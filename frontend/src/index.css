@@ -1,22 +1,27 @@
-/* Minimal baseline until the design system is chosen (task 1.4). Keep contrast at WCAG 2.2 AA. */
-:root {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  color: #1a1a1a;
-  background: #ffffff;
-}
+/* Global additions to the Mantine theme (src/theme.ts). Keep contrast at WCAG 2.2 AA. */
 
-body {
-  margin: 0;
-}
-
-main {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
+/* Visible focus everywhere, not only inside Mantine components. */
 :focus-visible {
-  outline: 3px solid #0b5fff;
+  outline: 3px solid #1864ab;
   outline-offset: 2px;
+}
+
+/* "Skip to main content": hidden until focused with the keyboard. */
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -3rem;
+  z-index: 1000;
+  padding: 0.5rem 0.75rem;
+  background: #ffffff;
+  border: 2px solid #1864ab;
+}
+
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+/* Page titles receive focus programmatically after navigation; no outline for that case. */
+#page-title:focus:not(:focus-visible) {
+  outline: none;
 }

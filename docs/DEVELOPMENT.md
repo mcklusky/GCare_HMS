@@ -29,10 +29,12 @@ Keycloak must be up before the backend starts (the backend reads its OIDC config
 Alternatively, `./mvnw spring-boot:test-run` starts the backend against a throwaway Testcontainers database without Compose (Keycloak from Compose is still needed for sign-in).
 
 ## Signing in locally (ADR-012)
-1. Open `http://localhost:8080/oauth2/authorization/keycloak` (or your `SERVER_PORT`). Keycloak shows its login page.
+1. Start the frontend (`npm run dev`) and open `http://localhost:5173`. Select **Sign in**; Keycloak shows its login page.
 2. Use a synthetic user from [infra/keycloak/README.md](../infra/keycloak/README.md), e.g. `demo.admin` / `Local-Demo-Only-1!`.
-3. You land on the frontend (`http://localhost:5173/`) signed in; `GET /api/v1/me` shows your permissions. The session cookie is shared across localhost ports, so the Vite proxy works.
-4. Sign out with `POST /api/v1/auth/logout` (send the `XSRF-TOKEN` cookie value as header `X-XSRF-TOKEN`). The response holds `logout_url`, which ends the Keycloak session too.
+3. You return to the app signed in. The Vite dev server proxies `/api`, `/oauth2`, `/login/oauth2` and `/v3/api-docs` to the backend and keeps the Host header, so sign-in, cookies and CSRF behave as in production behind one host name.
+4. **Sign out** in the account menu ends the GCare session and then the Keycloak session.
+
+If you changed the realm file, recreate the local Keycloak so it re-imports it: `docker compose up -d --force-recreate keycloak` (local demo data only).
 
 The OpenAPI document is at `/v3/api-docs` when signed in (local profile only).
 Keycloak's admin console is `http://localhost:8180` (`admin` / `admin`, local only).
@@ -45,6 +47,8 @@ Keycloak's admin console is `http://localhost:8180` (`admin` / `admin`, local on
 | Frontend | `npm run typecheck && npm run lint && npm test && npm run build` | tsc, oxlint, Vitest + Testing Library, Vite build |
 | Frontend deps | `npm audit --audit-level=high` | Known-vulnerability check |
 
+**Windows:** run the frontend tests from a path with an upper-case drive letter (`C:\Users\...`, as PowerShell does by default). From `c:\...` (lower case, as some terminals start), Vitest loads itself twice and every suite fails with "Vitest failed to find the current suite".
+
 Never report a check as passing unless it ran ([07-CLAUDE.md](07-CLAUDE.md)).
 
 ## Architecture map
@@ -52,7 +56,7 @@ Never report a check as passing unless it ran ([07-CLAUDE.md](07-CLAUDE.md)).
 - `backend/.../shared/`: cross-cutting infrastructure only (security config, current user and permissions, organization context, errors, correlation IDs).
 - `infra/keycloak/`: the local Keycloak realm (synthetic users).
 - `backend/src/main/resources/db/migration/`: Flyway migrations, the only owner of the schema.
-- `frontend/src/`: React app. Routing, the component library and the app shell arrive in task 1.4.
+- `frontend/src/` (ADR-013): `api/` (fetch client with CSRF and the standard error type), `auth/` (session, signed-in user, facility context), `shell/` (app layout, navigation, session gate and permission guard), `components/` (loading/empty/error/forbidden states, status badge, confirmation dialog), `pages/`, `routes.tsx`. Hiding navigation is for usability only; the API enforces every permission.
 
 ## Migration workflow
 1. Add `V<n>__<description>.sql` under `db/migration`. Never edit a merged migration.

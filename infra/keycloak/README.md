@@ -4,6 +4,7 @@
 It exists so developers can sign in locally. **It is not a production configuration.**
 
 - Realm `gcare`, issuer `http://localhost:8180/realms/gcare`.
+- Redirect URIs: `http://localhost:5173/...` (through the Vite proxy, normal use), `:8080` and `:8082` (backend directly).
 - Client `gcare-hms-backend`: confidential, authorization code flow with PKCE (S256), no implicit or password grants.
   The client secret `local-dev-only-not-a-secret` is a throwaway local value.
 - Synthetic users, all with password `Local-Demo-Only-1!` (local only):

@@ -42,6 +42,7 @@
       "frontchannelLogout": false,
       "fullScopeAllowed": false,
       "redirectUris": [
+        "http://localhost:5173/login/oauth2/code/keycloak",
         "http://localhost:8080/login/oauth2/code/keycloak",
         "http://localhost:8082/login/oauth2/code/keycloak"
       ],

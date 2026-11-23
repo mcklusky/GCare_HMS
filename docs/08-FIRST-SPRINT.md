@@ -19,11 +19,11 @@ Goal: establish a runnable, reviewable foundation for the approved Java + React 
 - [x] Add OpenAPI generation and `/api/v1` conventions. *(springdoc; `/v3/api-docs` for signed-in users, on in local/test only; the build writes `target/openapi/openapi.json`.)*
 
 ## Frontend foundation
-- [ ] Create React + TypeScript application with approved router and component library.
-- [ ] Implement application shell, sign-in/session handling, facility context and role-filtered navigation.
-- [ ] Add shared loading, empty, error, forbidden and confirmation patterns.
-- [ ] Establish accessible form, table, dialog and focus patterns; verify keyboard use.
-- [ ] Do not persist clinical content or tokens in local storage unless the approved auth design explicitly requires a reviewed mechanism.
+- [x] Create React + TypeScript application with approved router and component library. *(React Router 8, Mantine 9, TanStack Query; ADR-013.)*
+- [x] Implement application shell, sign-in/session handling, facility context and role-filtered navigation. *(Task 1.4. Verified locally through the Vite proxy with the Compose Keycloak.)*
+- [x] Add shared loading, empty, error, forbidden and confirmation patterns. *(`components/states.tsx`, `ConfirmDialog` with required reason.)*
+- [x] Establish accessible form, table, dialog and focus patterns; verify keyboard use. *(Skip link, focus moves to the page title on navigation, dialog focus trap/Escape tested, automated axe checks in unit tests. A manual screen-reader and keyboard review is still needed before pilot; colour contrast is not checked by the automated tests.)*
+- [x] Do not persist clinical content or tokens in local storage unless the approved auth design explicitly requires a reviewed mechanism. *(No browser storage used; tokens stay on the server, ADR-012.)*
 
 ## Quality and operations
 - [ ] CI runs formatting/static analysis, compile/build, unit tests, migration checks and dependency scan. *(Workflow added; Java dependency scanning is Dependabot only, and CI has not yet run on GitHub.)*
