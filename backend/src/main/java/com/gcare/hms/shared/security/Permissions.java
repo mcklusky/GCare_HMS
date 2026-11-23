@@ -52,6 +52,8 @@ public final class Permissions {
   public static final String REPORT_EXPORT = "REPORT_EXPORT";
   public static final String CONFIG_CLINICAL_MANAGE = "CONFIG_CLINICAL_MANAGE";
   public static final String CONFIG_ORGANIZATION_MANAGE = "CONFIG_ORGANIZATION_MANAGE";
+  public static final String DOWNTIME_MANAGE = "DOWNTIME_MANAGE";
+  public static final String DOWNTIME_RECORD = "DOWNTIME_RECORD";
 
   public static final Set<String> ALL =
       Set.of(
@@ -97,7 +99,9 @@ public final class Permissions {
           REPORT_REVENUE_READ,
           REPORT_EXPORT,
           CONFIG_CLINICAL_MANAGE,
-          CONFIG_ORGANIZATION_MANAGE);
+          CONFIG_ORGANIZATION_MANAGE,
+          DOWNTIME_MANAGE,
+          DOWNTIME_RECORD);
 
   private Permissions() {}
 }

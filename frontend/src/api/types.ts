@@ -82,6 +82,8 @@ export const Permission = {
   REPORT_EXPORT: 'REPORT_EXPORT',
   CONFIG_CLINICAL_MANAGE: 'CONFIG_CLINICAL_MANAGE',
   CONFIG_ORGANIZATION_MANAGE: 'CONFIG_ORGANIZATION_MANAGE',
+  DOWNTIME_MANAGE: 'DOWNTIME_MANAGE',
+  DOWNTIME_RECORD: 'DOWNTIME_RECORD',
 } as const
 
 export type PermissionCode = (typeof Permission)[keyof typeof Permission]

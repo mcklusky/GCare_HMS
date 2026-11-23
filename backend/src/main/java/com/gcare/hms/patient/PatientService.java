@@ -203,6 +203,20 @@ public class PatientService {
     return detail(id);
   }
 
+  /**
+   * Possible duplicates for a registration that has not been made yet, scored exactly as {@link
+   * #register} scores them (downtime reconciliation, docs/22). Creates nothing.
+   */
+  @PreAuthorize("hasAuthority('" + Permissions.PATIENT_READ + "')")
+  @Transactional(readOnly = true)
+  public List<DuplicateCandidate> candidatesFor(RegisterPatientRequest request) {
+    CurrentUser user = CurrentUser.require();
+    if (!user.scopeOf(Permissions.PATIENT_READ).includes(request.registrationFacilityId())) {
+      throw new ApiException.NotFound("Facility");
+    }
+    return candidates(factsOf(request), null);
+  }
+
   // --- search ----------------------------------------------------------------------------------
 
   /** Search parameters as received; normalized and checked by {@link #search}. */

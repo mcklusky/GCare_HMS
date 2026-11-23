@@ -7,6 +7,8 @@ import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_READ;
 import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_WRITE;
 import static com.gcare.hms.shared.security.Permissions.CONFIG_CLINICAL_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.CONFIG_ORGANIZATION_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.DOWNTIME_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.DOWNTIME_RECORD;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_OPEN;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_READ;
@@ -56,7 +58,7 @@ public enum SystemRole {
   /** Scoped users and configuration; no implicit clinical access. */
   ORGANIZATION_ADMIN(
       "Organization administrator",
-      "Manages facilities, departments, user accounts, the order catalog, payment methods, exemption reasons, branding and operational settings. No clinical access.",
+      "Manages facilities, departments, user accounts, the order catalog, payment methods, exemption reasons, branding and operational settings; declares downtime. No clinical access.",
       Set.of(
           FACILITY_READ,
           FACILITY_MANAGE,
@@ -65,7 +67,8 @@ public enum SystemRole {
           ORDER_CATALOG_MANAGE,
           PAYMENT_METHOD_MANAGE,
           EXEMPTION_REASON_MANAGE,
-          CONFIG_ORGANIZATION_MANAGE)),
+          CONFIG_ORGANIZATION_MANAGE,
+          DOWNTIME_MANAGE)),
 
   /** Reads the audit trail; no mutation. */
   AUDITOR("Auditor", "Reads the audit trail. Cannot change anything.", Set.of(AUDIT_READ)),
@@ -78,7 +81,13 @@ public enum SystemRole {
       "Registration clerk",
       "Searches, registers and corrects patients and opens visits at assigned facilities. No"
           + " clinical access.",
-      Set.of(PATIENT_READ, PATIENT_REGISTER, PATIENT_UPDATE, ENCOUNTER_READ, ENCOUNTER_OPEN)),
+      Set.of(
+          PATIENT_READ,
+          PATIENT_REGISTER,
+          PATIENT_UPDATE,
+          ENCOUNTER_READ,
+          ENCOUNTER_OPEN,
+          DOWNTIME_RECORD)),
 
   /**
    * Registration clerk plus the duplicate review queue and link requests. PROVISIONAL, like the
@@ -95,7 +104,8 @@ public enum SystemRole {
           PATIENT_DUPLICATE_REVIEW,
           PATIENT_LINK_REQUEST,
           ENCOUNTER_READ,
-          ENCOUNTER_OPEN)),
+          ENCOUNTER_OPEN,
+          DOWNTIME_RECORD)),
 
   /**
    * Second person for patient identity decisions: reviews duplicates, requests and approves links
@@ -120,7 +130,8 @@ public enum SystemRole {
           OBSERVATION_READ,
           OBSERVATION_RECORD,
           CLINICAL_NOTE_READ,
-          ORDER_READ)),
+          ORDER_READ,
+          DOWNTIME_RECORD)),
 
   /**
    * Calls, transfers, closes and reopens visits and records observations (docs/18). PROVISIONAL
@@ -140,7 +151,8 @@ public enum SystemRole {
           CLINICAL_NOTE_READ,
           CLINICAL_NOTE_WRITE,
           ORDER_READ,
-          ORDER_CREATE)),
+          ORDER_CREATE,
+          DOWNTIME_RECORD)),
 
   /**
    * Staff of a performing department (laboratory, imaging, ...): works the order worklist.
@@ -189,7 +201,8 @@ public enum SystemRole {
           INVOICE_MANAGE,
           PAYMENT_RECORD,
           REFUND_REQUEST,
-          EXEMPTION_REQUEST)),
+          EXEMPTION_REQUEST,
+          DOWNTIME_RECORD)),
 
   /**
    * PROVISIONAL (task 5.1; docs/20): the PRD's department manager. Sees aggregated visit, order and
@@ -208,7 +221,17 @@ public enum SystemRole {
   CLINICAL_LEAD(
       "Clinical lead",
       "Proposes and approves clinical settings (triage scale, alarm limits); another clinical lead approves each change.",
-      Set.of(CONFIG_CLINICAL_MANAGE));
+      Set.of(CONFIG_CLINICAL_MANAGE)),
+
+  /**
+   * PROVISIONAL (task 5.3; docs/22): declares, ends and closes downtime episodes, issues numbered
+   * paper forms and keys them. Creating real records from them needs the clerk, nurse, clinician or
+   * cashier permission for that record.
+   */
+  DOWNTIME_COORDINATOR(
+      "Downtime coordinator",
+      "Declares, ends and closes downtime episodes, issues numbered paper forms and keys them. Cannot create patients, visits, orders or payments.",
+      Set.of(DOWNTIME_MANAGE, DOWNTIME_RECORD));
 
   private final String displayName;
   private final String description;

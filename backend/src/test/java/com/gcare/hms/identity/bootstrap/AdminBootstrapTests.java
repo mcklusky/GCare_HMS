@@ -52,7 +52,8 @@ class AdminBootstrapTests {
             Permissions.ORDER_CATALOG_MANAGE,
             Permissions.PAYMENT_METHOD_MANAGE,
             Permissions.EXEMPTION_REASON_MANAGE,
-            Permissions.CONFIG_ORGANIZATION_MANAGE);
+            Permissions.CONFIG_ORGANIZATION_MANAGE,
+            Permissions.DOWNTIME_MANAGE);
     assertThat(admin.scopeOf(Permissions.FACILITY_READ).allFacilities()).isTrue();
     assertThat(
             fixtures.count(

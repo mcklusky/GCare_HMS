@@ -14,6 +14,9 @@ import { PriceApprovalsPage } from './pages/billing/PriceApprovalsPage'
 import { ReceiptPage } from './pages/billing/ReceiptPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 import { SettingsPage } from './pages/admin/SettingsPage'
+import { DowntimePage } from './pages/downtime/DowntimePage'
+import { EpisodePage } from './pages/downtime/EpisodePage'
+import { FormsPrintPage } from './pages/downtime/FormsPrintPage'
 import { ShiftPage } from './pages/billing/ShiftPage'
 import { ShiftReviewPage } from './pages/billing/ShiftReviewPage'
 import { TariffsPage } from './pages/billing/TariffsPage'
@@ -221,6 +224,30 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={[Permission.CONFIG_CLINICAL_MANAGE, Permission.CONFIG_ORGANIZATION_MANAGE]}>
             <SettingsPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'downtime',
+        element: (
+          <RequirePermission permission={[Permission.DOWNTIME_MANAGE, Permission.DOWNTIME_RECORD]}>
+            <DowntimePage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'downtime/episodes/:id',
+        element: (
+          <RequirePermission permission={[Permission.DOWNTIME_MANAGE, Permission.DOWNTIME_RECORD]}>
+            <EpisodePage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'downtime/forms/:id/print',
+        element: (
+          <RequirePermission permission={Permission.DOWNTIME_MANAGE}>
+            <FormsPrintPage />
           </RequirePermission>
         ),
       },

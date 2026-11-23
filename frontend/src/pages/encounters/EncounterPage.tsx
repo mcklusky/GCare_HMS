@@ -22,6 +22,7 @@ import { DiagnosesSection } from './DiagnosesSection'
 import { NotesSection } from './NotesSection'
 import { OrdersSection } from './OrdersSection'
 import { TriageSection } from './TriageSection'
+import { DowntimeSourcesNotice } from '../downtime/DowntimeSourcesNotice'
 
 const DIALOG: Record<
   Exclude<EncounterAction, 'call'>,
@@ -88,6 +89,7 @@ export function EncounterPage() {
                 {e.clinician && ` · Clinician: ${e.clinician.display_name}`}
               </Text>
             </Group>
+            <DowntimeSourcesNotice encounterId={e.id} />
             <Actions encounter={e} />
             <Card withBorder>
               <Title order={2} size="h4" mb="xs">

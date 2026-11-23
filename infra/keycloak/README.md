@@ -25,6 +25,7 @@ It exists so developers can sign in locally. **It is not a production configurat
 | `demo.cashier` | `…1013` | DEMO-ORG, CASHIER at DEMO-GH | Starts, edits and issues visit invoices; takes payments and pays out refunds in a shift; requests refunds and exemptions |
 | `demo.manager` | `…1014` | DEMO-ORG, DEPARTMENT_MANAGER at DEMO-GH | Sees and exports visit, order and registration reports and the dashboard |
 | `demo.clinlead`, `demo.clinlead2` | `…1015`, `…1016` | DEMO-ORG, CLINICAL_LEAD at DEMO-GH | Propose and approve (each other's) triage settings |
+| `demo.downtime` | `…1018` | DEMO-ORG, DOWNTIME_COORDINATOR at DEMO-GH | Declares downtime, prints numbered forms, keys them; cannot create records |
 | `demo.admin2` | `…1017` | DEMO-ORG, ORGANIZATION_ADMIN (organization-wide) | Second administrator, to approve branding and billing options |
 | `demo.unlinked` | `…1004` | not linked | Sign-in refused (`login_error=account_not_enabled`), audited |
 
