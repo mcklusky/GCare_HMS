@@ -46,6 +46,24 @@ Never report a check as passing unless it ran ([07-CLAUDE.md](07-CLAUDE.md)).
 1. Add `V<n>__<description>.sql` under `db/migration`. Never edit a merged migration.
 2. Run `./mvnw verify`. Tests start a fresh PostgreSQL and apply every migration, and Hibernate validates the entities against the schema.
 3. In the PR, describe the data impact and the rollback/forward-fix plan ([13-CHANGE-RELEASE.md](13-CHANGE-RELEASE.md)).
+4. Every new organization-owned table needs `organization_id`, `ENABLE` + `FORCE ROW LEVEL SECURITY`, an isolation policy using `app_current_organization_id()`, explicit grants to `gcare_app` (no `DELETE` for clinical/financial/config records), and an isolation test.
+
+Local synthetic seed data lives in `db/seed-local/` (repeatable migration, local profile only). It must stay idempotent and fictional.
+
+## Organization isolation (ADR-010)
+Isolation is enforced by PostgreSQL row-level security, so a missed `WHERE` clause cannot leak another hospital's rows.
+
+- Every pooled connection runs as the NOLOGIN role `gcare_app` (`SET ROLE` on checkout, in `shared/tenancy/RowLevelSecurityDataSource`).
+- The organization comes from `OrganizationContext` and is copied into the session setting `app.current_organization_id`. With no organization set, organization-owned tables look empty.
+- Set the context **before** a transaction starts: `OrganizationContext.callAs(orgId, () -> service.doWork())`. Switching organization inside a context throws.
+- `OrganizationContext.callAsSchemaOwner(...)` bypasses RLS. It is only for migrations and audited platform operations, never request handling.
+- Until task 1.3, nothing sets the context from a logged-in user; tests set it explicitly.
+- **Deployment note:** the database login used by the app must be able to `SET ROLE gcare_app`. Migration V1 grants this to the migrating user. Superusers bypass RLS, so the application must never run queries without `SET ROLE` (the DataSource wrapper guarantees this).
+
+## Audit and errors
+- Record security-relevant access and changes with `AuditService.record(...)`. It commits in its own transaction (it survives a rollback), redacts sensitive metadata keys, and `audit_events` rejects UPDATE, DELETE and TRUNCATE for everyone.
+- Throw `ApiException.NotFound` / `Conflict` / `InvalidTransition` for expected failures. `GlobalExceptionHandler` and the security handlers return `{code, message, field_errors, correlation_id}`; unexpected errors are logged with the correlation ID and answered generically.
+- Every response carries `X-Correlation-Id`, which also appears on every log line.
 
 ## Data and secrets policy
 - **Synthetic data only** in development, demo, test and CI. Use obviously fictional values (names like "Test Patient", phone `0000000000`, IDs from test generators). Never copy, paste, screenshot or "anonymize by hand" real patient records into the repo, issues, PRs or chat.

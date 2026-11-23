@@ -35,3 +35,8 @@ management:
       show-details: never
       probes:
         enabled: true
+
+logging:
+  pattern:
+    # Correlation ID on every log line (CorrelationIdFilter). Never log clinical content or secrets.
+    level: "%5p [%X{correlationId:-}]"

@@ -8,6 +8,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Deny-by-default security baseline (docs/08-FIRST-SPRINT.md, backend foundation).
@@ -20,12 +21,15 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  SecurityFilterChain securityFilterChain(HttpSecurity http, JsonMapper json) throws Exception {
     http.authorizeHttpRequests(auth ->
             auth.requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**")
                 .permitAll()
                 .anyRequest()
                 .denyAll())
+        .exceptionHandling(e ->
+            e.authenticationEntryPoint(ApiErrorSecurityHandlers.unauthenticated(json))
+                .accessDeniedHandler(ApiErrorSecurityHandlers.forbidden(json)))
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .httpBasic(b -> b.disable())
         .formLogin(f -> f.disable())

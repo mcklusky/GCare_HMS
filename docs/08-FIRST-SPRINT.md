@@ -11,12 +11,12 @@ Goal: establish a runnable, reviewable foundation for the approved Java + React 
 ## Backend foundation
 - [x] Create Spring Boot application with module/package boundaries and health endpoint.
 - [x] Configure PostgreSQL for local development and Flyway migrations. *(No migrations yet; first one in task 1.2.)*
-- [ ] Add tenant, facility and department seed configuration using synthetic values.
+- [x] Add tenant, facility and department seed configuration using synthetic values. *(`db/seed-local`, local profile only.)*
 - [ ] Add authentication integration using the approved identity setup; deny access by default. *(Deny-by-default done; authentication blocked on OD-03.)*
-- [ ] Implement authorization context and scoped repository/service pattern before patient APIs.
-- [ ] Add audit event interface and persistence for security-relevant actions; redact sensitive fields.
-- [ ] Add consistent validation/error response and correlation IDs.
-- [ ] Add OpenAPI generation and `/api/v1` conventions.
+- [ ] Implement authorization context and scoped repository/service pattern before patient APIs. *(Organization scoping done: `OrganizationContext` + PostgreSQL RLS, ADR-010. Facility/department scope and wiring it to the logged-in user come with task 1.3.)*
+- [x] Add audit event interface and persistence for security-relevant actions; redact sensitive fields. *(Append-only `audit_events`; callers are added per feature.)*
+- [x] Add consistent validation/error response and correlation IDs.
+- [ ] Add OpenAPI generation and `/api/v1` conventions. *(Deferred to the first real endpoint, task 1.3.)*
 
 ## Frontend foundation
 - [ ] Create React + TypeScript application with approved router and component library.
@@ -27,7 +27,7 @@ Goal: establish a runnable, reviewable foundation for the approved Java + React 
 
 ## Quality and operations
 - [ ] CI runs formatting/static analysis, compile/build, unit tests, migration checks and dependency scan. *(Workflow added; Java dependency scanning is Dependabot only, and CI has not yet run on GitHub.)*
-- [ ] Add automated tests for unauthenticated access, role denial, tenant/facility isolation, audit creation and error shape.
+- [ ] Add automated tests for unauthenticated access, role denial, tenant/facility isolation, audit creation and error shape. *(Done: unauthenticated access, organization isolation, audit, error shape. Role denial needs roles, task 1.3.)*
 - [x] Add `.env.example` with placeholders only; verify secrets and real patient data are excluded from Git.
 - [x] Document local setup, test commands, architecture map, migration workflow and backup responsibilities. *([DEVELOPMENT.md](DEVELOPMENT.md))*
 - [ ] Demonstrate a clean setup from a fresh checkout using synthetic data.

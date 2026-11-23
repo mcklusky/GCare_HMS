@@ -11,7 +11,8 @@ Hospital management system. **Patient safety, data integrity and security take p
 - `GCare_HMS_PRD_v1_4.docx` is superseded (it says Django). Do not build from it.
 
 ## Current state (2026-11-23)
-- Phase 1 in progress ([docs/08-FIRST-SPRINT.md](docs/08-FIRST-SPRINT.md)). Task 1.1 scaffold is done: backend/, frontend/, Compose, CI. Commands are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+- Phase 1 in progress ([docs/08-FIRST-SPRINT.md](docs/08-FIRST-SPRINT.md)). Done: 1.1 scaffold; 1.2 schema V1 (organizations, facilities, departments, audit_events), RLS isolation, audit service, error format, correlation IDs. Commands and the isolation model are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+- Organization-owned queries only work inside `OrganizationContext.callAs(...)`. Every new tenant table needs RLS + grants + an isolation test (DEVELOPMENT.md, migration workflow).
 - Decided: `organization`/`organization_id` naming (ADR-009); shared DB with `organization_id` + PostgreSQL RLS (ADR-010); pinned versions (ADR-011).
 - Still open: OD-03 (identity provider) blocks task 1.3 authentication. Stop and ask; do not pick silently.
 - Backend is deny-by-default (`shared/security/SecurityConfig`). Never loosen it to make a feature work.
