@@ -30,6 +30,7 @@ import com.gcare.hms.shared.security.CurrentUser;
 import com.gcare.hms.shared.security.FacilityScope;
 import com.gcare.hms.shared.security.Permissions;
 import com.gcare.hms.shared.web.ApiException;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -66,12 +67,15 @@ public class InvoiceService {
 
   private final InvoiceStore store;
   private final BillingStore billing;
+  private final PaymentStore payments;
   private final AuditService audit;
   private final Clock clock = Clock.systemUTC();
 
-  InvoiceService(InvoiceStore store, BillingStore billing, AuditService audit) {
+  InvoiceService(
+      InvoiceStore store, BillingStore billing, PaymentStore payments, AuditService audit) {
     this.store = store;
     this.billing = billing;
+    this.payments = payments;
     this.audit = audit;
   }
 
@@ -324,6 +328,10 @@ public class InvoiceService {
               ? "You cannot discard this draft"
               : "Voiding an issued invoice needs the void permission");
     }
+    if (payments.paidTotal(id).signum() > 0) {
+      throw new ApiException.InvalidTransition(
+          "This invoice has payments and cannot be voided. Refunds come with task 4.4.");
+    }
     if (store.voidInvoice(
             id, request.version(), invoice.status(), request.reason().trim(), user.userId())
         == 0) {
@@ -448,6 +456,7 @@ public class InvoiceService {
             ? totals(
                 lines.stream().filter(l -> l.status() == LineStatus.ACTIVE).toList(), i.currency())
             : new Totals(i.subtotal(), i.taxTotal(), i.total());
+    BigDecimal paid = PaymentStore.strip(payments.paidTotal(i.id()));
     return new InvoiceView(
         i.id(),
         i.invoiceNumber(),
@@ -461,6 +470,8 @@ public class InvoiceService {
         totals.subtotal(),
         totals.tax(),
         totals.total(),
+        paid,
+        i.status() == InvoiceStatus.ISSUED ? i.total().subtract(paid) : null,
         i.replacesInvoiceId(),
         i.createdBy(),
         i.createdAt(),

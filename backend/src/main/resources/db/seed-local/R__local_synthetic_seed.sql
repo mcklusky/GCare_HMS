@@ -306,7 +306,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
 VALUES
     ('00000000-0000-4000-8000-000000000309', '00000000-0000-4000-8000-000000000001', 'FINANCE_OFFICER', 'Finance officer', 'Maintains billable services and proposes prices and tax rates. No clinical access.', true, 'ACTIVE'),
-    ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000001', 'FINANCE_MANAGER', 'Finance manager', 'Approves or rejects prices and tax rates proposed by others. Voids issued invoices. No clinical access.', true, 'ACTIVE')
+    ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000001', 'FINANCE_MANAGER', 'Finance manager', 'Approves or rejects prices and tax rates proposed by others. Voids issued invoices and signs off cashier shifts. No clinical access.', true, 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO role_permissions (organization_id, role_id, permission_code)
@@ -357,7 +357,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
 VALUES
-    ('00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000001', 'CASHIER', 'Cashier', 'Starts and issues visit invoices. Cannot void issued invoices or change prices.', true, 'ACTIVE')
+    ('00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000001', 'CASHIER', 'Cashier', 'Starts and issues visit invoices and takes payments in a shift. Cannot void issued invoices or change prices.', true, 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO role_permissions (organization_id, role_id, permission_code)
@@ -383,4 +383,21 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
 VALUES
     ('00000000-0000-4000-8000-000000000611', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000412', '00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000101')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Payments and shifts (task 4.3). demo.cashier takes payments in a shift; demo.financemgr signs
+-- shifts off; demo.admin manages methods. The two methods below are DEMO entries only.
+-- ---------------------------------------------------------------------------
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000301', 'PAYMENT_METHOD_MANAGE'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000310', 'SHIFT_REVIEW'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000311', 'PAYMENT_RECORD')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO payment_methods (id, organization_id, code, name, is_cash, status, created_by)
+VALUES
+    ('00000000-0000-4000-8000-000000000961', '00000000-0000-4000-8000-000000000001', 'DEMO-CASH', 'Cash (demo)', true, 'ACTIVE', '00000000-0000-4000-8000-000000000401'),
+    ('00000000-0000-4000-8000-000000000962', '00000000-0000-4000-8000-000000000001', 'DEMO-NONCASH', 'Non-cash (demo)', false, 'ACTIVE', '00000000-0000-4000-8000-000000000401')
 ON CONFLICT (id) DO NOTHING;

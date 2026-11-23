@@ -39,6 +39,9 @@ public final class Permissions {
   public static final String INVOICE_READ = "INVOICE_READ";
   public static final String INVOICE_MANAGE = "INVOICE_MANAGE";
   public static final String INVOICE_VOID = "INVOICE_VOID";
+  public static final String PAYMENT_METHOD_MANAGE = "PAYMENT_METHOD_MANAGE";
+  public static final String PAYMENT_RECORD = "PAYMENT_RECORD";
+  public static final String SHIFT_REVIEW = "SHIFT_REVIEW";
 
   public static final Set<String> ALL =
       Set.of(
@@ -71,7 +74,10 @@ public final class Permissions {
           PRICE_APPROVE,
           INVOICE_READ,
           INVOICE_MANAGE,
-          INVOICE_VOID);
+          INVOICE_VOID,
+          PAYMENT_METHOD_MANAGE,
+          PAYMENT_RECORD,
+          SHIFT_REVIEW);
 
   private Permissions() {}
 }

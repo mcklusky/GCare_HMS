@@ -37,6 +37,7 @@ import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { PatientBanner } from '../../components/PatientBadges'
 import { ErrorState, PageTitle, QueryState } from '../../components/states'
+import { PaymentsSection } from './PaymentsSection'
 
 type Pending = { kind: 'issue' } | { kind: 'discard' } | { kind: 'void' } | { kind: 'remove'; line: InvoiceLine }
 
@@ -221,6 +222,8 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
         </Table>
       </Card>
 
+      {invoice.invoice_number && <PaymentsSection invoice={invoice} />}
+
       {draft && invoice.unbilled_orders.length > 0 && (
         <Card withBorder>
           <Title order={2} size="h4" mb="xs">
@@ -250,7 +253,7 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
             </Button>
           </>
         )}
-        {invoice.status === 'ISSUED' && canVoid && (
+        {invoice.status === 'ISSUED' && canVoid && Number(invoice.paid) === 0 && (
           <Button color="red" variant="light" onClick={() => setPending({ kind: 'void' })}>
             Void invoice
           </Button>

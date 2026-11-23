@@ -69,6 +69,8 @@ const DRAFT: Invoice = {
   subtotal: 12.5,
   tax_total: 1.88,
   total: 14.38,
+  paid: 0,
+  balance: null,
   replaces_invoice_id: null,
   created_by: USER,
   created_at: '2026-11-23T08:05:00Z',
@@ -86,6 +88,7 @@ const ISSUED: Invoice = {
   unbilled_orders: [],
   issued_by: USER,
   issued_at: '2026-11-23T08:10:00Z',
+  balance: 14.38,
   version: 4,
 }
 
@@ -128,6 +131,7 @@ describe('invoice page', () => {
         sent = JSON.parse(String(init.body))
         return { body: ISSUED }
       },
+      'GET /api/v1/invoices/inv1/payments': { body: [] },
     })
 
     renderApp('/billing/invoices/inv1')
@@ -173,6 +177,7 @@ describe('invoice page', () => {
     fakeBackend({
       'GET /api/v1/me': { body: VOIDER },
       'GET /api/v1/invoices/inv1': { body: ISSUED },
+      'GET /api/v1/invoices/inv1/payments': { body: [] },
       'POST /api/v1/invoices/inv1/void': (init: RequestInit) => {
         sent = JSON.parse(String(init.body))
         return {

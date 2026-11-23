@@ -2,7 +2,7 @@
 
 > **Status:** the decisions below were made by the product owner on 2026-11-23. Everything marked *provisional* is an engineering default that the **finance owner** must confirm before real use (Phase 4 exit: "finance owner approves permissions and receipt format"). No tariff, price, tax rate or exchange rate is defined by engineering.
 
-Requirements: FR-017 (billing and tariff catalog), FR-042 (configuration, partial). Code: `backend/.../billing/`, migrations `V9__billing_catalog_and_tariffs.sql`, `V10__invoices.sql`, screens `/billing/tariffs`, `/billing/approvals`, `/billing/invoices`.
+Requirements: FR-017 (billing and tariff catalog), FR-018 (payments and receipts), FR-042 (configuration, partial). Code: `backend/.../billing/`, migrations `V9__billing_catalog_and_tariffs.sql`, `V10__invoices.sql`, `V11__payments_and_shifts.sql`, screens `/billing/tariffs`, `/billing/approvals`, `/billing/invoices`, `/billing/shift`, `/billing/shift-reviews`, `/billing/receipts/{id}`, `/admin/payment-methods`.
 
 ## 1. Decisions (product owner, 2026-11-23)
 
@@ -15,6 +15,10 @@ Requirements: FR-017 (billing and tariff catalog), FR-042 (configuration, partia
 | Invoice charges (task 4.2) | **Orders + cashier**: each order whose orderable item is linked to a billable service is charged automatically; a cashier adds or removes other charges with a reason. |
 | Invoice currency | **Cashier picks one currency per invoice.** Each charge needs an approved price in that currency; nothing is converted. |
 | Tax on invoices | **Per line, rounded half-up** to the currency's decimals; totals are the sums of the rounded lines. |
+| Payment methods (task 4.3) | **Admin-managed**, empty by default. Each method is marked cash or not; cash counts toward the drawer. |
+| Part payments | **Allowed up to the balance.** A payment larger than the balance is refused; change is given outside the system. |
+| Shift close | **Cash count + second-person sign-off.** A difference needs a note. |
+| Receipt | **Basic, provisional** layout until the finance owner approves it. |
 | Corrections | **Void + reissue**: an issued invoice never changes; it is voided with a reason and a new invoice is made. Credit notes and refunds are task 4.4. |
 
 ## 2. Services, prices and tax rates (task 4.1)
@@ -41,15 +45,25 @@ Requirements: FR-017 (billing and tariff catalog), FR-042 (configuration, partia
 - *Provisional:* invoice number format; the 7-day window of "visits without an invoice"; one currency per visit at a time.
 - Audit records ids, codes, currencies and invoice numbers; never amounts or reasons.
 
-## 4. Provisional roles
+## 4. Payments, receipts and shifts (task 4.3)
+
+- **Payments** go only on issued invoices, in the invoice's currency, from 0.01 (or the currency's smallest unit) up to the balance due. Several payments per invoice are allowed; each states its method and an optional reference (e.g. a mobile money transaction number).
+- **Idempotent:** the browser sends a random key with each payment form; a retry with the same key returns the payment already recorded (no double charge). The same key with a different amount or method is refused.
+- **Shift:** a cashier must have an open shift at the invoice's facility to take payments; one open shift per cashier. Closing the shift records the cash counted per currency against the expected cash (sum of cash-method payments). Every currency with cash payments must be counted; any difference needs a note. A **different person** with `SHIFT_REVIEW` signs the shift off with a note (database CHECK as well).
+- **Receipt:** numbered `RCT-000001` and up per organization, with no gaps. Shows facility, date, patient name and number, invoice number and total, amount, method, reference, balance after, and cashier. Every view or reprint is audited. Layout is **provisional**.
+- **Never changed:** payments and cash counts cannot be updated or deleted (grants). An invoice with payments can no longer be voided (service and database trigger); refunds and reversals are task 4.4.
+- Audit records ids, receipt numbers, method codes and currencies; never amounts or notes.
+
+## 5. Provisional roles
 
 | Role | Permissions |
 |---|---|
 | Finance officer | `BILLING_READ`, `BILLING_CATALOG_MANAGE`, `PRICE_PROPOSE`, `INVOICE_READ` |
-| Finance manager | `BILLING_READ`, `PRICE_PROPOSE`, `PRICE_APPROVE`, `INVOICE_READ`, `INVOICE_VOID` |
-| Cashier | `BILLING_READ`, `INVOICE_READ`, `INVOICE_MANAGE` |
+| Finance manager | `BILLING_READ`, `PRICE_PROPOSE`, `PRICE_APPROVE`, `INVOICE_READ`, `INVOICE_VOID`, `SHIFT_REVIEW` |
+| Cashier | `BILLING_READ`, `INVOICE_READ`, `INVOICE_MANAGE`, `PAYMENT_RECORD` |
+| Organization administrator | adds `PAYMENT_METHOD_MANAGE` |
 
-Local demo: `demo.finance`, `demo.financemgr`, `demo.cashier`; services `DEMO-CONSULT`, `DEMO-LAB-A` with **fictional** prices of 1.00 (not a tariff).
+Local demo: `demo.finance`, `demo.financemgr`, `demo.cashier`; services `DEMO-CONSULT`, `DEMO-LAB-A` with **fictional** prices of 1.00 (not a tariff); payment methods `DEMO-CASH`, `DEMO-NONCASH` (demo only).
 
 ## Open questions for the finance owner
 
@@ -59,9 +73,13 @@ Local demo: `demo.finance`, `demo.financemgr`, `demo.cashier`; services `DEMO-CO
 4. ~~Who chooses the invoice currency?~~ Decided 2026-11-23: the cashier, per invoice.
 5. Is the invoice number format (`INV-000001`, per organization) acceptable, or is a legal format required?
 6. Must a voided invoice be approved by a second person?
+7. Which payment methods are accepted (cash, mobile money, card, bank transfer…), and which need a reference number?
+8. Approve the receipt layout (Phase 4 exit), including any legal wording or tax number.
+9. Who may sign off cashier shifts, and what difference (if any) needs escalation?
 
 ## Change log
 | Date | Change | By |
 |---|---|---|
 | 2026-11-23 | Decisions recorded; service catalog, dated prices and tax rates with two-person approval | Engineering (Claude Code), task 4.1 |
 | 2026-11-23 | Invoice decisions recorded; visit invoices with per-line tax, issue and void | Engineering (Claude Code), task 4.2 |
+| 2026-11-23 | Payment decisions recorded; idempotent part payments, receipts, shifts with cash count and sign-off | Engineering (Claude Code), task 4.3 |

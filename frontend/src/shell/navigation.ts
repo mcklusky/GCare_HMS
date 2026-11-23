@@ -2,6 +2,9 @@ import {
   IconBuildingHospital,
   IconCash,
   IconChecklist,
+  IconCashRegister,
+  IconCreditCard,
+  IconReportMoney,
   IconClipboardList,
   IconCopy,
   IconFileInvoice,
@@ -35,10 +38,23 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Queue', to: '/queue', icon: IconStethoscope, permission: Permission.ENCOUNTER_READ },
   { label: 'Worklist', to: '/orders', icon: IconClipboardList, permission: Permission.ORDER_PROCESS },
   { label: 'Invoices', to: '/billing/invoices', icon: IconFileInvoice, permission: Permission.INVOICE_READ },
+  { label: 'My shift', to: '/billing/shift', icon: IconCashRegister, permission: Permission.PAYMENT_RECORD },
+  {
+    label: 'Shift sign-off',
+    to: '/billing/shift-reviews',
+    icon: IconReportMoney,
+    permission: Permission.SHIFT_REVIEW,
+  },
   { label: 'Tariffs', to: '/billing/tariffs', icon: IconCash, permission: Permission.BILLING_READ },
   { label: 'Price approvals', to: '/billing/approvals', icon: IconChecklist, permission: Permission.PRICE_APPROVE },
   { label: 'Facilities', to: '/facilities', icon: IconBuildingHospital, permission: Permission.FACILITY_READ },
   { label: 'Order catalog', to: '/admin/order-catalog', icon: IconListDetails, permission: Permission.ORDER_CATALOG_MANAGE },
+  {
+    label: 'Payment methods',
+    to: '/admin/payment-methods',
+    icon: IconCreditCard,
+    permission: Permission.PAYMENT_METHOD_MANAGE,
+  },
 ]
 
 export function visibleNavItems(permissions: readonly string[]): NavItem[] {

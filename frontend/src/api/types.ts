@@ -69,6 +69,9 @@ export const Permission = {
   INVOICE_READ: 'INVOICE_READ',
   INVOICE_MANAGE: 'INVOICE_MANAGE',
   INVOICE_VOID: 'INVOICE_VOID',
+  PAYMENT_METHOD_MANAGE: 'PAYMENT_METHOD_MANAGE',
+  PAYMENT_RECORD: 'PAYMENT_RECORD',
+  SHIFT_REVIEW: 'SHIFT_REVIEW',
 } as const
 
 export type PermissionCode = (typeof Permission)[keyof typeof Permission]

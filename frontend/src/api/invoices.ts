@@ -54,6 +54,10 @@ export interface Invoice {
   subtotal: Money
   tax_total: Money
   total: Money
+  /** Sum of payments (task 4.3). */
+  paid: Money
+  /** Total minus payments for issued invoices; null for drafts and void invoices. */
+  balance: Money | null
   replaces_invoice_id: string | null
   created_by: UserRef
   created_at: string

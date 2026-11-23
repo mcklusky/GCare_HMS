@@ -7,7 +7,11 @@ import { FacilitiesPage, FacilityDepartmentsPage } from './pages/FacilitiesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { InvoicePage } from './pages/billing/InvoicePage'
 import { InvoicesPage } from './pages/billing/InvoicesPage'
+import { PaymentMethodsPage } from './pages/billing/PaymentMethodsPage'
 import { PriceApprovalsPage } from './pages/billing/PriceApprovalsPage'
+import { ReceiptPage } from './pages/billing/ReceiptPage'
+import { ShiftPage } from './pages/billing/ShiftPage'
+import { ShiftReviewPage } from './pages/billing/ShiftReviewPage'
 import { TariffsPage } from './pages/billing/TariffsPage'
 import { OrderCatalogPage } from './pages/orders/OrderCatalogPage'
 import { WorklistPage } from './pages/orders/WorklistPage'
@@ -141,6 +145,38 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.INVOICE_READ}>
             <InvoicePage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/receipts/:paymentId',
+        element: (
+          <RequirePermission permission={Permission.INVOICE_READ}>
+            <ReceiptPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/shift',
+        element: (
+          <RequirePermission permission={Permission.PAYMENT_RECORD}>
+            <ShiftPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/shift-reviews',
+        element: (
+          <RequirePermission permission={Permission.SHIFT_REVIEW}>
+            <ShiftReviewPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'admin/payment-methods',
+        element: (
+          <RequirePermission permission={Permission.PAYMENT_METHOD_MANAGE}>
+            <PaymentMethodsPage />
           </RequirePermission>
         ),
       },

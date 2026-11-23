@@ -121,6 +121,10 @@ public final class InvoiceApi {
       BigDecimal subtotal,
       @JsonProperty("tax_total") BigDecimal taxTotal,
       BigDecimal total,
+      /** Sum of payments (task 4.3); zero for drafts. */
+      BigDecimal paid,
+      /** Total minus payments for issued invoices; null for drafts and void invoices. */
+      BigDecimal balance,
       @JsonProperty("replaces_invoice_id") UUID replacesInvoiceId,
       @JsonProperty("created_by") UserRef createdBy,
       @JsonProperty("created_at") Instant createdAt,
