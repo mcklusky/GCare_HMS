@@ -2,7 +2,7 @@ import { Anchor, Badge, Card, Stack, Table, Text } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { getReportingList } from '../../api/radiologyReports'
-import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime } from '../../components/time'
 
 /** Examined imaging orders waiting for a report (task 6.4; docs/26). */
@@ -10,10 +10,10 @@ export function ReportingPage() {
   const list = useQuery({ queryKey: ['radiology-reporting'], queryFn: ({ signal }) => getReportingList(signal) })
   return (
     <Stack>
-      <PageTitle>Reporting</PageTitle>
-      <Text size="sm" c="dimmed">
-        Examinations recorded as done, without a signed report or with a draft open. Urgent ones first.
-      </Text>
+      <PageHeader
+        title="Reporting"
+        description="Examinations recorded as done, without a signed report or with a draft open. Urgent ones first."
+      />
       <QueryState query={list} loadingLabel="Loading examinations…">
         {(items) =>
           items.length === 0 ? (

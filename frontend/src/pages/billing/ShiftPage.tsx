@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { currencyDecimals, formatMoney, validAmount } from '../../api/billing'
 import { SHIFT_STATUS_LABEL, closeShift, myShifts, openShift, type Shift } from '../../api/payments'
 import { useFacilityContext } from '../../auth/facilityContextValue'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime } from '../../components/time'
 
 /** The cashier's shift (task 4.3): open, take payments, close with a cash count per currency. */
@@ -21,11 +21,10 @@ export function ShiftPage() {
 
   return (
     <Stack>
-      <PageTitle>My shift</PageTitle>
-      <Text size="sm" c="dimmed">
-        Payments are recorded in your open shift. At the end, count the cash in each currency; a different person signs
-        the shift off.
-      </Text>
+      <PageHeader
+        title="My shift"
+        description="Payments are recorded in your open shift. At the end, count the cash in each currency; a different person signs the shift off."
+      />
       {open.isError && <ErrorState error={open.error} />}
       <QueryState query={shifts} loadingLabel="Loading shifts…">
         {(rows) => {

@@ -42,7 +42,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { BandBadge, PatientBanner } from '../../components/PatientBadges'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { StartVisitDialog } from '../encounters/StartVisitDialog'
 import { PatientChart } from './PatientChart'
 import { LinkHistory, LinkedNotice } from './PatientLinks'
@@ -70,7 +70,7 @@ export function PatientPage() {
       <QueryState query={patient} loadingLabel="Loading patient…">
         {(p) => (
           <Stack>
-            <PageTitle>{displayName(p)}</PageTitle>
+            <PageHeader title={displayName(p)} description={`Patient number ${p.patient_number}`} />
             {registeredNumber && (
               <Alert
                 color="teal"

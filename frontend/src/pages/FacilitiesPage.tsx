@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router'
 import { apiFetch } from '../api/client'
 import type { Department, Facility } from '../api/types'
-import { EmptyState, PageTitle, QueryState } from '../components/states'
+import { EmptyState, PageHeader, QueryState } from '../components/states'
 import { StatusBadge } from '../components/StatusBadge'
 
 /** Facilities in the user's scope (GET /api/v1/facilities, needs FACILITY_READ). */
@@ -15,7 +15,7 @@ export function FacilitiesPage() {
 
   return (
     <Stack>
-      <PageTitle>Facilities</PageTitle>
+      <PageHeader title="Facilities" description="Facilities in your scope and their departments." />
       <QueryState
         query={facilities}
         loadingLabel="Loading facilities…"
@@ -75,7 +75,7 @@ export function FacilityDepartmentsPage() {
       <Anchor component={Link} to="/facilities" size="sm">
         ← All facilities
       </Anchor>
-      <PageTitle>{facility ? facility.name : 'Facility'}: departments</PageTitle>
+      <PageHeader title={`${facility ? facility.name : 'Facility'}: departments`} />
       <QueryState
         query={departments}
         loadingLabel="Loading departments…"

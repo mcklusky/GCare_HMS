@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { decideStudy, getUnlinkedStudies, proposeLink, type Study } from '../../api/imagingWork'
 import { useCurrentMe } from '../../auth/MeContext'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 
 /** Studies that did not link automatically: propose, approve (another person) or send back (task 6.3; docs/25). */
 export function StudyQueuePage() {
@@ -26,11 +26,10 @@ export function StudyQueuePage() {
 
   return (
     <Stack>
-      <PageTitle>Studies to review</PageTitle>
-      <Text size="sm" c="dimmed">
-        These studies are in the archive but did not link to an order by themselves. Check the patient and the
-        examination against the archive before proposing a link; a second person approves it.
-      </Text>
+      <PageHeader
+        title="Studies to review"
+        description="These studies are in the archive but did not link to an order by themselves. Check the patient and the examination against the archive before proposing a link; a second person approves it."
+      />
       <QueryState query={queue} loadingLabel="Loading studies…">
         {(studies) =>
           studies.length === 0 ? (

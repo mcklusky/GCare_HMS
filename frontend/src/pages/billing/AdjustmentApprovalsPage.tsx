@@ -8,7 +8,7 @@ import type { UserRef } from '../../api/encounters'
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 
 interface Pending {
   kind: 'refunds' | 'exemptions'
@@ -46,11 +46,15 @@ export function AdjustmentApprovalsPage() {
 
   return (
     <Stack>
-      <PageTitle>Refund and exemption approvals</PageTitle>
-      <Text size="sm" c="dimmed">
-        Requests at {facility.name}. Check the invoice and the reason before deciding. Approved refunds are then paid
-        out by a cashier; approved exemptions reduce the balance due at once.
-      </Text>
+      <PageHeader
+        title="Refund and exemption approvals"
+        description={
+          <>
+            Requests at {facility.name}. Check the invoice and the reason before deciding. Approved refunds are then
+            paid out by a cashier; approved exemptions reduce the balance due at once.
+          </>
+        }
+      />
       {act.isError && <ErrorState error={act.error} />}
       <QueryState query={pending} loadingLabel="Loading requests…">
         {(a) => {

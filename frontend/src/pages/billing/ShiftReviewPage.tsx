@@ -6,7 +6,7 @@ import { reviewShift, shiftsToReview, type Shift } from '../../api/payments'
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { ShiftTotals } from './ShiftPage'
 import { formatDateTime } from '../../components/time'
 
@@ -33,10 +33,12 @@ export function ShiftReviewPage() {
 
   return (
     <Stack>
-      <PageTitle>Shift sign-off</PageTitle>
-      <Text size="sm" c="dimmed">
-        Closed cashier shifts at {facility.name}. Check the cash count and the cashier's note before signing off.
-      </Text>
+      <PageHeader
+        title="Shift sign-off"
+        description={
+          <>Closed cashier shifts at {facility.name}. Check the cash count and the cashier's note before signing off.</>
+        }
+      />
       {review.isError && <ErrorState error={review.error} />}
       <QueryState
         query={shifts}

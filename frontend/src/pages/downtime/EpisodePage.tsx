@@ -47,7 +47,7 @@ import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime, zoneNote } from '../../components/time'
 
 const TRIAGE_FIELDS: [string, string][] = [
@@ -83,16 +83,16 @@ export function EpisodePage() {
       <QueryState query={episode} loadingLabel="Loading episode…">
         {(e) => (
           <Stack>
-            <PageTitle>Downtime episode {e.episode_number}</PageTitle>
-            <Group>
-              <Badge size="lg" variant="light">
-                {EPISODE_STATUS_LABEL[e.status]}
-              </Badge>
-              <Text size="sm">
-                {formatDateTime(e.started_at)} – {e.ended_at ? formatDateTime(e.ended_at) : 'ongoing'} ·{' '}
-                {e.affected_areas} · {e.reason}
-              </Text>
-            </Group>
+            <PageHeader
+              title={`Downtime episode ${e.episode_number}`}
+              description={
+                <>
+                  {formatDateTime(e.started_at)} – {e.ended_at ? formatDateTime(e.ended_at) : 'ongoing'} ·{' '}
+                  {e.affected_areas} · {e.reason}
+                </>
+              }
+              actions={<Badge size="lg">{EPISODE_STATUS_LABEL[e.status]}</Badge>}
+            />
             {e.closing_note && <Text size="sm">Closed: {e.closing_note}</Text>}
             {hasPermission(me, Permission.DOWNTIME_MANAGE) && <EpisodeActions episode={e} />}
             {canRecord && e.status !== 'CLOSED' && <KeyForm episode={e} />}

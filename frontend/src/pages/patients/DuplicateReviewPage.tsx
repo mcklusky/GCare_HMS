@@ -15,7 +15,7 @@ import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { PendingLinks, RequestLinkDialog } from './PatientLinks'
 import { formatDateTime } from '../../components/time'
 
@@ -42,11 +42,10 @@ export function DuplicateReviewPage() {
 
   return (
     <Stack>
-      <PageTitle>Duplicate review</PageTitle>
-      <Text size="sm" c="dimmed">
-        Compare each pair. Decide only after checking ID documents or asking the patient. You cannot decide items you
-        raised yourself.
-      </Text>
+      <PageHeader
+        title="Duplicate review"
+        description="Compare each pair. Decide only after checking ID documents or asking the patient. You cannot decide items you raised yourself."
+      />
       {decide.isError && <ErrorState error={decide.error} />}
       <QueryState
         query={flags}

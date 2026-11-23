@@ -1,8 +1,8 @@
-import { Badge, Button, Group, Modal, Stack, Switch, Table, Text, TextInput } from '@mantine/core'
+import { Badge, Button, Group, Modal, Stack, Switch, Table, TextInput } from '@mantine/core'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { createPaymentMethod, listPaymentMethods, updatePaymentMethod, type PaymentMethod } from '../../api/payments'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 
 /** Payment methods (task 4.3): administrator-managed, empty until added. */
 export function PaymentMethodsPage() {
@@ -16,14 +16,11 @@ export function PaymentMethodsPage() {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <PageTitle>Payment methods</PageTitle>
-        <Button onClick={() => setAdding(true)}>Add method</Button>
-      </Group>
-      <Text size="sm" c="dimmed">
-        Cash methods count toward the cash drawer when a cashier closes a shift. Whether a method is cash cannot be
-        changed later; deactivate it and add a new one instead.
-      </Text>
+      <PageHeader
+        title="Payment methods"
+        description="Cash methods count toward the cash drawer when a cashier closes a shift. Whether a method is cash cannot be changed later; deactivate it and add a new one instead."
+        actions={<Button onClick={() => setAdding(true)}>Add method</Button>}
+      />
       {toggle.isError && <ErrorState error={toggle.error} />}
       <QueryState
         query={methods}

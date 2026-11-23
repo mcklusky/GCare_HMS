@@ -1,8 +1,8 @@
-import { Badge, Button, Group, Modal, Stack, Table, Text, TextInput } from '@mantine/core'
+import { Badge, Button, Group, Modal, Stack, Table, TextInput } from '@mantine/core'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { createReason, listReasons, updateReason, type ExemptionReason } from '../../api/adjustments'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 
 /** Exemption reasons (task 4.4): administrator-managed, empty until added. No eligibility rules. */
 export function ExemptionReasonsPage() {
@@ -16,13 +16,11 @@ export function ExemptionReasonsPage() {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <PageTitle>Exemption reasons</PageTitle>
-        <Button onClick={() => setAdding(true)}>Add reason</Button>
-      </Group>
-      <Text size="sm" c="dimmed">
-        Reasons a fee can be waived, as agreed by your hospital. Each exemption still needs approval by a second person.
-      </Text>
+      <PageHeader
+        title="Exemption reasons"
+        description="Reasons a fee can be waived, as agreed by your hospital. Each exemption still needs approval by a second person."
+        actions={<Button onClick={() => setAdding(true)}>Add reason</Button>}
+      />
       {toggle.isError && <ErrorState error={toggle.error} />}
       <QueryState
         query={reasons}

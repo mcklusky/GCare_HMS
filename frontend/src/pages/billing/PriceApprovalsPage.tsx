@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { decide, formatMoney, listApprovals } from '../../api/billing'
 import { useCurrentMe } from '../../auth/MeContext'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 
 interface Pending {
   kind: 'prices' | 'tax-rates'
@@ -34,11 +34,10 @@ export function PriceApprovalsPage() {
 
   return (
     <Stack>
-      <PageTitle>Price approvals</PageTitle>
-      <Text size="sm" c="dimmed">
-        Check each value against the approved tariff before approving. Approved prices and rates can never be changed;
-        mistakes are corrected with a new price from a later date.
-      </Text>
+      <PageHeader
+        title="Price approvals"
+        description="Check each value against the approved tariff before approving. Approved prices and rates can never be changed; mistakes are corrected with a new price from a later date."
+      />
       {act.isError && <ErrorState error={act.error} />}
       <QueryState query={approvals} loadingLabel="Loading proposals…">
         {(a) => {

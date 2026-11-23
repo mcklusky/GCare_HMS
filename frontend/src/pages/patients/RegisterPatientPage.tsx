@@ -38,7 +38,7 @@ import {
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { BandBadge } from '../../components/PatientBadges'
-import { ErrorState, PageTitle } from '../../components/states'
+import { ErrorState, PageHeader } from '../../components/states'
 
 interface FormState {
   facilityId: string | null
@@ -119,7 +119,9 @@ export function RegisterPatientPage() {
   const fieldError = (field: string) =>
     mutation.error instanceof ApiRequestError ? mutation.error.fieldErrors[field]?.[0] : undefined
   const otherError =
-    mutation.isError && !duplicateCandidatesOf(mutation.error) && !(mutation.error instanceof ApiRequestError && mutation.error.status === 400)
+    mutation.isError &&
+    !duplicateCandidatesOf(mutation.error) &&
+    !(mutation.error instanceof ApiRequestError && mutation.error.status === 400)
   const anyLikely = candidates?.some((c) => c.band === 'LIKELY') ?? false
 
   return (
@@ -127,11 +129,10 @@ export function RegisterPatientPage() {
       <Anchor component={Link} to="/patients" size="sm">
         ← Find a patient
       </Anchor>
-      <PageTitle>Register a new patient</PageTitle>
-      <Text size="sm" c="dimmed">
-        Search first: most patients are already registered. Unknown details can be left empty when care must
-        proceed; the record is then marked “details incomplete”.
-      </Text>
+      <PageHeader
+        title="Register a new patient"
+        description="Search first: most patients are already registered. Unknown details can be left empty when care must proceed; the record is then marked “details incomplete”."
+      />
 
       <form onSubmit={onSubmit} aria-label="Patient registration">
         <Stack>
@@ -218,7 +219,10 @@ export function RegisterPatientPage() {
                   maxLength={50}
                   onChange={(e) => {
                     const value = e.currentTarget.value
-                    update('identifiers', form.identifiers.map((x, i) => (i === index ? { ...x, value } : x)))
+                    update(
+                      'identifiers',
+                      form.identifiers.map((x, i) => (i === index ? { ...x, value } : x)),
+                    )
                   }}
                 />
                 <Checkbox
@@ -227,14 +231,22 @@ export function RegisterPatientPage() {
                   checked={id.verified}
                   onChange={(e) => {
                     const verified = e.currentTarget.checked
-                    update('identifiers', form.identifiers.map((x, i) => (i === index ? { ...x, verified } : x)))
+                    update(
+                      'identifiers',
+                      form.identifiers.map((x, i) => (i === index ? { ...x, verified } : x)),
+                    )
                   }}
                 />
                 <ActionIcon
                   variant="default"
                   mb={4}
                   aria-label={`Remove ID document ${index + 1}`}
-                  onClick={() => update('identifiers', form.identifiers.filter((_, i) => i !== index))}
+                  onClick={() =>
+                    update(
+                      'identifiers',
+                      form.identifiers.filter((_, i) => i !== index),
+                    )
+                  }
                 >
                   <IconTrash size={16} aria-hidden />
                 </ActionIcon>

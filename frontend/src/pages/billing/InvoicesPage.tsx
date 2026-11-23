@@ -29,7 +29,7 @@ import { Permission } from '../../api/types'
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime } from '../../components/time'
 
 const FILTERS: Record<string, InvoiceStatus[]> = { open: ['DRAFT', 'ISSUED'], void: ['VOID'] }
@@ -57,11 +57,15 @@ export function InvoicesPage() {
 
   return (
     <Stack>
-      <PageTitle>Invoices</PageTitle>
-      <Text size="sm" c="dimmed">
-        Invoices at {facility.name}. Each invoice uses one currency and the approved prices of the day each charge is
-        added. An issued invoice cannot change; void it with a reason and start a new one.
-      </Text>
+      <PageHeader
+        title="Invoices"
+        description={
+          <>
+            Invoices at {facility.name}. Each invoice uses one currency and the approved prices of the day each charge
+            is added. An issued invoice cannot change; void it with a reason and start a new one.
+          </>
+        }
+      />
 
       {canManage && (
         <Card withBorder>

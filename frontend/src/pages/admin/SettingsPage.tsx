@@ -34,7 +34,7 @@ import {
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 
 type Json = Record<string, unknown>
 
@@ -48,11 +48,10 @@ export function SettingsPage() {
 
   return (
     <Stack>
-      <PageTitle>Settings</PageTitle>
-      <Text size="sm" c="dimmed">
-        A change takes effect only after a different person approves it. Every version is kept; to roll back, propose an
-        earlier version again.
-      </Text>
+      <PageHeader
+        title="Settings"
+        description="A change takes effect only after a different person approves it. Every version is kept; to roll back, propose an earlier version again."
+      />
       <PendingApprovals />
       <QueryState query={settings} loadingLabel="Loading settings…">
         {(rows) => (

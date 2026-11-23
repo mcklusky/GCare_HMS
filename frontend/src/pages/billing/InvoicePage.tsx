@@ -36,7 +36,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { PatientBanner } from '../../components/PatientBadges'
-import { ErrorState, PageTitle, QueryState } from '../../components/states'
+import { ErrorState, PageHeader, QueryState } from '../../components/states'
 import { AdjustmentsSection } from './AdjustmentsSection'
 import { PaymentsSection } from './PaymentsSection'
 import { formatDateTime } from '../../components/time'
@@ -100,12 +100,14 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <PageTitle>{invoice.invoice_number ? `Invoice ${invoice.invoice_number}` : 'Draft invoice'}</PageTitle>
-        <Badge size="lg" variant="light" color={invoice.status === 'ISSUED' ? 'green' : 'gray'}>
-          {INVOICE_STATUS_LABEL[invoice.status]}
-        </Badge>
-      </Group>
+      <PageHeader
+        title={invoice.invoice_number ? `Invoice ${invoice.invoice_number}` : 'Draft invoice'}
+        actions={
+          <Badge size="lg" color={invoice.status === 'ISSUED' ? 'green' : 'gray'}>
+            {INVOICE_STATUS_LABEL[invoice.status]}
+          </Badge>
+        }
+      />
       <PatientBanner patient={invoice.patient} />
       <Text size="sm">
         Visit: {invoice.encounter.department_name}, arrived {formatDateTime(invoice.encounter.arrived_at)}. Currency:{' '}

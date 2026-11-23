@@ -8,7 +8,7 @@ import { checkArchive, getWorklist, recordStep, STEP_LABEL, type WorklistItem } 
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime } from '../../components/time'
 
 const STEP_COLOR = { ORDERED: 'gray', ARRIVED: 'blue', EXAMINED: 'orange', IMAGES_AVAILABLE: 'green', CANCELLED: 'red' }
@@ -37,15 +37,19 @@ export function ImagingWorklistPage() {
 
   return (
     <Stack>
-      <PageTitle>Imaging worklist</PageTitle>
-      <Text size="sm" c="dimmed">
-        Enter the accession number at the scanner. A study links by itself only when its accession number and patient ID
-        both match the order; anything else goes to{' '}
-        <Anchor component={Link} to="/imaging/studies">
-          studies to review
-        </Anchor>
-        .
-      </Text>
+      <PageHeader
+        title="Imaging worklist"
+        description={
+          <>
+            Enter the accession number at the scanner. A study links by itself only when its accession number and
+            patient ID both match the order; anything else goes to{' '}
+            <Anchor component={Link} to="/imaging/studies">
+              studies to review
+            </Anchor>
+            .
+          </>
+        }
+      />
       <Checkbox
         label="Show finished and cancelled orders"
         checked={finished}

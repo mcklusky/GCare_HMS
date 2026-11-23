@@ -1,4 +1,4 @@
-import { Badge, Button, Group, Modal, Select, Stack, Switch, Table, Text, TextInput } from '@mantine/core'
+import { Badge, Button, Group, Modal, Select, Stack, Switch, Table, TextInput } from '@mantine/core'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { apiFetch } from '../../api/client'
@@ -12,7 +12,7 @@ import {
 } from '../../api/orders'
 import type { Department } from '../../api/types'
 import { useFacilityContext } from '../../auth/facilityContextValue'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 
 /**
  * Order catalog administration (task 3.3). Starts empty: the hospital decides what can be
@@ -24,13 +24,11 @@ export function OrderCatalogPage() {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <PageTitle>Order catalog</PageTitle>
-        <Button onClick={() => setEditing('new')}>Add item</Button>
-      </Group>
-      <Text size="sm" c="dimmed">
-        What clinicians can order or refer to. Enter only items approved for your hospital.
-      </Text>
+      <PageHeader
+        title="Order catalog"
+        description="What clinicians can order or refer to. Enter only items approved for your hospital."
+        actions={<Button onClick={() => setEditing('new')}>Add item</Button>}
+      />
       <QueryState
         query={catalog}
         loadingLabel="Loading catalog…"

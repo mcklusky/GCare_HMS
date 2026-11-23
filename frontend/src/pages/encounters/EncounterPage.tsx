@@ -1,4 +1,4 @@
-import { Anchor, Badge, Button, Card, Group, Select, Stack, Table, Text, Title } from '@mantine/core'
+import { Anchor, Badge, Button, Card, Grid, Group, Select, Stack, Text, Timeline, Title } from '@mantine/core'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
@@ -17,7 +17,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { PatientBanner } from '../../components/PatientBadges'
-import { ErrorState, PageTitle, QueryState } from '../../components/states'
+import { ErrorState, PageHeader, QueryState } from '../../components/states'
 import { DiagnosesSection } from './DiagnosesSection'
 import { NotesSection } from './NotesSection'
 import { OrdersSection } from './OrdersSection'
@@ -73,66 +73,76 @@ export function EncounterPage() {
       <QueryState query={encounter} loadingLabel="Loading visit…">
         {({ encounter: e, events }) => (
           <Stack>
-            <PageTitle>
-              {TYPE_LABEL[e.encounter_type]}, {e.department.name}
-            </PageTitle>
+            <PageHeader
+              title={`${TYPE_LABEL[e.encounter_type]}, ${e.department.name}`}
+              description={
+                <>
+                  Arrived {formatDateTime(e.arrived_at)}
+                  {e.clinician && ` · Clinician: ${e.clinician.display_name}`}
+                </>
+              }
+              actions={
+                <>
+                  <Badge size="lg">{STATUS_LABEL[e.status]}</Badge>
+                  {hasPermission(me, Permission.PATIENT_READ) && (
+                    <Button component={Link} to={`/patients/${e.patient.id}`} variant="default">
+                      Open patient chart
+                    </Button>
+                  )}
+                </>
+              }
+            />
             <PatientBanner patient={e.patient} />
-            {hasPermission(me, Permission.PATIENT_READ) && (
-              <Anchor component={Link} to={`/patients/${e.patient.id}`} size="sm">
-                Open patient chart
-              </Anchor>
-            )}
-            <Group>
-              <Badge size="lg" variant="light">
-                {STATUS_LABEL[e.status]}
-              </Badge>
-              <Text size="sm">
-                Arrived {formatDateTime(e.arrived_at)}
-                {e.clinician && ` · Clinician: ${e.clinician.display_name}`}
-              </Text>
-            </Group>
             <DowntimeSourcesNotice encounterId={e.id} />
             <Actions encounter={e} />
-            <Card withBorder>
-              <Title order={2} size="h4" mb="xs">
-                Visit history
-              </Title>
-              <Table aria-label="Visit history">
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th scope="col">When</Table.Th>
-                    <Table.Th scope="col">What</Table.Th>
-                    <Table.Th scope="col">Department</Table.Th>
-                    <Table.Th scope="col">By</Table.Th>
-                    <Table.Th scope="col">Reason</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {events.map((ev) => (
-                    <Table.Tr key={ev.id}>
-                      <Table.Td>{formatDateTime(ev.occurred_at)}</Table.Td>
-                      <Table.Td>{EVENT_LABEL[ev.event_type]}</Table.Td>
-                      <Table.Td>{ev.department.name}</Table.Td>
-                      <Table.Td>{ev.actor.display_name}</Table.Td>
-                      <Table.Td>{ev.reason ?? ''}</Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </Card>
-            {hasPermission(me, Permission.OBSERVATION_READ) && (
-              <TriageSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
-            )}
-            {hasPermission(me, Permission.CLINICAL_NOTE_READ) && (
-              <>
-                <DiagnosesSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
-                <NotesSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
-              </>
-            )}
-            {hasPermission(me, Permission.ORDER_READ) && (
-              <OrdersSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
-            )}
-            {hasPermission(me, Permission.RADIOLOGY_REPORT_READ) && <ImagingResultsSection encounterId={e.id} />}
+            {/* Clinical work on the left; the visit's history beside it on wide screens, below on small ones. */}
+            <Grid gap="lg" align="flex-start">
+              <Grid.Col span={{ base: 12, lg: 8 }}>
+                <Stack>
+                  {hasPermission(me, Permission.OBSERVATION_READ) && (
+                    <TriageSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
+                  )}
+                  {hasPermission(me, Permission.CLINICAL_NOTE_READ) && (
+                    <>
+                      <DiagnosesSection
+                        encounterId={e.id}
+                        open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'}
+                      />
+                      <NotesSection
+                        encounterId={e.id}
+                        open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'}
+                      />
+                    </>
+                  )}
+                  {hasPermission(me, Permission.ORDER_READ) && (
+                    <OrdersSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
+                  )}
+                  {hasPermission(me, Permission.RADIOLOGY_REPORT_READ) && <ImagingResultsSection encounterId={e.id} />}
+                </Stack>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, lg: 4 }}>
+                <Card withBorder component="section" aria-labelledby="visit-history">
+                  <Title order={2} size="h4" mb="md" id="visit-history">
+                    Visit history
+                  </Title>
+                  <Timeline bulletSize={14} lineWidth={2} active={events.length - 1}>
+                    {events.map((ev) => (
+                      <Timeline.Item key={ev.id} title={EVENT_LABEL[ev.event_type]}>
+                        <Text size="xs" c="dimmed">
+                          {formatDateTime(ev.occurred_at)} · {ev.department.name}
+                        </Text>
+                        <Text size="sm">{ev.actor.display_name}</Text>
+                        {ev.reason && (
+                          <Text size="sm" c="dimmed">
+                            Reason: {ev.reason}
+                          </Text>
+                        )}
+                      </Timeline.Item>
+                    ))}
+                  </Timeline>
+                </Card>
+              </Grid.Col>
+            </Grid>
           </Stack>
         )}
       </QueryState>

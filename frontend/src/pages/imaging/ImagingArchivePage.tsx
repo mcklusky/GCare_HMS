@@ -2,7 +2,7 @@ import { Alert, Anchor, Badge, Button, Card, Group, Stack, Table, Text, TextInpu
 import { useQuery } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { findArchiveStudies, getArchiveStatus, safeViewerHref } from '../../api/imaging'
-import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, PageHeader, QueryState } from '../../components/states'
 
 /** Imaging archive connection check and study look-up for the evaluation and support (task 6.1; docs/24). */
 export function ImagingArchivePage() {
@@ -22,11 +22,10 @@ export function ImagingArchivePage() {
 
   return (
     <Stack>
-      <PageTitle>Imaging archive</PageTitle>
-      <Text size="sm" c="dimmed">
-        The archive and viewer are external and not selected yet. The HMS reads study details only (no images) and opens
-        the archive’s viewer by link. Every look-up is recorded in the audit trail.
-      </Text>
+      <PageHeader
+        title="Imaging archive"
+        description="The archive and viewer are external and not selected yet. The HMS reads study details only (no images) and opens the archive’s viewer by link. Every look-up is recorded in the audit trail."
+      />
       <QueryState query={status} loadingLabel="Checking the archive…">
         {(s) => (
           <Card withBorder>

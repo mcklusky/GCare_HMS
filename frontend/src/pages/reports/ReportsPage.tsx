@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { formatMoney, todayUtc } from '../../api/billing'
 import { exportUrl, getDashboard, listReports, runReport, type ReportView } from '../../api/reports'
 import { useFacilityContext } from '../../auth/facilityContextValue'
-import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime } from '../../components/time'
 
 /**
@@ -37,7 +37,10 @@ export function ReportsPage() {
 
   return (
     <Stack>
-      <PageTitle>Reports</PageTitle>
+      <PageHeader
+        title="Reports"
+        description="Aggregated numbers only, counted in facility-local days. Every export is recorded in the audit trail."
+      />
       <QueryState query={dashboard} loadingLabel="Loading today's numbers…">
         {(d) => (
           <Card withBorder>

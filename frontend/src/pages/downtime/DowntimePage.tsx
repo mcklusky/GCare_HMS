@@ -30,7 +30,7 @@ import { Permission } from '../../api/types'
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime, zoneNote } from '../../components/time'
 
 /** Downtime episodes and numbered paper forms (task 5.3; docs/22). */
@@ -42,12 +42,10 @@ export function DowntimePage() {
 
   return (
     <Stack>
-      <PageTitle>Downtime</PageTitle>
-      <Text size="sm" c="dimmed">
-        When the system is down, staff use the numbered paper forms. Afterwards each form is keyed into the episode's
-        queue and reconciled: nothing becomes a patient, visit, order or payment until it is reconciled. Registrations,
-        orders and payments need a second person.
-      </Text>
+      <PageHeader
+        title="Downtime"
+        description="When the system is down, staff use the numbered paper forms. Afterwards each form is keyed into the episode's queue and reconciled: nothing becomes a patient, visit, order or payment until it is reconciled. Registrations, orders and payments need a second person."
+      />
       <QueryState query={episodes} loadingLabel="Loading downtime episodes…">
         {(list) => {
           const here = list.filter((e) => !facility || e.facility_id === facility.id)

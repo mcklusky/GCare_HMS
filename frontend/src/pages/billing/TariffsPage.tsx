@@ -17,7 +17,7 @@ import {
 import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 
 const CURRENCY = /^[A-Z]{3}$/
 
@@ -35,14 +35,11 @@ export function TariffsPage() {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <PageTitle>Tariffs</PageTitle>
-        {canManage && <Button onClick={() => setAdding(true)}>Add service</Button>}
-      </Group>
-      <Text size="sm" c="dimmed">
-        Enter only prices approved by your finance owner. A price change is a new price from a later date; invoices keep
-        the price they were made with. Amounts are never converted between currencies.
-      </Text>
+      <PageHeader
+        title="Tariffs"
+        description="Enter only prices approved by your finance owner. A price change is a new price from a later date; invoices keep the price they were made with. Amounts are never converted between currencies."
+        actions={canManage && <Button onClick={() => setAdding(true)}>Add service</Button>}
+      />
       <QueryState
         query={services}
         loadingLabel="Loading services…"

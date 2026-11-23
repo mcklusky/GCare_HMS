@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { getWorkspace } from '../../api/chart'
 import { displayName } from '../../api/patients'
-import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime, formatTime } from '../../components/time'
 
 /** Clinician workspace (task 3.4): patients with me now and my unsigned drafts. */
@@ -16,7 +16,7 @@ export function WorkspacePage() {
 
   return (
     <Stack>
-      <PageTitle>My workspace</PageTitle>
+      <PageHeader title="My workspace" description="Patients with you now and the work waiting for you." />
       <QueryState query={workspace} loadingLabel="Loading your workspace…">
         {(w) => (
           <Stack>

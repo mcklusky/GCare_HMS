@@ -15,7 +15,7 @@ import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime } from '../../components/time'
 
 /** Performing departments' worklist (FR-009): urgent first, then oldest request. */
@@ -57,10 +57,10 @@ export function WorklistPage() {
 
   return (
     <Stack>
-      <PageTitle>Worklist</PageTitle>
-      <Text size="sm" c="dimmed">
-        Open orders at {facility.name}. Urgent first. Updates every 30 seconds.
-      </Text>
+      <PageHeader
+        title="Worklist"
+        description={<>Open orders at {facility.name}. Urgent first. Updates every 30 seconds.</>}
+      />
       {departments.size > 1 && (
         <Chip.Group value={department} onChange={(v) => setDepartment(v as string)}>
           <Group gap="xs" role="group" aria-label="Department">
