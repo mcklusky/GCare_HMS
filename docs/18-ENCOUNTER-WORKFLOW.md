@@ -98,6 +98,17 @@ Questions for the clinical and department leads:
 10. Should "urgent" carry a target time, and who defines it?
 11. May performing departments cancel, or only reject back to the clinician?
 
+## 9. Patient chart and clinician workspace (task 3.4)
+
+- **Chart** (patient record, `GET /api/v1/patients/{id}/chart`, needs `ENCOUNTER_READ`): visits at facilities in scope, newest first. With `CLINICAL_NOTE_READ`: recorded diagnoses across visits. With `OBSERVATION_READ`: the latest triage set and **allergies reported at recent triage** (free text from the last 20 sets, up to 5 shown). With `ORDER_READ`: orders across visits (`GET /api/v1/patients/{id}/orders`). A section the user may not see is absent, not empty. Viewing is audited.
+- Reported allergies are labelled "as reported, not verified" and the screen says that absence does not mean no allergies. A structured, verified allergy list is part of the clinical record still to be designed (FR-008).
+- **Workspace** (`/workspace`, `GET /api/v1/workspace`): the clinician's patients in consultation now and their unsigned note drafts across visits.
+- Results, follow-up scheduling and billing steps of the outpatient flow come with later tasks/modules.
+
+Question for the clinical lead:
+
+12. Should a verified allergy list (with "no known allergies" as an explicit, attributed entry) be added before the pilot?
+
 ## Open questions for the workflow owner
 
 1. Visit types beyond new/follow-up? Emergency arrivals in the pilot?
@@ -112,3 +123,4 @@ Questions for the clinical and department leads:
 | 2026-11-23 | Provisional defaults written at product owner's request; triage scale and alarm limits left empty for a clinical lead | Engineering (Claude Code), task 3.1 |
 | 2026-11-23 | Clinical notes (fixed sections, draft/sign/amend) and free-text diagnoses per OD-10/OD-09 decisions | Engineering (Claude Code), task 3.2 |
 | 2026-11-23 | Orders and referrals; admin-managed catalog, empty by default (user decision) | Engineering (Claude Code), task 3.3 |
+| 2026-11-23 | Patient chart and clinician workspace (read only) | Engineering (Claude Code), task 3.4 |

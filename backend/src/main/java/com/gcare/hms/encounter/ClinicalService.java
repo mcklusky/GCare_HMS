@@ -291,7 +291,7 @@ public class ClinicalService {
         n.version());
   }
 
-  private static DiagnosisView view(DiagnosisRow d) {
+  static DiagnosisView view(DiagnosisRow d) {
     return new DiagnosisView(
         d.id(),
         d.encounterId(),

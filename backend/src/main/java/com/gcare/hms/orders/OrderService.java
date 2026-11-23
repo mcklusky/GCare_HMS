@@ -192,6 +192,21 @@ public class OrderService {
     return result;
   }
 
+  /** A patient's orders across visits at facilities in scope, newest first (patient chart). */
+  @PreAuthorize("hasAuthority('" + Permissions.ORDER_READ + "')")
+  @Transactional(readOnly = true)
+  public List<OrderView> ordersOfPatient(UUID patientId) {
+    CurrentUser user = CurrentUser.require();
+    FacilityScope scope = user.scopeOf(Permissions.ORDER_READ);
+    List<OrderView> result =
+        views(
+            store.ordersOfPatient(patientId, MAX_PAGE_SIZE).stream()
+                .filter(o -> scope.includes(o.facilityId()))
+                .toList());
+    audit(user, null, "PATIENT_ORDERS_VIEWED", "Patient", patientId, Map.of());
+    return result;
+  }
+
   /** Department worklist; default active orders (REQUESTED, IN_PROGRESS). Urgent first. */
   @PreAuthorize("hasAuthority('" + Permissions.ORDER_READ + "')")
   @Transactional(readOnly = true)

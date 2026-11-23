@@ -220,6 +220,47 @@ class ClinicalStore {
         .update();
   }
 
+  record DraftRow(
+      UUID noteId,
+      UUID encounterId,
+      UUID facilityId,
+      UUID patientId,
+      boolean amendment,
+      Instant updatedAt) {}
+
+  /** The user's open drafts across visits, newest first (workspace). */
+  List<DraftRow> draftsOf(UUID authorId) {
+    return jdbc.sql(
+            """
+            SELECT n.id, n.encounter_id, e.facility_id, n.patient_id, n.amends_note_id, n.updated_at
+            FROM clinical_notes n JOIN encounters e ON e.id = n.encounter_id
+            WHERE n.author_id = :a AND n.status = 'DRAFT'
+            ORDER BY n.updated_at DESC, n.id
+            """)
+        .param("a", authorId)
+        .query((rs, i) ->
+            new DraftRow(
+                rs.getObject("id", UUID.class),
+                rs.getObject("encounter_id", UUID.class),
+                rs.getObject("facility_id", UUID.class),
+                rs.getObject("patient_id", UUID.class),
+                rs.getObject("amends_note_id", UUID.class) != null,
+                instant(rs, "updated_at")))
+        .list();
+  }
+
+  /** The patient's recorded diagnoses across visits, newest first. */
+  List<DiagnosisRow> diagnosesOfPatient(UUID patientId, int limit) {
+    return jdbc.sql(
+            SELECT_DIAGNOSIS
+                + " WHERE g.patient_id = :p AND g.status = 'RECORDED'"
+                + " ORDER BY g.recorded_at DESC, g.id LIMIT :limit")
+        .param("p", patientId)
+        .param("limit", limit)
+        .query(ClinicalStore::diagnosisRow)
+        .list();
+  }
+
   // --- mapping ---------------------------------------------------------------------------------
 
   private static NoteRow noteRow(ResultSet rs, int i) throws SQLException {

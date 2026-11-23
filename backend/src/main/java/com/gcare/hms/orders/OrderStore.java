@@ -207,6 +207,17 @@ class OrderStore {
         .list();
   }
 
+  /** Orders of a patient across visits, newest first. */
+  List<OrderRow> ordersOfPatient(UUID patientId, int limit) {
+    return jdbc.sql(
+            SELECT_ORDER
+                + " WHERE o.patient_id = :p ORDER BY o.requested_at DESC, o.id LIMIT :limit")
+        .param("p", patientId)
+        .param("limit", limit)
+        .query(OrderStore::orderRow)
+        .list();
+  }
+
   /** Worklist: urgent first, then oldest request first. */
   List<OrderRow> worklist(
       Collection<UUID> facilities,

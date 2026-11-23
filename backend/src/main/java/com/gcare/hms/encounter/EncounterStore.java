@@ -227,6 +227,43 @@ class EncounterStore {
     return " WHERE " + String.join(" AND ", where);
   }
 
+  /** Visits where {@code clinicianId} is seeing the patient now (workspace). */
+  List<EncounterRow> inConsultationWith(UUID clinicianId) {
+    return jdbc.sql(
+            SELECT_ENCOUNTER
+                + " WHERE e.clinician_id = :u AND e.status = 'IN_CONSULTATION'"
+                + " ORDER BY e.consultation_started_at, e.id")
+        .param("u", clinicianId)
+        .query(EncounterStore::encounterRow)
+        .list();
+  }
+
+  /** The patient's most recent observation sets not marked entered in error, newest first. */
+  List<ObservationRow> recentObservationsOfPatient(UUID patientId, int limit) {
+    return jdbc.sql(
+            SELECT_OBSERVATION
+                + " WHERE t.patient_id = :p AND t.status = 'RECORDED'"
+                + " ORDER BY t.recorded_at DESC, t.id LIMIT :limit")
+        .param("p", patientId)
+        .param("limit", limit)
+        .query(EncounterStore::observationRow)
+        .list();
+  }
+
+  /** Facility of each encounter, for scope checks on rows that do not carry it. */
+  Map<UUID, UUID> facilitiesOf(Collection<UUID> encounterIds) {
+    Map<UUID, UUID> result = new LinkedHashMap<>();
+    if (encounterIds.isEmpty()) {
+      return result;
+    }
+    jdbc.sql("SELECT id, facility_id FROM encounters WHERE id IN (:ids)")
+        .param("ids", encounterIds)
+        .query((rs, i) ->
+            result.put(rs.getObject("id", UUID.class), rs.getObject("facility_id", UUID.class)))
+        .list();
+    return result;
+  }
+
   // --- writes ----------------------------------------------------------------------------------
 
   void insert(

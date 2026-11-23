@@ -44,6 +44,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { BandBadge, PatientBanner } from '../../components/PatientBadges'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
 import { StartVisitDialog } from '../encounters/StartVisitDialog'
+import { PatientChart } from './PatientChart'
 import { LinkHistory, LinkedNotice } from './PatientLinks'
 
 /** One patient's record (FR-003, FR-004). Viewing is audited by the backend. */
@@ -89,6 +90,7 @@ export function PatientPage() {
               )}
             </Group>
             <Details patient={p} />
+            {hasPermission(me, Permission.ENCOUNTER_READ) && <PatientChart patientId={p.id} />}
             <LinkHistory patientId={p.id} />
             <History patientId={p.id} />
             {p.status === 'ACTIVE' && <PossibleDuplicates patientId={p.id} />}

@@ -80,6 +80,14 @@ class OrderController {
     return service.ordersOfVisit(id);
   }
 
+  @GetMapping("/patients/{id}/orders")
+  @Operation(
+      summary = "Orders of a patient",
+      description = "Needs ORDER_READ. Across visits in scope, newest first.")
+  List<OrderView> ordersOfPatient(@PathVariable UUID id) {
+    return service.ordersOfPatient(id);
+  }
+
   @GetMapping("/orders")
   @Operation(
       summary = "Department worklist",

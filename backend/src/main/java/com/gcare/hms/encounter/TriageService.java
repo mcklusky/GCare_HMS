@@ -212,7 +212,7 @@ public class TriageService {
         .collect(Collectors.toList());
   }
 
-  private ObservationView view(ObservationRow o) {
+  ObservationView view(ObservationRow o) {
     List<Flag> flags = json.readValue(o.flagsJson(), new TypeReference<List<Flag>>() {});
     return new ObservationView(
         o.id(),

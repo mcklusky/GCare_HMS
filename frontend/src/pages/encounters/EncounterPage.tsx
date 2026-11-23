@@ -74,6 +74,11 @@ export function EncounterPage() {
               {TYPE_LABEL[e.encounter_type]}, {e.department.name}
             </PageTitle>
             <PatientBanner patient={e.patient} />
+            {hasPermission(me, Permission.PATIENT_READ) && (
+              <Anchor component={Link} to={`/patients/${e.patient.id}`} size="sm">
+                Open patient chart
+              </Anchor>
+            )}
             <Group>
               <Badge size="lg" variant="light">
                 {STATUS_LABEL[e.status]}

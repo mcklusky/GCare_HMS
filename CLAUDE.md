@@ -50,4 +50,4 @@
 - Project-record templates stay empty; never fill them with invented values
 - No force-push or deploy without explicit approval
 **State (2026-11-23)**
-- Done 1.1–1.4, 2.1–2.3, 3.1–3.3 (PRs stacked 1.2→…→3.2→3.3). Gates for Phases 1–2 not yet signed off. Encounter workflow PROVISIONAL (docs/18); triage scale/alarm limits empty until a clinical lead sets them. Notes: fixed sections, signed = immutable (OD-10); diagnoses free text, coding open (OD-09). Order catalog admin-managed, empty by design. Next: 3.4 chart/workspace.
+- Done 1.1–1.4, 2.1–2.3, 3.1–3.4 (PRs stacked 1.2→…→3.3→3.4). Gates for Phases 1–2 not yet signed off. Encounter workflow PROVISIONAL (docs/18); triage scale/alarm limits empty until a clinical lead sets them. Notes: fixed sections, signed = immutable (OD-10); diagnoses free text, coding open (OD-09). Order catalog admin-managed, empty by design. Phase 3 code done; its exit needs end-to-end UAT with role checks. Next: 4.1 billing (tariffs needed).

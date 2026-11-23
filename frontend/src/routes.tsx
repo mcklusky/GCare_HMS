@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router'
 import { Permission } from './api/types'
 import { EncounterPage } from './pages/encounters/EncounterPage'
+import { WorkspacePage } from './pages/encounters/WorkspacePage'
 import { QueuePage } from './pages/encounters/QueuePage'
 import { FacilitiesPage, FacilityDepartmentsPage } from './pages/FacilitiesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -64,6 +65,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.PATIENT_READ}>
             <PatientPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'workspace',
+        element: (
+          <RequirePermission permission={Permission.ENCOUNTER_MANAGE}>
+            <WorkspacePage />
           </RequirePermission>
         ),
       },

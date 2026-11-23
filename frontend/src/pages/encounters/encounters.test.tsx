@@ -227,6 +227,9 @@ describe('start visit', () => {
       'GET /api/v1/patients/p1/history': { body: [] },
       'GET /api/v1/patients/p1/possible-duplicates': { body: [] },
       'GET /api/v1/patients/p1/links': { body: [] },
+      'GET /api/v1/patients/p1/chart': {
+        body: { patient_id: 'p1', visits: [], diagnoses: null, latest_observation: null, reported_allergies: null },
+      },
       'POST /api/v1/encounters': (init: RequestInit) => {
         sent = JSON.parse(String(init.body))
         return { status: 201, body: DETAIL }

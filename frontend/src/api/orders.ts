@@ -99,3 +99,6 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 }
 
 export const PRIORITY_LABEL: Record<Priority, string> = { ROUTINE: 'Routine', URGENT: 'Urgent' }
+
+export const listPatientOrders = (patientId: string, signal?: AbortSignal) =>
+  apiFetch<Order[]>(`/api/v1/patients/${enc(patientId)}/orders`, { signal })

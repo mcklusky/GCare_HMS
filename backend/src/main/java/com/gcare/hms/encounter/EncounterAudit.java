@@ -31,14 +31,25 @@ class EncounterAudit {
       String action,
       UUID encounterId,
       Map<String, String> metadata) {
+    afterCommit(user, facilityId, action, "Encounter", encounterId, metadata);
+  }
+
+  /** As above, for another resource type (for example "Patient" for the chart). */
+  void afterCommit(
+      CurrentUser user,
+      UUID facilityId,
+      String action,
+      String resourceType,
+      UUID resourceId,
+      Map<String, String> metadata) {
     AuditEvent event =
         new AuditEvent(
             user.organizationId(),
             facilityId,
             user.userId(),
             action,
-            "Encounter",
-            encounterId != null ? encounterId.toString() : null,
+            resourceType,
+            resourceId != null ? resourceId.toString() : null,
             AuditOutcome.SUCCESS,
             null,
             Instant.now(),

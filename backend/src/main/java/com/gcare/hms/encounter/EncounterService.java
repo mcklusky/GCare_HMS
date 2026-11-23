@@ -371,7 +371,7 @@ public class EncounterService {
         summary(e, user.hasPermission(Permissions.OBSERVATION_READ)), events);
   }
 
-  private EncounterSummary summary(EncounterRow r, boolean clinical) {
+  EncounterSummary summary(EncounterRow r, boolean clinical) {
     List<String> flags = List.of();
     if (clinical && r.flagsJson() != null) {
       List<EncounterApi.Flag> parsed =
