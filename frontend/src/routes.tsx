@@ -4,6 +4,8 @@ import { EncounterPage } from './pages/encounters/EncounterPage'
 import { QueuePage } from './pages/encounters/QueuePage'
 import { FacilitiesPage, FacilityDepartmentsPage } from './pages/FacilitiesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { OrderCatalogPage } from './pages/orders/OrderCatalogPage'
+import { WorklistPage } from './pages/orders/WorklistPage'
 import { DuplicateReviewPage } from './pages/patients/DuplicateReviewPage'
 import { PatientPage } from './pages/patients/PatientPage'
 import { PatientSearchPage } from './pages/patients/PatientSearchPage'
@@ -78,6 +80,22 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.ENCOUNTER_READ}>
             <EncounterPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'orders',
+        element: (
+          <RequirePermission permission={Permission.ORDER_PROCESS}>
+            <WorklistPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'admin/order-catalog',
+        element: (
+          <RequirePermission permission={Permission.ORDER_CATALOG_MANAGE}>
+            <OrderCatalogPage />
           </RequirePermission>
         ),
       },

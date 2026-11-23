@@ -82,6 +82,22 @@ Further questions for the clinical lead:
 7. Should late signing (after the visit closed) be limited in time?
 8. Are the section names right for the pilot departments?
 
+## 8. Orders and referrals (task 3.3)
+
+Decision (user, 2026-11-23): the **order catalog is managed by administrators and starts empty**. Engineering adds no tests, imaging studies or referral destinations; only the local demo seed has three clearly fictional items.
+
+- **Catalog item:** code (fixed), name, type (laboratory, imaging, procedure, referral; fixed), optional performing department, active/inactive. Never deleted. Managed with `ORDER_CATALOG_MANAGE` (organization administrator).
+- **Order:** placed on an open visit with `ORDER_CREATE` (clinician): item, priority *routine* or *urgent* (labels only, no time targets), optional indication. It keeps a **snapshot** of the item's code, name and type, so catalog changes never alter an order. An item whose performing department belongs to another facility cannot be ordered here.
+- **Status:** requested → in progress → completed (`ORDER_PROCESS`, service department staff), or cancelled with a **reason** by the ordering side or the performing department. Every change is in the order's history and audited (ids only; never the indication or item code).
+- **Worklist:** open orders at the facility, urgent first, then oldest. Results reporting is out of scope here (laboratory module is "later"; imaging in Phase 6).
+- Orders may continue after the visit closes; new orders need an open visit.
+
+Questions for the clinical and department leads:
+
+9. Which items, names and performing departments belong in the pilot catalog?
+10. Should "urgent" carry a target time, and who defines it?
+11. May performing departments cancel, or only reject back to the clinician?
+
 ## Open questions for the workflow owner
 
 1. Visit types beyond new/follow-up? Emergency arrivals in the pilot?
@@ -95,3 +111,4 @@ Further questions for the clinical lead:
 |---|---|---|
 | 2026-11-23 | Provisional defaults written at product owner's request; triage scale and alarm limits left empty for a clinical lead | Engineering (Claude Code), task 3.1 |
 | 2026-11-23 | Clinical notes (fixed sections, draft/sign/amend) and free-text diagnoses per OD-10/OD-09 decisions | Engineering (Claude Code), task 3.2 |
+| 2026-11-23 | Orders and referrals; admin-managed catalog, empty by default (user decision) | Engineering (Claude Code), task 3.3 |

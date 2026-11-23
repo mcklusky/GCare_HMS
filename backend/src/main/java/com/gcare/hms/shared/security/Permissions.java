@@ -28,6 +28,10 @@ public final class Permissions {
   public static final String OBSERVATION_RECORD = "OBSERVATION_RECORD";
   public static final String CLINICAL_NOTE_READ = "CLINICAL_NOTE_READ";
   public static final String CLINICAL_NOTE_WRITE = "CLINICAL_NOTE_WRITE";
+  public static final String ORDER_CATALOG_MANAGE = "ORDER_CATALOG_MANAGE";
+  public static final String ORDER_READ = "ORDER_READ";
+  public static final String ORDER_CREATE = "ORDER_CREATE";
+  public static final String ORDER_PROCESS = "ORDER_PROCESS";
 
   public static final Set<String> ALL =
       Set.of(
@@ -49,7 +53,11 @@ public final class Permissions {
           OBSERVATION_READ,
           OBSERVATION_RECORD,
           CLINICAL_NOTE_READ,
-          CLINICAL_NOTE_WRITE);
+          CLINICAL_NOTE_WRITE,
+          ORDER_CATALOG_MANAGE,
+          ORDER_READ,
+          ORDER_CREATE,
+          ORDER_PROCESS);
 
   private Permissions() {}
 }

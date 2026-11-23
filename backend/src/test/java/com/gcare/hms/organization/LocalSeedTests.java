@@ -43,7 +43,7 @@ class LocalSeedTests {
               .hasValueSatisfying(org -> assertThat(org.getCode()).isEqualTo("DEMO-ORG"));
           assertThat(departments.findByFacilityIdOrderByCode(DEMO_FACILITY))
               .extracting(Department::getCode)
-              .containsExactly("BILL", "OPD", "RAD", "REG");
+              .containsExactly("BILL", "LAB", "OPD", "RAD", "REG");
         });
   }
 

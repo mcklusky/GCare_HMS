@@ -11,6 +11,10 @@ import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
 import static com.gcare.hms.shared.security.Permissions.OBSERVATION_READ;
 import static com.gcare.hms.shared.security.Permissions.OBSERVATION_RECORD;
+import static com.gcare.hms.shared.security.Permissions.ORDER_CATALOG_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.ORDER_CREATE;
+import static com.gcare.hms.shared.security.Permissions.ORDER_PROCESS;
+import static com.gcare.hms.shared.security.Permissions.ORDER_READ;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_DUPLICATE_REVIEW;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_LINK_APPROVE;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_LINK_REQUEST;
@@ -32,8 +36,8 @@ public enum SystemRole {
   /** Scoped users and configuration; no implicit clinical access. */
   ORGANIZATION_ADMIN(
       "Organization administrator",
-      "Manages facilities, departments and user accounts. No clinical access.",
-      Set.of(FACILITY_READ, FACILITY_MANAGE, USER_READ, USER_MANAGE)),
+      "Manages facilities, departments, user accounts and the order catalog. No clinical access.",
+      Set.of(FACILITY_READ, FACILITY_MANAGE, USER_READ, USER_MANAGE, ORDER_CATALOG_MANAGE)),
 
   /** Reads the audit trail; no mutation. */
   AUDITOR("Auditor", "Reads the audit trail. Cannot change anything.", Set.of(AUDIT_READ)),
@@ -83,7 +87,12 @@ public enum SystemRole {
       "Triage nurse",
       "Sees department queues and records triage observations.",
       Set.of(
-          PATIENT_READ, ENCOUNTER_READ, OBSERVATION_READ, OBSERVATION_RECORD, CLINICAL_NOTE_READ)),
+          PATIENT_READ,
+          ENCOUNTER_READ,
+          OBSERVATION_READ,
+          OBSERVATION_RECORD,
+          CLINICAL_NOTE_READ,
+          ORDER_READ)),
 
   /**
    * Calls, transfers, closes and reopens visits and records observations (docs/18). PROVISIONAL
@@ -101,7 +110,18 @@ public enum SystemRole {
           OBSERVATION_READ,
           OBSERVATION_RECORD,
           CLINICAL_NOTE_READ,
-          CLINICAL_NOTE_WRITE));
+          CLINICAL_NOTE_WRITE,
+          ORDER_READ,
+          ORDER_CREATE)),
+
+  /**
+   * Staff of a performing department (laboratory, imaging, ...): works the order worklist.
+   * PROVISIONAL until the permission matrix is signed off.
+   */
+  SERVICE_DEPARTMENT_STAFF(
+      "Service department staff",
+      "Sees the order worklist and starts, completes or cancels orders. No access to notes.",
+      Set.of(PATIENT_READ, ORDER_READ, ORDER_PROCESS));
 
   private final String displayName;
   private final String description;

@@ -1,4 +1,12 @@
-import { IconBuildingHospital, IconCopy, IconHome, IconStethoscope, IconUsers } from '@tabler/icons-react'
+import {
+  IconBuildingHospital,
+  IconClipboardList,
+  IconCopy,
+  IconHome,
+  IconListDetails,
+  IconStethoscope,
+  IconUsers,
+} from '@tabler/icons-react'
 import { Permission } from '../api/types'
 
 export interface NavItem {
@@ -20,7 +28,9 @@ export const NAV_ITEMS: NavItem[] = [
     permission: Permission.PATIENT_DUPLICATE_REVIEW,
   },
   { label: 'Queue', to: '/queue', icon: IconStethoscope, permission: Permission.ENCOUNTER_READ },
+  { label: 'Worklist', to: '/orders', icon: IconClipboardList, permission: Permission.ORDER_PROCESS },
   { label: 'Facilities', to: '/facilities', icon: IconBuildingHospital, permission: Permission.FACILITY_READ },
+  { label: 'Order catalog', to: '/admin/order-catalog', icon: IconListDetails, permission: Permission.ORDER_CATALOG_MANAGE },
 ]
 
 export function visibleNavItems(permissions: readonly string[]): NavItem[] {

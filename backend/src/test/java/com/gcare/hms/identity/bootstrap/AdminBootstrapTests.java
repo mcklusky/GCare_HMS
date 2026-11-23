@@ -48,7 +48,8 @@ class AdminBootstrapTests {
             Permissions.FACILITY_READ,
             Permissions.FACILITY_MANAGE,
             Permissions.USER_READ,
-            Permissions.USER_MANAGE);
+            Permissions.USER_MANAGE,
+            Permissions.ORDER_CATALOG_MANAGE);
     assertThat(admin.scopeOf(Permissions.FACILITY_READ).allFacilities()).isTrue();
     assertThat(
             fixtures.count(

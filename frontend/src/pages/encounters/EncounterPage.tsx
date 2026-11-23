@@ -20,6 +20,7 @@ import { PatientBanner } from '../../components/PatientBadges'
 import { ErrorState, PageTitle, QueryState } from '../../components/states'
 import { DiagnosesSection } from './DiagnosesSection'
 import { NotesSection } from './NotesSection'
+import { OrdersSection } from './OrdersSection'
 import { TriageSection } from './TriageSection'
 
 const DIALOG: Record<
@@ -118,6 +119,9 @@ export function EncounterPage() {
                 <DiagnosesSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
                 <NotesSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
               </>
+            )}
+            {hasPermission(me, Permission.ORDER_READ) && (
+              <OrdersSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
             )}
           </Stack>
         )}
