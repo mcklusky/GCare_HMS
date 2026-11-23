@@ -1,11 +1,13 @@
 /* Global additions to the Mantine theme (src/theme.ts). Keep contrast at WCAG 2.2 AA in light and dark. */
 
 :root {
-  /* Soft grey page behind white cards (light); deep slate in dark mode. */
-  --gcare-page: light-dark(#f4f6f8, var(--mantine-color-dark-8));
+  /* Soft mint-grey page behind white cards (light); deep slate in dark mode. */
+  --gcare-page: light-dark(#eef3f3, var(--mantine-color-dark-8));
   --gcare-surface: light-dark(#ffffff, var(--mantine-color-dark-7));
   --gcare-sidebar: light-dark(#ffffff, var(--mantine-color-dark-7));
-  --gcare-border: light-dark(#e3e8ee, var(--mantine-color-dark-4));
+  --gcare-border: light-dark(#e1eaea, var(--mantine-color-dark-4));
+  /* Tinted strip under stat numbers and the "today" marker. */
+  --gcare-tint: light-dark(#e3f1f1, rgba(63, 148, 151, 0.16));
   --gcare-focus: light-dark(#0f766e, #5eead4);
 }
 
@@ -45,8 +47,33 @@ body {
   background: var(--gcare-page);
 }
 
-.gcare-header,
+.gcare-header {
+  /* The header sits on the page colour, beside the sidebar (AppShell layout "alt"). */
+  background: var(--gcare-page);
+  border: 0;
+}
+
+.gcare-product {
+  color: light-dark(var(--mantine-color-clinical-8), var(--mantine-color-clinical-2));
+}
+
 .gcare-navbar {
+  background: var(--gcare-sidebar);
+  border-color: var(--gcare-border);
+}
+
+/* Sidebar items are pills; the current page is a filled teal pill. */
+.gcare-nav-link {
+  border-radius: var(--mantine-radius-xl);
+  padding-block: 10px;
+}
+
+.gcare-nav-link:not([data-active]) {
+  color: light-dark(#3b4a4b, var(--mantine-color-dark-0));
+}
+
+/* Search in the header is a rounded pill. */
+.gcare-search input {
   background: var(--gcare-surface);
   border-color: var(--gcare-border);
 }
@@ -74,10 +101,54 @@ body {
   color: light-dark(#475569, var(--mantine-color-dark-1));
 }
 
-/* Stat cards: number first, label below. */
+/* Stat cards: label, big number, dark icon tile; an optional tinted note strip at the bottom. */
 .gcare-stat-value {
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
+}
+
+.gcare-stat-note {
+  background: var(--gcare-tint);
+  color: light-dark(#1d5557, var(--mantine-color-dark-0));
+}
+
+/* Month calendar on the home page. */
+.gcare-calendar {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.gcare-calendar th {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+  color: var(--mantine-color-dimmed);
+  padding-bottom: 6px;
+}
+
+.gcare-calendar td {
+  padding: 2px;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.gcare-calendar td span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.gcare-calendar td[data-outside] span {
+  color: var(--mantine-color-dimmed);
+}
+
+.gcare-calendar td[aria-current='date'] span {
+  background: var(--mantine-color-clinical-7);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 /* Respect users who ask for less motion. */
@@ -113,4 +184,26 @@ body {
   * {
     color: #000000 !important;
   }
+}
+
+/* Home shortcuts: tinted tiles that lift slightly on hover. */
+.gcare-shortcut {
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid var(--gcare-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--gcare-surface);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.gcare-shortcut:hover {
+  border-color: var(--mantine-color-clinical-4);
+  background: var(--gcare-tint);
+}
+
+.gcare-shortcut-arrow {
+  color: var(--mantine-color-dimmed);
+  flex-shrink: 0;
 }

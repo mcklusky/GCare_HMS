@@ -135,7 +135,10 @@ export function PageHeader({
   )
 }
 
-/** A headline number with its label, e.g. on the home page. `tone` colours the icon only (never the only signal). */
+/**
+ * A headline number with its label, e.g. on the home page: label, big number and a dark icon tile,
+ * with an optional tinted note strip underneath. `tone` colours the icon only (never the only signal).
+ */
 export function StatCard({
   label,
   value,
@@ -150,27 +153,27 @@ export function StatCard({
   hint?: ReactNode
 }) {
   return (
-    <Card withBorder>
-      <Group justify="space-between" align="flex-start" wrap="nowrap">
-        <Stack gap={4}>
+    <Card withBorder padding={0}>
+      <Group justify="space-between" align="flex-start" wrap="nowrap" p="lg">
+        <Stack gap={6}>
           <Text size="sm" c="dimmed" fw={500}>
             {label}
           </Text>
-          <Text className="gcare-stat-value" fz={28} fw={700}>
+          <Text className="gcare-stat-value" fz={30} fw={700}>
             {value}
           </Text>
-          {hint && (
-            <Text size="xs" c="dimmed">
-              {hint}
-            </Text>
-          )}
         </Stack>
         {icon && (
-          <ThemeIcon size={40} radius="md" variant="light" color={tone} aria-hidden>
+          <ThemeIcon size={40} radius="md" variant="filled" color={`${tone}.8`} aria-hidden>
             {icon}
           </ThemeIcon>
         )}
       </Group>
+      {hint && (
+        <Text className="gcare-stat-note" size="xs" fw={500} px="lg" py={10}>
+          {hint}
+        </Text>
+      )}
     </Card>
   )
 }

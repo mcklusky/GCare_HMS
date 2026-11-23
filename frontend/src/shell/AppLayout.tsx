@@ -4,6 +4,7 @@ import {
   AppShell,
   Avatar,
   Badge,
+  Box,
   Burger,
   Group,
   Image,
@@ -69,8 +70,9 @@ export function AppLayout({ me }: { me: Me }) {
 
   return (
     <AppShell
-      header={{ height: 64 }}
-      navbar={{ width: 264, breakpoint: 'sm', collapsed: { mobile: !navOpened } }}
+      layout="alt"
+      header={{ height: 72 }}
+      navbar={{ width: 260, breakpoint: 'sm', collapsed: { mobile: !navOpened } }}
       padding="lg"
     >
       <Anchor href="#main" className="skip-link">
@@ -87,12 +89,9 @@ export function AppLayout({ me }: { me: Me }) {
               size="sm"
               aria-label={navOpened ? 'Close navigation' : 'Open navigation'}
             />
-            <ThemeIcon size={34} radius="md" variant="filled" aria-hidden>
-              <IconHeartbeat size={20} />
-            </ThemeIcon>
-            <Text fw={700} size="lg">
-              GCare HMS
-            </Text>
+            <Box hiddenFrom="sm">
+              <ProductMark />
+            </Box>
             <FacilityBrand fallback={me.organization.name} />
             {environmentLabel && (
               <Badge color="yellow" variant="filled" visibleFrom="lg">
@@ -124,13 +123,18 @@ export function AppLayout({ me }: { me: Me }) {
             <Menu position="bottom-end" withinPortal>
               <Menu.Target>
                 <UnstyledButton aria-label={`Account: ${me.display_name}`}>
-                  <Group gap={8} wrap="nowrap">
-                    <Avatar size={32} radius="xl" color="clinical" aria-hidden>
+                  <Group gap={10} wrap="nowrap">
+                    <Avatar size={38} radius="xl" color="clinical" variant="filled" aria-hidden>
                       {initials}
                     </Avatar>
-                    <Text size="sm" fw={500} visibleFrom="sm">
-                      {me.display_name}
-                    </Text>
+                    <Stack gap={0} visibleFrom="sm">
+                      <Text size="sm" fw={600} lh={1.2}>
+                        {me.display_name}
+                      </Text>
+                      <Text size="xs" c="dimmed" lh={1.3}>
+                        {me.username}
+                      </Text>
+                    </Stack>
                     <IconChevronDown size={14} aria-hidden />
                   </Group>
                 </UnstyledButton>
@@ -151,7 +155,10 @@ export function AppLayout({ me }: { me: Me }) {
       </AppShell.Header>
 
       <AppShell.Navbar className="gcare-navbar" aria-label="Main navigation" component="nav">
-        <ScrollArea type="auto" px="sm" py="md">
+        <Box px="lg" pt="lg" pb="sm" visibleFrom="sm">
+          <ProductMark />
+        </Box>
+        <ScrollArea type="auto" px="md" py="sm">
           <Stack gap="md">
             {sections.map(({ section, items }) => (
               <div key={section}>
@@ -168,8 +175,8 @@ export function AppLayout({ me }: { me: Me }) {
                       to={item.to}
                       end={item.to === '/'}
                       label={item.label}
-                      leftSection={<item.icon size={18} stroke={1.7} aria-hidden />}
-                      style={{ borderRadius: 'var(--mantine-radius-md)' }}
+                      leftSection={<item.icon size={19} stroke={1.7} aria-hidden />}
+                      className="gcare-nav-link"
                     />
                   ))}
                 </Stack>
@@ -206,11 +213,13 @@ function QuickPatientSearch() {
     <form onSubmit={onSubmit} role="search" aria-label="Quick patient search">
       <TextInput
         aria-label="Quick search by patient number"
-        placeholder="Patient number"
-        leftSection={<IconSearch size={16} aria-hidden />}
+        placeholder="Search patient number"
+        rightSection={<IconSearch size={16} aria-hidden />}
+        radius="xl"
+        className="gcare-search"
         value={value}
         onChange={(e) => setValue(e.currentTarget.value)}
-        w={200}
+        w={260}
         visibleFrom="md"
       />
     </form>
@@ -225,7 +234,8 @@ function ColorSchemeToggle() {
   return (
     <Tooltip label={next === 'dark' ? 'Dark mode' : 'Light mode'}>
       <ActionIcon
-        size="lg"
+        size={38}
+        radius="xl"
         variant="default"
         onClick={() => setColorScheme(next)}
         aria-label={next === 'dark' ? 'Switch to dark mode' : 'Switch to light mode'}
@@ -233,6 +243,20 @@ function ColorSchemeToggle() {
         {next === 'dark' ? <IconMoon size={18} aria-hidden /> : <IconSun size={18} aria-hidden />}
       </ActionIcon>
     </Tooltip>
+  )
+}
+
+/** Product name and mark: top of the sidebar on wide screens, in the header on phones. */
+function ProductMark() {
+  return (
+    <Group gap={10} wrap="nowrap">
+      <ThemeIcon size={36} radius="md" variant="filled" aria-hidden>
+        <IconHeartbeat size={21} />
+      </ThemeIcon>
+      <Text fw={700} fz={20} lh={1} className="gcare-product">
+        GCare HMS
+      </Text>
+    </Group>
   )
 }
 
