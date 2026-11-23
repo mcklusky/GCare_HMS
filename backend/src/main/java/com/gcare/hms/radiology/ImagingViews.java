@@ -41,6 +41,9 @@ class ImagingViews {
         || !o.get().patient().patientNumber().equals(s.dicomPatientId().trim())) {
       return "The patient ID on the study differs from the order's patient number";
     }
+    if (store.wasUnlinkedFrom(s.id(), o.get().orderId())) {
+      return "A person unlinked it from this order; propose a link if it does belong there";
+    }
     if (store.orderHasLinkedStudy(o.get().orderId())) {
       return "The order already has a linked study";
     }

@@ -12,7 +12,7 @@ import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, PageTitle, QueryState } from '../../components/states'
 
 /** Critical radiology results not yet acknowledged (task 6.4; docs/26). */
 export function CriticalResultsPage() {
@@ -26,6 +26,7 @@ export function CriticalResultsPage() {
       setAcking(null)
       void queryClient.invalidateQueries({ queryKey: ['critical-results'] })
     },
+    onError: () => void queryClient.invalidateQueries({ queryKey: ['critical-results'] }),
   })
   const canAck = hasPermission(me, Permission.CRITICAL_RESULT_ACKNOWLEDGE)
 
@@ -36,7 +37,6 @@ export function CriticalResultsPage() {
         Critical radiology results not yet acknowledged in the HMS, oldest first. The radiologist has already told
         someone directly; acknowledging records that the treating team has acted on it.
       </Text>
-      {ack.isError && <ErrorState error={ack.error} />}
       <QueryState query={open} loadingLabel="Loading critical results…">
         {(list) =>
           list.length === 0 ? (
@@ -82,7 +82,7 @@ export function CriticalResultsPage() {
                       </Table.Td>
                       <Table.Td>
                         {canAck ? (
-                          <Button size="xs" color="red" onClick={() => setAcking(c)}>
+                          <Button size="xs" color="red" onClick={() => (ack.reset(), setAcking(c))}>
                             Acknowledge
                           </Button>
                         ) : (
@@ -103,6 +103,7 @@ export function CriticalResultsPage() {
         confirmLabel="Acknowledge"
         requireReason
         busy={ack.isPending}
+        error={ack.error}
         onConfirm={(note) => acking && ack.mutate({ c: acking, note: note ?? '' })}
         onCancel={() => setAcking(null)}
       >

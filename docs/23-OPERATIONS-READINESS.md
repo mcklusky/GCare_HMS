@@ -23,6 +23,10 @@ Requirements: FR-036 (monitoring and alerting), FR-037 (accessibility), FR-027 (
 - **Keys:** generate the key pair on an operator workstation; install only the public key on the server; keep the private key (and a second copy) offline under the operations owner's custody. A backup cannot be restored without it — losing it loses the backups.
 - **First local drill (2026-11-23, synthetic data):** 46 tables, migration version 15, backup and restore each about 1 s, verification passed. Real timings must come from a drill on the pilot server with production-like volume.
 
+**Review fixes (2026-11-23, docs/27):** a failed backup now deletes its partial files (a truncated encrypted file could look like a backup), and a failed manifest query stops the run. `restore.sh` grants `gcare_app` to `GCARE_APP_LOGIN` (the application's login role); without it, an application on a new server could not run a single query after restore. Set it for every real restore.
+
+**Known limitation (time zones):** screens show and enter times in the workstation's time zone, not the facility's. Until that is changed, pilot workstations must be set to the facility's time zone; otherwise paper times and critical-result contact times are stored shifted.
+
 ## 3. Security review
 
 - **Endpoint sweep** (`EndpointSecuritySweepTests`): every `/api/v1` operation is discovered from the running application and checked: without sign-in → 401; state changes without the CSRF token → 403; a signed-in user with no permissions → 4xx (only `GET /api/v1/me` is open to any signed-in user). New endpoints are covered automatically.

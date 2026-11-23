@@ -274,6 +274,15 @@ class RadiologyReportTests {
             "$.id");
     send(post("/api/v1/radiology-reports/{id}/sign", report), radiologist, "{\"version\": 0}")
         .andExpect(status().isBadRequest());
+    // A contact time before the examination was even ordered is a typing error, not a 500.
+    for (String wrong : new String[] {"1900-01-01T00:00:00Z", "-5000-01-01T00:00:00Z"}) {
+      send(
+              post("/api/v1/radiology-reports/{id}/sign", report),
+              radiologist,
+              "{\"version\": 0, \"communication\": {\"communicated_to\": \"Dr Test\", \"method\": \"PHONE\", \"communicated_at\": \"%s\"}}"
+                  .formatted(wrong))
+          .andExpect(status().isBadRequest());
+    }
     String when = Instant.now().minus(5, ChronoUnit.MINUTES).toString();
     send(
             post("/api/v1/radiology-reports/{id}/sign", report),
@@ -344,6 +353,21 @@ class RadiologyReportTests {
     draft(o[0], elsewhere, "{}").andExpect(status().isNotFound());
     send(get("/api/v1/encounters/{id}/imaging-results", o[1]), elsewhere, "")
         .andExpect(jsonPath("$.length()").value(0));
+    // Lists are scoped before their limit: the other facility's radiologist sees none of this work.
+    send(get("/api/v1/radiology/reporting"), elsewhere, "")
+        .andExpect(jsonPath("$[?(@.order_id == '" + o[0] + "')]").isEmpty());
+    send(get("/api/v1/radiology/reporting"), radiologist, "")
+        .andExpect(jsonPath("$[?(@.order_id == '" + o[0] + "')]").isNotEmpty());
+    // Reading a visit's imaging results is audited against that visit.
+    send(get("/api/v1/encounters/{id}/imaging-results", o[1]), nurse, "")
+        .andExpect(status().isOk());
+    assertThat(
+            fixtures.count(
+                "SELECT count(*) FROM audit_events WHERE actor_id = ? AND action = 'IMAGING_RESULTS_VIEWED'"
+                    + " AND resource_type = 'Encounter' AND resource_id = ?",
+                nurse.userId(),
+                o[1]))
+        .isEqualTo(1);
     send(get("/api/v1/radiology/reporting"), clinician, "").andExpect(status().isForbidden());
     UUID otherOrg = fixtures.organization();
     assertThat(

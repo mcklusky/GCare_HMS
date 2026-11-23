@@ -40,5 +40,12 @@ public record ImagingArchiveProperties(
       throw new IllegalArgumentException(
           "gcare.imaging.archive.viewer-url-template must contain {StudyInstanceUID}");
     }
+    if (viewerUrlTemplate != null
+        && !viewerUrlTemplate.isBlank()
+        && !(viewerUrlTemplate.startsWith("https://") || viewerUrlTemplate.startsWith("http://"))) {
+      // The link is shown to clinicians; never let a template become a script or another scheme.
+      throw new IllegalArgumentException(
+          "gcare.imaging.archive.viewer-url-template must be an http(s) URL");
+    }
   }
 }

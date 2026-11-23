@@ -8,6 +8,7 @@ Schema is owned here; Hibernate only validates it (`ddl-auto: validate`).
 - V3 (task 2.1) adds patients, identifiers (with provenance), per-organization patient-number counters and the duplicate review flags. Uses `pg_trgm` for fuzzy names. Rules: docs/17-PATIENT-IDENTITY-POLICY.md (provisional).
 - V4 (task 2.2) adds `patient_changes` (append-only correction history) and review decisions on `patient_duplicate_flags` (one open item per pair).
 - V5 (task 2.3) adds `patient_links` (request, decision, unlink; requester and decider must differ, enforced by a CHECK) and `patients.linked_to_patient_id` (set exactly when status is LINKED).
+- V19 (review fixes, docs/27) allows the imaging study event `ARCHIVE_CHANGED` (recorded by the automatic matcher).
 - V18 (task 6.4) adds `radiology_reports` (only drafts change; amendments reference the amended report) and `critical_results` (documented contact never changes; acknowledgement set once).
 - V17 (task 6.3) adds `imaging_orders` (HMS accession numbers, arrival/examination steps; immutable by trigger), `imaging_studies` (metadata only; two-person CHECK for reviewed links) and `imaging_study_events`.
 - V16 (task 6.1) adds the `IMAGING_ARCHIVE_ADMIN` permission only; no imaging tables (DICOM stays in the external archive).

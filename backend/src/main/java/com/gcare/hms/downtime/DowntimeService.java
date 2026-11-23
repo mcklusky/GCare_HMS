@@ -11,6 +11,7 @@ import com.gcare.hms.downtime.DowntimeApi.DecisionRequest;
 import com.gcare.hms.downtime.DowntimeApi.DeclareRequest;
 import com.gcare.hms.downtime.DowntimeApi.DowntimeSource;
 import com.gcare.hms.downtime.DowntimeApi.EndRequest;
+import com.gcare.hms.downtime.DowntimeApi.EntryEvent;
 import com.gcare.hms.downtime.DowntimeApi.EntryRequest;
 import com.gcare.hms.downtime.DowntimeApi.EntryStatus;
 import com.gcare.hms.downtime.DowntimeApi.EntryView;
@@ -39,10 +40,12 @@ import com.gcare.hms.patient.PatientApi.DuplicateReview;
 import com.gcare.hms.patient.PatientApi.PatientDetail;
 import com.gcare.hms.patient.PatientApi.PatientSummary;
 import com.gcare.hms.patient.PatientApi.RegisterPatientRequest;
+import com.gcare.hms.patient.PatientNumber;
 import com.gcare.hms.patient.PatientService;
 import com.gcare.hms.patient.PatientService.SearchCriteria;
 import com.gcare.hms.patient.PatientStatus;
 import com.gcare.hms.shared.security.CurrentUser;
+import com.gcare.hms.shared.security.FacilityScope;
 import com.gcare.hms.shared.security.Permissions;
 import com.gcare.hms.shared.web.ApiException;
 import java.math.BigDecimal;
@@ -54,6 +57,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.dao.DuplicateKeyException;
@@ -126,7 +130,17 @@ public class DowntimeService {
   @Transactional(readOnly = true)
   public List<EpisodeView> episodes() {
     CurrentUser user = CurrentUser.require();
-    return store.episodes().stream().filter(e -> mayView(user, e.facilityId())).toList();
+    FacilityScope manage = user.scopeOf(Permissions.DOWNTIME_MANAGE);
+    FacilityScope record = user.scopeOf(Permissions.DOWNTIME_RECORD);
+    FacilityScope either =
+        manage.allFacilities() || record.allFacilities()
+            ? FacilityScope.ALL
+            : new FacilityScope(
+                false,
+                java.util.stream.Stream.concat(
+                        manage.facilityIds().stream(), record.facilityIds().stream())
+                    .collect(java.util.stream.Collectors.toSet()));
+    return either.isEmpty() ? List.of() : store.episodes(either);
   }
 
   @PreAuthorize(ANY)
@@ -150,6 +164,7 @@ public class DowntimeService {
     if (request.endedAt() != null) {
       checkEnd(request.startedAt(), request.endedAt(), now);
     }
+    store.lockFacilityEpisodes(facility);
     if (store.overlaps(facility, request.startedAt(), request.endedAt())) {
       throw new ApiException.Conflict(
           "Another downtime episode of this facility overlaps this period");
@@ -179,7 +194,10 @@ public class DowntimeService {
   @Transactional
   public EpisodeView end(UUID id, EndRequest request) {
     CurrentUser user = CurrentUser.require();
-    EpisodeView e = managedEpisode(user, id);
+    managedEpisode(user, id);
+    // Locked, so no form can be keyed with a later paper time while the end is checked.
+    store.lockEpisode(id);
+    EpisodeView e = store.episode(id).orElseThrow();
     if (e.status() != EpisodeStatus.ACTIVE) {
       throw new ApiException.InvalidTransition("This episode has already ended");
     }
@@ -202,8 +220,9 @@ public class DowntimeService {
   @Transactional
   public EpisodeView close(UUID id, CloseRequest request) {
     CurrentUser user = CurrentUser.require();
-    EpisodeView e = managedEpisode(user, id);
+    managedEpisode(user, id);
     store.lockEpisode(id);
+    EpisodeView e = store.episode(id).orElseThrow();
     if (e.status() == EpisodeStatus.ACTIVE) {
       throw new ApiException.InvalidTransition("End the episode before closing it");
     }
@@ -293,7 +312,7 @@ public class DowntimeService {
   public List<EntryView> entries(UUID episodeId) {
     CurrentUser user = CurrentUser.require();
     EpisodeView e = visibleEpisode(user, episodeId);
-    List<EntryView> list = store.entries(episodeId);
+    List<EntryView> list = store.entries(episodeId).stream().map(x -> shown(user, x)).toList();
     audit(
         user,
         e.facilityId(),
@@ -310,7 +329,7 @@ public class DowntimeService {
     CurrentUser user = CurrentUser.require();
     EntryView x = visibleEntry(user, id);
     audit(user, x.facilityId(), "DOWNTIME_FORM_VIEWED", "DowntimeEntry", id, entryMeta(x));
-    return withEvents(x);
+    return shown(user, withEvents(x));
   }
 
   /**
@@ -326,6 +345,9 @@ public class DowntimeService {
             .episode(episodeId)
             .filter(x -> user.scopeOf(Permissions.DOWNTIME_RECORD).includes(x.facilityId()))
             .orElseThrow(() -> new ApiException.NotFound("Downtime episode"));
+    // Locked against a concurrent end or close of the episode (they lock it too).
+    store.lockEpisode(episodeId);
+    e = store.episode(episodeId).orElseThrow();
     if (e.status() == EpisodeStatus.CLOSED) {
       throw new ApiException.InvalidTransition("This downtime episode is closed");
     }
@@ -405,7 +427,10 @@ public class DowntimeService {
     List<DuplicateCandidate> candidates =
         patients.candidatesFor(registerRequest(x.facilityId(), form, null));
     PatientSummary written = null;
-    if (StringUtils.hasText(form.writtenPatientNumber())) {
+    // A miswritten number on paper is common: look it up only when it is a valid patient number;
+    // the other candidates still help.
+    if (StringUtils.hasText(form.writtenPatientNumber())
+        && PatientNumber.parse(form.writtenPatientNumber()).isPresent()) {
       written =
           patients
               .search(
@@ -450,7 +475,7 @@ public class DowntimeService {
     if (request.action() == ProposalAction.APPLY) {
       switch (x.formType()) {
         case REGISTRATION -> proposeRegistration(user, x, request, proposal);
-        case PAYMENT -> proposePayment(x, request, proposal);
+        case PAYMENT -> proposePayment(user, x, request, proposal);
         default -> {}
       }
     }
@@ -467,7 +492,7 @@ public class DowntimeService {
     Map<String, String> meta = entryMeta(x);
     meta.put("action", request.action().name());
     audit(user, x.facilityId(), "DOWNTIME_RECONCILIATION_PROPOSED", "DowntimeEntry", id, meta);
-    return withEvents(store.entry(id).orElseThrow());
+    return shown(user, withEvents(store.entry(id).orElseThrow()));
   }
 
   /**
@@ -497,7 +522,7 @@ public class DowntimeService {
     boolean voiding = "VOID".equals(x.proposal().path("action").asString());
     Applied applied = voiding ? new Applied(null, null, null) : apply(x);
     finish(user, x, EntryStatus.PROPOSED, voiding, applied, request);
-    return withEvents(store.entry(id).orElseThrow());
+    return shown(user, withEvents(store.entry(id).orElseThrow()));
   }
 
   /** Returns a proposal to the queue (with a note); anyone, including the proposer. */
@@ -515,7 +540,7 @@ public class DowntimeService {
     }
     store.insertEvent(user.organizationId(), id, "SENT_BACK", request.note().trim(), user.userId());
     audit(user, x.facilityId(), "DOWNTIME_PROPOSAL_SENT_BACK", "DowntimeEntry", id, entryMeta(x));
-    return withEvents(store.entry(id).orElseThrow());
+    return shown(user, withEvents(store.entry(id).orElseThrow()));
   }
 
   /** Triage and vitals: one person records the observations on the reconciled visit. */
@@ -525,7 +550,7 @@ public class DowntimeService {
     CurrentUser user = CurrentUser.require();
     EntryView x = pendingTriage(user, id, request);
     finish(user, x, EntryStatus.PENDING, false, apply(x), request);
-    return withEvents(store.entry(id).orElseThrow());
+    return shown(user, withEvents(store.entry(id).orElseThrow()));
   }
 
   /** Triage and vitals: one person voids a wrongly keyed or unusable form, with a reason. */
@@ -534,8 +559,11 @@ public class DowntimeService {
   public EntryView voidEntry(UUID id, DecisionRequest request) {
     CurrentUser user = CurrentUser.require();
     EntryView x = pendingTriage(user, id, request);
+    if (!user.scopeOf(Permissions.OBSERVATION_RECORD).includes(x.facilityId())) {
+      throw new AccessDeniedException("Voiding a triage form needs OBSERVATION_RECORD");
+    }
     finish(user, x, EntryStatus.PENDING, true, new Applied(null, null, null), request);
-    return withEvents(store.entry(id).orElseThrow());
+    return shown(user, withEvents(store.entry(id).orElseThrow()));
   }
 
   /** Reconciled paper forms behind a visit, with their paper times. */
@@ -564,16 +592,24 @@ public class DowntimeService {
             "patient_id", "is linked to another record; choose the record in use");
       }
       proposal.put("patient_id", p.id().toString());
+      // What the approver checks against the paper form (the ids alone say nothing to a person).
+      proposal.put(
+          "patient_label",
+          p.patientNumber()
+              + " · "
+              + java.util.stream.Stream.of(p.familyName(), p.givenNames())
+                  .filter(StringUtils::hasText)
+                  .collect(java.util.stream.Collectors.joining(", "))
+              + " · "
+              + (p.birthDate() == null ? "no birth date" : p.birthDate().toString()));
       if (request.encounterId() != null) {
         EncounterRef enc =
-            store
-                .encounter(request.encounterId())
-                .filter(e -> e.patientId().equals(p.id()) && e.facilityId().equals(x.facilityId()))
-                .filter(e -> !"CANCELLED".equals(e.status()))
+            openVisitOf(request.encounterId(), p.id(), x.facilityId())
                 .orElseThrow(() ->
                     new ApiException.Invalid(
-                        "encounter_id", "is not a visit of this patient at this facility"));
+                        "encounter_id", "is not an open visit of this patient at this facility"));
         proposal.put("encounter_id", enc.id().toString());
+        proposal.put("encounter_label", "at " + enc.departmentName() + " (" + enc.status() + ")");
       }
       return;
     }
@@ -600,14 +636,25 @@ public class DowntimeService {
     }
   }
 
-  private void proposePayment(EntryView x, ProposeRequest request, ObjectNode proposal) {
+  private void proposePayment(
+      CurrentUser user, EntryView x, ProposeRequest request, ObjectNode proposal) {
     if (request.invoiceId() == null) {
       throw new ApiException.Invalid("invoice_id", "is required: the visit's issued invoice");
     }
+    if (!user.scopeOf(Permissions.INVOICE_READ).includes(x.facilityId())) {
+      throw new AccessDeniedException("Choosing the invoice needs INVOICE_READ");
+    }
     EntryView registration = registrationOf(x);
     PaymentForm form = json.treeToValue(x.data(), PaymentForm.class);
-    checkInvoice(request.invoiceId(), registration.encounterId(), form.currency());
+    InvoiceRef invoice =
+        checkInvoice(request.invoiceId(), registration.encounterId(), form.currency(), false);
     proposal.put("invoice_id", request.invoiceId().toString());
+    proposal.put(
+        "invoice_label",
+        (invoice.invoiceNumber() == null ? "(no number)" : invoice.invoiceNumber())
+            + " ("
+            + invoice.currency()
+            + ")");
   }
 
   private Applied apply(EntryView x) {
@@ -632,7 +679,7 @@ public class DowntimeService {
         EntryView reg = registrationOf(x);
         PaymentForm form = json.treeToValue(x.data(), PaymentForm.class);
         UUID invoice = UUID.fromString(x.proposal().path("invoice_id").asString());
-        checkInvoice(invoice, reg.encounterId(), form.currency());
+        checkInvoice(invoice, reg.encounterId(), form.currency(), true);
         // The entry id is the idempotency key: this paper payment can be recorded only once.
         var recorded =
             payments.record(
@@ -645,6 +692,9 @@ public class DowntimeService {
   }
 
   private Applied applyRegistration(EntryView x) {
+    if (!CurrentUser.require().scopeOf(Permissions.PATIENT_REGISTER).includes(x.facilityId())) {
+      throw new AccessDeniedException("Approving a registration form needs PATIENT_REGISTER");
+    }
     RegistrationForm form = json.treeToValue(x.data(), RegistrationForm.class);
     JsonNode p = x.proposal();
     UUID patientId;
@@ -672,7 +722,12 @@ public class DowntimeService {
     }
     UUID encounterId;
     if (p.hasNonNull("encounter_id")) {
-      encounterId = UUID.fromString(p.get("encounter_id").asString());
+      encounterId =
+          openVisitOf(UUID.fromString(p.get("encounter_id").asString()), patientId, x.facilityId())
+              .orElseThrow(() ->
+                  new ApiException.InvalidTransition(
+                      "The proposed visit is no longer open. Send the proposal back."))
+              .id();
     } else {
       encounterId =
           encounters
@@ -743,21 +798,90 @@ public class DowntimeService {
                 "Reconcile registration form " + label + " first: it identifies the patient"));
   }
 
-  private void checkInvoice(UUID invoiceId, UUID encounterId, String currency) {
+  /**
+   * The proposed invoice, checked. At approval ({@code approving}) a change since the proposal is a
+   * state conflict (send it back), not a bad request: the approver did not send an invoice.
+   */
+  private InvoiceRef checkInvoice(
+      UUID invoiceId, UUID encounterId, String currency, boolean approving) {
     InvoiceRef invoice =
         store
             .invoice(invoiceId)
             .filter(i -> i.encounterId().equals(encounterId))
-            .orElseThrow(() ->
-                new ApiException.Invalid(
-                    "invoice_id", "is not an invoice of this patient's visit"));
+            .orElseThrow(
+                () -> invoiceProblem(approving, "is not an invoice of this patient's visit"));
     if (!"ISSUED".equals(invoice.status())) {
-      throw new ApiException.Invalid("invoice_id", "must be an issued invoice");
+      throw invoiceProblem(approving, "must be an issued invoice");
     }
     if (!invoice.currency().equals(currency)) {
-      throw new ApiException.Invalid(
-          "invoice_id", "is in " + invoice.currency() + " but the paper receipt is in " + currency);
+      throw invoiceProblem(
+          approving, "is in " + invoice.currency() + " but the paper receipt is in " + currency);
     }
+    return invoice;
+  }
+
+  private static ApiException invoiceProblem(boolean approving, String problem) {
+    return approving
+        ? new ApiException.InvalidTransition(
+            "The proposed invoice changed since the proposal (it " + problem + "). Send it back.")
+        : new ApiException.Invalid("invoice_id", problem);
+  }
+
+  /** The patient's visit at this facility, if it is still open (waiting or in consultation). */
+  private Optional<EncounterRef> openVisitOf(UUID encounterId, UUID patientId, UUID facilityId) {
+    return store
+        .encounter(encounterId)
+        .filter(e -> e.patientId().equals(patientId) && e.facilityId().equals(facilityId))
+        .filter(e -> "WAITING".equals(e.status()) || "IN_CONSULTATION".equals(e.status()));
+  }
+
+  /**
+   * Keyed contents (names, vitals, amounts) only for people who may see that kind of record, or who
+   * keyed the form themselves; everyone else working the queue sees form number, status and people.
+   */
+  private static EntryView shown(CurrentUser user, EntryView x) {
+    boolean own = x.enteredBy() != null && user.userId().equals(x.enteredBy().id());
+    String needed =
+        switch (x.formType()) {
+          case REGISTRATION -> Permissions.PATIENT_READ;
+          case TRIAGE -> Permissions.OBSERVATION_READ;
+          case ORDER -> Permissions.ORDER_READ;
+          case PAYMENT -> Permissions.INVOICE_READ;
+        };
+    if (own || user.scopeOf(needed).includes(x.facilityId())) {
+      return x;
+    }
+    return new EntryView(
+        x.id(),
+        x.episodeId(),
+        x.facilityId(),
+        x.formType(),
+        x.formNumber(),
+        x.formLabel(),
+        x.registrationFormNumber(),
+        x.registrationFormLabel(),
+        x.occurredAt(),
+        null,
+        x.status(),
+        x.needsSecondPerson(),
+        x.enteredBy(),
+        x.enteredAt(),
+        null,
+        x.proposedBy(),
+        x.proposedAt(),
+        null,
+        x.decidedBy(),
+        x.decidedAt(),
+        null,
+        null,
+        null,
+        null,
+        x.events() == null
+            ? null
+            : x.events().stream()
+                .map(ev -> new EntryEvent(ev.eventType(), null, ev.by(), ev.occurredAt()))
+                .toList(),
+        x.version());
   }
 
   // --- keying validation -----------------------------------------------------------------------

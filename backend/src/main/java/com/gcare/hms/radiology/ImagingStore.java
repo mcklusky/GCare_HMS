@@ -6,13 +6,13 @@ import com.gcare.hms.patient.Sex;
 import com.gcare.hms.radiology.ImagingWorkApi.StudyEvent;
 import com.gcare.hms.radiology.ImagingWorkApi.StudyStatus;
 import com.gcare.hms.radiology.ImagingWorkApi.UserRef;
+import com.gcare.hms.shared.security.FacilityScope;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -144,14 +144,34 @@ class ImagingStore {
 
   // --- worklist --------------------------------------------------------------------------------
 
-  List<OrderRow> worklist(Collection<String> orderStatuses, int limit) {
-    return jdbc.sql(
-            ORDER
-                + " WHERE o.status IN (:st) ORDER BY (o.priority = 'URGENT') DESC, o.requested_at LIMIT :limit")
-        .param("st", orderStatuses)
-        .param("limit", limit)
-        .query(this::orderRow)
-        .list();
+  /**
+   * The worklist, filtered in SQL (scope and finished items) before the limit, so old finished
+   * orders or another facility's orders can never push current work out of the list.
+   */
+  List<OrderRow> worklist(FacilityScope scope, boolean includeFinished, int limit) {
+    StringBuilder sql = new StringBuilder(ORDER);
+    if (includeFinished) {
+      sql.append(" WHERE TRUE");
+    } else {
+      sql.append(
+          """
+           WHERE o.status IN ('REQUESTED', 'IN_PROGRESS', 'COMPLETED')
+             AND NOT (io.examined_at IS NOT NULL AND EXISTS (
+                 SELECT 1 FROM imaging_studies s WHERE s.order_id = io.order_id AND s.status = 'LINKED'))
+          """);
+    }
+    if (!scope.allFacilities()) {
+      sql.append(" AND io.facility_id IN (:fac)");
+    }
+    sql.append(
+        includeFinished
+            ? " ORDER BY o.requested_at DESC LIMIT :limit"
+            : " ORDER BY (o.priority = 'URGENT') DESC, o.requested_at LIMIT :limit");
+    var spec = jdbc.sql(sql.toString()).param("limit", limit);
+    if (!scope.allFacilities()) {
+      spec = spec.param("fac", scope.facilityIds());
+    }
+    return spec.query(this::orderRow).list();
   }
 
   Optional<OrderRow> order(UUID orderId) {
@@ -216,6 +236,43 @@ class ImagingStore {
   // --- studies ---------------------------------------------------------------------------------
 
   /** Inserts or refreshes a study; returns its id and whether it was new. */
+  Optional<StudyRow> studyByUid(String uid) {
+    return jdbc.sql(STUDY + " WHERE s.study_instance_uid = :uid")
+        .param("uid", uid)
+        .query(this::studyRow)
+        .optional();
+  }
+
+  /**
+   * Back to the queue because the archive changed the study's accession number or patient ID after
+   * it was proposed or linked: the earlier decision no longer describes these images.
+   */
+  int detach(UUID studyId) {
+    return jdbc.sql(
+            """
+            UPDATE imaging_studies SET status = 'UNMATCHED', order_id = NULL, link_method = NULL, linked_at = NULL,
+                linked_by = NULL, proposed_order_id = NULL, proposed_by = NULL, proposed_at = NULL,
+                proposal_note = NULL, version = version + 1
+            WHERE id = :id AND status <> 'UNMATCHED'
+            """)
+        .param("id", studyId)
+        .update();
+  }
+
+  /** True when a person unlinked this study from this order: the matcher must not link it again. */
+  boolean wasUnlinkedFrom(UUID studyId, UUID orderId) {
+    return Boolean.TRUE.equals(
+        jdbc.sql(
+                """
+                SELECT EXISTS (SELECT 1 FROM imaging_study_events
+                               WHERE study_id = :s AND order_id = :o AND event_type = 'UNLINKED')
+                """)
+            .param("s", studyId)
+            .param("o", orderId)
+            .query(Boolean.class)
+            .single());
+  }
+
   Object[] upsertStudy(UUID org, ImagingArchive.Study s) {
     return jdbc.sql(
             """
@@ -226,7 +283,11 @@ class ImagingStore {
                 accession_number = EXCLUDED.accession_number, dicom_patient_id = EXCLUDED.dicom_patient_id,
                 modalities = EXCLUDED.modalities, study_date = EXCLUDED.study_date,
                 description = EXCLUDED.description, series_count = EXCLUDED.series_count,
-                instance_count = EXCLUDED.instance_count, last_seen_at = now()
+                instance_count = EXCLUDED.instance_count, last_seen_at = now(),
+                version = imaging_studies.version
+                    + CASE WHEN imaging_studies.accession_number IS DISTINCT FROM EXCLUDED.accession_number
+                             OR imaging_studies.dicom_patient_id IS DISTINCT FROM EXCLUDED.dicom_patient_id
+                           THEN 1 ELSE 0 END
             RETURNING id, (xmax = 0) AS inserted
             """)
         .param("id", UUID.randomUUID())

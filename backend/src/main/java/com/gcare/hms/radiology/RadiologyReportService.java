@@ -19,6 +19,7 @@ import com.gcare.hms.radiology.RadiologyReportApi.VersionRequest;
 import com.gcare.hms.radiology.RadiologyReportStore.CriticalRow;
 import com.gcare.hms.radiology.RadiologyReportStore.ReportRow;
 import com.gcare.hms.shared.security.CurrentUser;
+import com.gcare.hms.shared.security.FacilityScope;
 import com.gcare.hms.shared.security.Permissions;
 import com.gcare.hms.shared.web.ApiException;
 import java.time.Duration;
@@ -62,6 +63,7 @@ public class RadiologyReportService {
   private final ImagingStore imaging;
   private final ImagingViews views;
   private final AuditService audit;
+  private static final Instant EARLIEST_CONTACT = Instant.parse("2000-01-01T00:00:00Z");
 
   RadiologyReportService(
       RadiologyReportStore store, ImagingStore imaging, ImagingViews views, AuditService audit) {
@@ -78,7 +80,8 @@ public class RadiologyReportService {
   public List<ReportingItem> reportingWorklist() {
     CurrentUser user = CurrentUser.require();
     List<ReportingItem> items = new ArrayList<>();
-    for (UUID id : store.ordersToReport()) {
+    FacilityScope scope = user.scopeOf(Permissions.RADIOLOGY_REPORT_WRITE);
+    for (UUID id : scope.isEmpty() ? List.<UUID>of() : store.ordersToReport(scope)) {
       OrderRow o = imaging.order(id).orElse(null);
       if (o == null || !user.scopeOf(Permissions.RADIOLOGY_REPORT_WRITE).includes(o.facilityId())) {
         continue;
@@ -137,8 +140,9 @@ public class RadiologyReportService {
   @Transactional
   public ReportView createDraft(UUID orderId, CreateReportRequest request) {
     CurrentUser user = CurrentUser.require();
-    OrderRow o = writableOrder(user, orderId);
+    writableOrder(user, orderId);
     imaging.lockOrder(orderId);
+    OrderRow o = imaging.order(orderId).orElseThrow();
     if ("CANCELLED".equals(o.orderStatus())) {
       throw new ApiException.InvalidTransition("The order was cancelled");
     }
@@ -223,6 +227,10 @@ public class RadiologyReportService {
     if (r.version() != request.version()) {
       throw new ApiException.Conflict("This draft was changed. Reload it.");
     }
+    if ("CANCELLED".equals(imaging.order(r.orderId()).orElseThrow().orderStatus())) {
+      throw new ApiException.InvalidTransition(
+          "The order was cancelled after the examination; discard the draft");
+    }
     if (!StringUtils.hasText(r.findings())) {
       throw new ApiException.Invalid("findings", "is required to sign");
     }
@@ -241,6 +249,12 @@ public class RadiologyReportService {
           .isAfter(Instant.now().plus(Duration.ofMinutes(5)))) {
         throw new ApiException.Invalid(
             "communication.communicated_at", "must not be in the future");
+      }
+      // A sanity floor only (a typing error must give 400, not a database error). Orders keyed
+      // after downtime carry the keying time, so the contact may precede the order's own time.
+      if (request.communication().communicatedAt().isBefore(EARLIEST_CONTACT)) {
+        throw new ApiException.Invalid(
+            "communication.communicated_at", "is not a plausible date; check the year");
       }
     } else if (request.communication() != null) {
       throw new ApiException.Invalid("communication", "only applies to a report marked critical");
@@ -293,14 +307,14 @@ public class RadiologyReportService {
   @Transactional(readOnly = true)
   public List<ImagingResult> resultsOfEncounter(UUID encounterId) {
     CurrentUser user = CurrentUser.require();
-    return results(user, imaging.ordersOfEncounter(encounterId), "encounter");
+    return results(user, imaging.ordersOfEncounter(encounterId), "Encounter", encounterId);
   }
 
   @PreAuthorize(READERS)
   @Transactional(readOnly = true)
   public List<ImagingResult> resultsOfPatient(UUID patientId) {
     CurrentUser user = CurrentUser.require();
-    return results(user, imaging.ordersOfPatient(patientId), "patient");
+    return results(user, imaging.ordersOfPatient(patientId), "Patient", patientId);
   }
 
   @PreAuthorize(
@@ -312,11 +326,20 @@ public class RadiologyReportService {
   @Transactional(readOnly = true)
   public List<CriticalView> openCriticalResults() {
     CurrentUser user = CurrentUser.require();
+    FacilityScope ack = user.scopeOf(Permissions.CRITICAL_RESULT_ACKNOWLEDGE);
+    FacilityScope oversight = user.scopeOf(Permissions.CRITICAL_RESULT_OVERSIGHT);
+    FacilityScope either =
+        ack.allFacilities() || oversight.allFacilities()
+            ? FacilityScope.ALL
+            : new FacilityScope(
+                false,
+                java.util.stream.Stream.concat(
+                        ack.facilityIds().stream(), oversight.facilityIds().stream())
+                    .collect(java.util.stream.Collectors.toSet()));
     List<CriticalView> list =
-        store.openCritical().stream()
-            .filter(c -> mayFollowCritical(user, c.facilityId()))
-            .map(this::criticalView)
-            .toList();
+        either.isEmpty()
+            ? List.of()
+            : store.openCritical(either).stream().map(this::criticalView).toList();
     audit(
         user,
         null,
@@ -357,7 +380,8 @@ public class RadiologyReportService {
 
   // --- helpers ---------------------------------------------------------------------------------
 
-  private List<ImagingResult> results(CurrentUser user, List<OrderRow> orders, String scope) {
+  private List<ImagingResult> results(
+      CurrentUser user, List<OrderRow> orders, String subjectType, UUID subjectId) {
     List<ImagingResult> list = new ArrayList<>();
     for (OrderRow o : orders) {
       if (!user.scopeOf(Permissions.RADIOLOGY_REPORT_READ).includes(o.facilityId())
@@ -393,13 +417,14 @@ public class RadiologyReportService {
               current,
               earlier));
     }
+    // Whose record was read: the visit or the patient, like the other chart reads.
     audit(
         user,
         null,
         "IMAGING_RESULTS_VIEWED",
-        "ImagingResult",
-        null,
-        Map.of("scope", scope, "count", Integer.toString(list.size())));
+        subjectType,
+        subjectId,
+        Map.of("count", Integer.toString(list.size())));
     return list;
   }
 
@@ -464,11 +489,6 @@ public class RadiologyReportService {
 
   private static String trim(String v) {
     return StringUtils.hasText(v) ? v.strip() : null;
-  }
-
-  private static boolean mayFollowCritical(CurrentUser user, UUID facility) {
-    return user.scopeOf(Permissions.CRITICAL_RESULT_ACKNOWLEDGE).includes(facility)
-        || user.scopeOf(Permissions.CRITICAL_RESULT_OVERSIGHT).includes(facility);
   }
 
   private OrderRow readableOrder(CurrentUser user, UUID orderId) {

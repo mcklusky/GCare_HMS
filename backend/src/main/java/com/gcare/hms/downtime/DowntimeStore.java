@@ -10,6 +10,7 @@ import com.gcare.hms.downtime.DowntimeApi.FormBatchView;
 import com.gcare.hms.downtime.DowntimeApi.FormType;
 import com.gcare.hms.downtime.DowntimeApi.Option;
 import com.gcare.hms.downtime.DowntimeApi.UserRef;
+import com.gcare.hms.shared.security.FacilityScope;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -33,9 +34,11 @@ import tools.jackson.databind.json.JsonMapper;
 @Repository
 class DowntimeStore {
 
-  record EncounterRef(UUID id, UUID patientId, UUID facilityId, String status) {}
+  record EncounterRef(
+      UUID id, UUID patientId, UUID facilityId, String status, String departmentName) {}
 
-  record InvoiceRef(UUID id, UUID encounterId, String currency, String status) {}
+  record InvoiceRef(
+      UUID id, UUID encounterId, String currency, String status, String invoiceNumber) {}
 
   private static final String EPISODE =
       """
@@ -126,10 +129,28 @@ class DowntimeStore {
         .optional();
   }
 
-  List<EpisodeView> episodes() {
-    return jdbc.sql(EPISODE + " ORDER BY e.started_at DESC LIMIT 200")
-        .query(this::mapEpisode)
-        .list();
+  /** The newest episodes in the facilities of {@code scope} (filtered before the limit). */
+  List<EpisodeView> episodes(FacilityScope scope) {
+    var spec =
+        jdbc.sql(
+            EPISODE
+                + (scope.allFacilities() ? "" : " WHERE e.facility_id IN (:fac)")
+                + " ORDER BY e.started_at DESC LIMIT 200");
+    if (!scope.allFacilities()) {
+      spec = spec.param("fac", scope.facilityIds());
+    }
+    return spec.query(this::mapEpisode).list();
+  }
+
+  /**
+   * Serializes declaring episodes of one facility, so two overlapping declarations cannot both
+   * pass.
+   */
+  void lockFacilityEpisodes(UUID facility) {
+    jdbc.sql("SELECT pg_advisory_xact_lock(hashtextextended('downtime-episodes:' || :f, 0))")
+        .param("f", facility.toString())
+        .query((rs, i) -> 1)
+        .single();
   }
 
   int endEpisode(UUID id, long version, Instant end, UUID by) {
@@ -282,26 +303,33 @@ class DowntimeStore {
   }
 
   Optional<EncounterRef> encounter(UUID id) {
-    return jdbc.sql("SELECT id, patient_id, facility_id, status FROM encounters WHERE id = :id")
+    return jdbc.sql(
+            """
+            SELECT e.id, e.patient_id, e.facility_id, e.status, d.name AS department
+            FROM encounters e JOIN departments d ON d.id = e.department_id WHERE e.id = :id
+            """)
         .param("id", id)
         .query((rs, i) ->
             new EncounterRef(
                 rs.getObject("id", UUID.class),
                 rs.getObject("patient_id", UUID.class),
                 rs.getObject("facility_id", UUID.class),
-                rs.getString("status")))
+                rs.getString("status"),
+                rs.getString("department")))
         .optional();
   }
 
   Optional<InvoiceRef> invoice(UUID id) {
-    return jdbc.sql("SELECT id, encounter_id, currency, status FROM invoices WHERE id = :id")
+    return jdbc.sql(
+            "SELECT id, encounter_id, currency, status, invoice_number FROM invoices WHERE id = :id")
         .param("id", id)
         .query((rs, i) ->
             new InvoiceRef(
                 rs.getObject("id", UUID.class),
                 rs.getObject("encounter_id", UUID.class),
                 rs.getString("currency"),
-                rs.getString("status")))
+                rs.getString("status"),
+                rs.getString("invoice_number")))
         .optional();
   }
 

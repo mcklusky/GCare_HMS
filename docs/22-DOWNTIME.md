@@ -27,6 +27,13 @@ Requirements: FR-027 (downtime and recovery workflow), FR-035 (partial: downtime
 - **Times:** real records keep the time they were entered in the system. The paper time stays on the keyed form and is shown on the visit ("Entered after downtime from paper forms").
 - Audit records form type and number, episode number and counts, never keyed values.
 
+### Review fixes (2026-11-23, docs/27)
+- **Who sees keyed contents:** names, vitals, order details and amounts on a keyed form are shown only to staff who may see that kind of record (registration: patient read; triage: observation read; order: order read; payment: invoice read) or who keyed it. Everyone else working the queue (e.g. the coordinator, the organization administrator) sees form number, status, times and people.
+- **Approvals:** approving a registration form needs patient registration rights, and an existing visit must still be open (waiting or in consultation) when it is approved. Choosing the invoice for a paper payment needs invoice access. Voiding a triage form needs the right to record observations.
+- **Proposals name what they propose:** the approver sees the chosen patient (number, name, birth date), visit and invoice number, not only "an existing patient".
+- **Concurrency:** declaring, ending, closing and keying lock the episode (or the facility's episodes), so no overlapping episodes and no form keyed into an episode being closed.
+- A miswritten patient number on a paper form no longer blocks the candidate list.
+
 ## 3. Provisional roles
 
 | Role | Permissions |

@@ -25,6 +25,15 @@ Requirements: FR-010 (imaging worklist), FR-011 (DICOM receive and link, partial
 - **Scheduled check:** runs only when the archive is bound to an organization: `GCARE_IMAGING_ARCHIVE_ORGANIZATION_ID`; interval `GCARE_IMAGING_SYNC_INTERVAL` (default 5 minutes — an engineering default to tune), look-back `GCARE_IMAGING_SYNC_LOOKBACK_DAYS` (default 2). Failures are logged and retried at the next run; nothing is linked on doubt.
 - **Audit:** worklist and queue views (counts), steps, archive checks and sweeps (counts), proposals, approvals and unlinks (ids only). Never patient numbers or study values.
 
+### Review fixes (2026-11-23, docs/27)
+- A study a person unlinked from an order is never linked to that order again automatically; the queue says why it waits.
+- If the archive changes a study's accession number or patient ID after a link was proposed or made, the study returns to the queue (history: "archive changed").
+- Two archive checks at once cannot link two studies to one order automatically (the order is locked).
+- The worklist filters by facility and hides finished orders in the database query, so old work never pushes new orders out of the list. An order the department already started or completed from the orders worklist still moves through arrived and examined here.
+- The scheduled check pages through the archive's answers (it used to read only the first 200 studies) and never holds database locks while the archive answers. Answers over 5 MiB are refused while reading.
+- **Organization binding:** when `gcare.imaging.archive.organization-id` is set, users of other organizations cannot query the archive. **Set it in every deployment** (the scheduled check needs it anyway); without it the HMS logs a warning at start-up. Viewer link templates must be http(s).
+- Send back, history and the queue's proposals respect the facility scope.
+
 ## 3. Provisional roles
 
 | Role | Permissions |

@@ -131,7 +131,8 @@ export interface Entry {
   registration_form_number: number | null
   registration_form_label: string | null
   occurred_at: string
-  data: Record<string, unknown>
+  /** Null when your role may not see this kind of record (and you did not key it). */
+  data: Record<string, unknown> | null
   status: EntryStatus
   needs_second_person: boolean
   entered_by: UserRef

@@ -156,7 +156,28 @@ These belong to the launch authorization, not to a single phase:
 - Named approvers ([project-record/approvals.md](project-record/approvals.md)). The pilot decisions were confirmed on 2026-11-23 without names.
 - The pull requests (stacked 1.2 → … → 6.4) are reviewed and merged.
 
+## Review of Phases 5–6 (2026-11-23)
+
+Four independent reviewers read the code for tasks 5.3 to 6.4: downtime, the imaging archive and worklist, radiology reports, and operations plus the screens. Each finding was checked against the code before it was fixed. Fixes are on branch `review/phase5-6-fixes` (migration V19).
+
+| Area | Fixed |
+|---|---|
+| Patient safety (screens) | The confirm dialog no longer keeps a reason typed for the previous record, which could have recorded a false critical-result acknowledgement. The "propose link" form resets for each study, so it cannot keep the previous study's accession number. Downtime approvers see the proposed patient, visit and invoice by name. Errors (e.g. "someone else acted first") show inside the dialog, and the list reloads. If the paper-record notice on a visit cannot load, a warning shows instead of nothing. |
+| Lists cut short | The imaging worklist, reporting list, critical-results list and downtime episode list now filter by facility (and the worklist also hides finished orders) before their row limit. Before, old or other-facility rows could push current work, including critical results, out of view. |
+| Imaging linking | Unlinked pairings are never re-linked automatically. Archive-side changes to accession number or patient ID send a study back to review. Two concurrent checks cannot double-link. The scheduled check pages through results. No lock is held while the archive answers. The size cap applies while reading. Archive look-ups are bound to one organization. Send back and history respect facility scope. Orders started from the orders worklist still move on. Viewer links must be http(s), checked both in configuration and on screen. |
+| Access | Keyed downtime contents only for roles that may see that kind of record. Approving a registration form needs registration rights, and the visit must still be open. Choosing a paper payment's invoice needs invoice access. Voiding a triage form needs observation rights. |
+| Concurrency (downtime) | Locks prevent overlapping episodes, forms keyed into an episode being closed, and paper times after the recorded end. |
+| Errors and audit | A miswritten paper patient number no longer blocks matching. Implausible contact years give 400, not 500. A changed invoice at approval gives 422 ("send it back"). Imaging results reads are audited against the visit or patient. |
+| Operations | A failed backup deletes its partial files. Restore grants the application role to `GCARE_APP_LOGIN`. Isolation tests now cover all five downtime tables. |
+
+**Not changed (need a decision or a larger change):**
+- **Time zones:** screens use the workstation's time zone. Pilot PCs must be set to the facility's zone until display and entry move to the facility zone (docs/23).
+- **Amending a critical report:** this can leave two open critical results or one orphaned open result (docs/26, question 5).
+- **Archive binding:** the HMS only warns when `gcare.imaging.archive.organization-id` is missing. Every deployment must set it (docs/25).
+- Minor items: an unknown visit or patient id returns an empty list rather than 404. The foreign key of `downtime_entry_events` is not organization-qualified (RLS still isolates it).
+
 ## Change log
 | Date | Change | By |
 |---|---|---|
+| 2026-11-23 | Phase 5–6 review: findings fixed or recorded above (V19) | Engineering (Claude Code) |
 | 2026-11-23 | Pack prepared for Phases 1–6; radiology scenarios R1–R10 added; traceability rows FR-014, FR-035, FR-040, FR-043 filled from tests that ran | Engineering (Claude Code) |

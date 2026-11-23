@@ -50,11 +50,11 @@ export function ReportEditorPage() {
   return (
     <Stack>
       <Anchor component={Link} to="/radiology/reporting" size="sm">
-        ← Reporting
+        â† Reporting
       </Anchor>
       <PageTitle>Radiology report</PageTitle>
       {start.isError && <ErrorState error={start.error} />}
-      <QueryState query={reports} loadingLabel="Loading reports…">
+      <QueryState query={reports} loadingLabel="Loading reportsâ€¦">
         {(list) => {
           const draft = list.find((r) => r.status === 'DRAFT')
           const signed = list.filter((r) => r.status === 'SIGNED')
@@ -65,7 +65,7 @@ export function ReportEditorPage() {
                   <ReportText report={r} />
                   {r.critical && (
                     <Text size="sm" c="red" mt="xs">
-                      Critical result · told {r.critical_result?.communicated_to}
+                      Critical result Â· told {r.critical_result?.communicated_to}
                     </Text>
                   )}
                 </Card>
@@ -147,7 +147,7 @@ function DraftEditor({ draft, onChanged }: { draft: Report; onChanged: () => voi
       onChanged()
     },
   })
-  const discard = useMutation({ mutationFn: () => discardReport(draft), onSuccess: onChanged })
+  const discard = useMutation({ mutationFn: () => discardReport(draft), onSuccess: onChanged, onError: onChanged })
   const field = (k: keyof Omit<Sections, 'critical'>, label: string, required = false) => (
     <Textarea
       label={label}
@@ -183,7 +183,6 @@ function DraftEditor({ draft, onChanged }: { draft: Report; onChanged: () => voi
           }}
         />
         {save.isError && <ErrorState error={save.error} />}
-        {discard.isError && <ErrorState error={discard.error} />}
         <Group>
           <Button type="submit" variant="default" disabled={!dirty} loading={save.isPending}>
             Save draft
@@ -191,7 +190,7 @@ function DraftEditor({ draft, onChanged }: { draft: Report; onChanged: () => voi
           <Button onClick={() => setSigning(true)} disabled={!canSign}>
             Sign
           </Button>
-          <Button variant="subtle" color="red" onClick={() => setDiscarding(true)}>
+          <Button variant="subtle" color="red" onClick={() => (discard.reset(), setDiscarding(true))}>
             Discard draft
           </Button>
         </Group>
@@ -246,6 +245,7 @@ function DraftEditor({ draft, onChanged }: { draft: Report; onChanged: () => voi
         confirmLabel="Discard"
         danger
         busy={discard.isPending}
+        error={discard.error}
         onConfirm={() => discard.mutate()}
         onCancel={() => setDiscarding(false)}
       >

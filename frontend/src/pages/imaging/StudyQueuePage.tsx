@@ -21,6 +21,7 @@ export function StudyQueuePage() {
       setDeciding(null)
       done()
     },
+    onError: done,
   })
 
   return (
@@ -30,7 +31,6 @@ export function StudyQueuePage() {
         These studies are in the archive but did not link to an order by themselves. Check the patient and the
         examination against the archive before proposing a link; a second person approves it.
       </Text>
-      {decide.isError && <ErrorState error={decide.error} />}
       <QueryState query={queue} loadingLabel="Loading studies…">
         {(studies) =>
           studies.length === 0 ? (
@@ -74,14 +74,17 @@ export function StudyQueuePage() {
                             {s.proposed_by?.id === me.id ? (
                               <Text size="xs">Your proposal: another person approves.</Text>
                             ) : (
-                              <Button size="xs" onClick={() => setDeciding({ study: s, decision: 'approve' })}>
+                              <Button
+                                size="xs"
+                                onClick={() => (decide.reset(), setDeciding({ study: s, decision: 'approve' }))}
+                              >
                                 Approve
                               </Button>
                             )}
                             <Button
                               size="xs"
                               variant="default"
-                              onClick={() => setDeciding({ study: s, decision: 'send-back' })}
+                              onClick={() => (decide.reset(), setDeciding({ study: s, decision: 'send-back' }))}
                             >
                               Send back
                             </Button>
@@ -96,13 +99,14 @@ export function StudyQueuePage() {
           )
         }
       </QueryState>
-      {proposing && <ProposeCard study={proposing} onDone={() => (setProposing(null), done())} />}
+      {proposing && <ProposeCard key={proposing.id} study={proposing} onDone={() => (setProposing(null), done())} />}
       <ConfirmDialog
         opened={deciding !== null}
         title={deciding?.decision === 'approve' ? 'Approve this link?' : 'Send this proposal back?'}
         confirmLabel={deciding?.decision === 'approve' ? 'Approve' : 'Send back'}
         requireReason
         busy={decide.isPending}
+        error={decide.error}
         onConfirm={(note) => deciding && decide.mutate({ ...deciding, note: note ?? '' })}
         onCancel={() => setDeciding(null)}
       >

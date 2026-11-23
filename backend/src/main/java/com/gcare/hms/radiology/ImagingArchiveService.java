@@ -12,7 +12,9 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -28,14 +30,20 @@ public class ImagingArchiveService {
 
   private final ImagingArchive archive;
   private final AuditService audit;
+  private final UUID archiveOrganization;
 
-  ImagingArchiveService(ImagingArchive archive, AuditService audit) {
+  ImagingArchiveService(
+      ImagingArchive archive,
+      AuditService audit,
+      @Value("${gcare.imaging.archive.organization-id:#{null}}") UUID archiveOrganization) {
     this.archive = archive;
     this.audit = audit;
+    this.archiveOrganization = archiveOrganization;
   }
 
   @PreAuthorize("hasAuthority('" + Permissions.IMAGING_ARCHIVE_ADMIN + "')")
   public ArchiveStatusView status() {
+    ImagingService.requireArchiveFor(archiveOrganization, CurrentUser.require().organizationId());
     ImagingArchive.Status s = archive.status();
     return new ArchiveStatusView(
         s.configured(),
@@ -49,6 +57,7 @@ public class ImagingArchiveService {
   @PreAuthorize("hasAuthority('" + Permissions.IMAGING_ARCHIVE_ADMIN + "')")
   public List<StudyView> studiesByAccession(String accessionNumber) {
     CurrentUser user = CurrentUser.require();
+    ImagingService.requireArchiveFor(archiveOrganization, user.organizationId());
     // DICOM AccessionNumber is SH: at most 16 characters.
     if (accessionNumber == null || !ACCESSION.matcher(accessionNumber.trim()).matches()) {
       throw new ApiException.Invalid(

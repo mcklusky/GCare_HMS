@@ -34,18 +34,31 @@ stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 base="$BACKUP_DIR/gcare-${PGDATABASE}-${stamp}"
 start="$(date +%s)"
 
+# A failed run leaves nothing that looks like a backup (a truncated but valid .dump.gpg would).
+completed=0
+cleanup() {
+  if [[ "$completed" != 1 ]]; then
+    rm -f "$base.dump.gpg" "$base.manifest.tmp" "$base.manifest"
+  fi
+}
+trap cleanup EXIT
+
 # Hold one read-only snapshot open so the counts and the dump see exactly the same data.
 coproc SNAP { psql -X -q -At -v ON_ERROR_STOP=1; }
 echo "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SELECT pg_export_snapshot();" >&"${SNAP[1]}"
 read -r snapshot <&"${SNAP[0]}"
 [[ -n "$snapshot" ]] || { echo "could not export a snapshot" >&2; exit 1; }
 
+# Assignments, not command substitutions inside echo: set -e stops the run if a query fails.
+flyway_version="$(in_snapshot "$snapshot" "$FLYWAY_VERSION_SQL")"
+table_counts="$(in_snapshot "$snapshot" "$TABLE_COUNTS_SQL")"
+[[ -n "$flyway_version" && -n "$table_counts" ]] || { echo "could not read the manifest data" >&2; exit 1; }
 {
   echo "format=gcare-backup-1"
   echo "created_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "database=$PGDATABASE"
-  echo "flyway_version=$(in_snapshot "$snapshot" "$FLYWAY_VERSION_SQL")"
-  in_snapshot "$snapshot" "$TABLE_COUNTS_SQL" | sed 's/^/table./'
+  echo "flyway_version=$flyway_version"
+  echo "$table_counts" | sed 's/^/table./'
 } > "$base.manifest.tmp"
 
 pg_dump --format=custom --snapshot="$snapshot" --no-password \
@@ -61,6 +74,7 @@ wait "$SNAP_PID" 2>/dev/null || true
   echo "sha256=$(sha256sum "$base.dump.gpg" | cut -d' ' -f1)"
 } > "$base.manifest"
 rm -f "$base.manifest.tmp"
+completed=1
 elapsed=$(( $(date +%s) - start ))
 
 # Retention only after a successful backup, and never the one just written.

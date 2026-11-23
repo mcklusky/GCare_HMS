@@ -11,6 +11,10 @@
 #
 # Required environment: PGHOST, PGPORT, PGDATABASE (the empty target), PGUSER (+ password), and a
 # GNUPGHOME holding the private key. The restoring user becomes the owner of restored objects.
+# GCARE_APP_LOGIN: the login role the application connects as. Role memberships are cluster-wide and
+# not in the dump, so on a new server the application could not run a single query without
+# "GRANT gcare_app TO <login>". Set it for every real restore; drills that never start the
+# application may leave it empty (a warning is printed).
 set -euo pipefail
 
 backup="${1:?usage: restore.sh <backup .dump.gpg>}"
@@ -38,6 +42,12 @@ fi
 
 # The application role is cluster-wide, so it is not in the dump; grants in the dump need it.
 run_sql "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'gcare_app') THEN CREATE ROLE gcare_app NOLOGIN; END IF; END \$\$"
+if [[ -n "${GCARE_APP_LOGIN:-}" ]]; then
+  [[ "$GCARE_APP_LOGIN" =~ ^[a-z_][a-z0-9_]{0,62}$ ]] || { echo "GCARE_APP_LOGIN is not a plain role name" >&2; exit 2; }
+  run_sql "GRANT gcare_app TO \"$GCARE_APP_LOGIN\""
+else
+  echo "warning: GCARE_APP_LOGIN not set; grant gcare_app to the application's login before starting it" >&2
+fi
 
 gpg --batch --quiet --decrypt "$backup" | pg_restore --no-owner --exit-on-error --dbname="$PGDATABASE"
 

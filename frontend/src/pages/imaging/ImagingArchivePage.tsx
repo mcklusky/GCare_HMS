@@ -1,7 +1,7 @@
 import { Alert, Anchor, Badge, Button, Card, Group, Stack, Table, Text, TextInput, Title } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
-import { findArchiveStudies, getArchiveStatus } from '../../api/imaging'
+import { findArchiveStudies, getArchiveStatus, safeViewerHref } from '../../api/imaging'
 import { EmptyState, PageTitle, QueryState } from '../../components/states'
 
 /** Imaging archive connection check and study look-up for the evaluation and support (task 6.1; docs/24). */
@@ -96,8 +96,8 @@ export function ImagingArchivePage() {
                           {s.series_count ?? '?'} / {s.instance_count ?? '?'}
                         </Table.Td>
                         <Table.Td>
-                          {s.viewer_url ? (
-                            <Anchor href={s.viewer_url} target="_blank" rel="noopener noreferrer">
+                          {safeViewerHref(s.viewer_url) ? (
+                            <Anchor href={safeViewerHref(s.viewer_url)!} target="_blank" rel="noopener noreferrer">
                               Open in viewer
                             </Anchor>
                           ) : (

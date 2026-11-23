@@ -1,7 +1,8 @@
 import { MantineProvider } from '@mantine/core'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { ApiRequestError } from '../api/client'
 import { ConfirmDialog } from './ConfirmDialog'
 
 function renderDialog(props: Partial<Parameters<typeof ConfirmDialog>[0]> = {}) {
@@ -62,5 +63,39 @@ describe('ConfirmDialog', () => {
 
     expect(onCancel).toHaveBeenCalled()
     expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  it('starts with an empty reason each time it opens, so a reason never carries over to the next record', async () => {
+    const dialog = (opened: boolean) => (
+      <MantineProvider env="test">
+        <ConfirmDialog
+          opened={opened}
+          title="Acknowledge"
+          confirmLabel="Acknowledge"
+          requireReason
+          onConfirm={vi.fn()}
+          onCancel={vi.fn()}
+        >
+          Record A or B
+        </ConfirmDialog>
+      </MantineProvider>
+    )
+    const view = render(dialog(true))
+    await userEvent.type(await screen.findByRole('textbox', { name: /Reason/ }), 'Patient A recalled')
+    // Confirmed: the caller closes the dialog without Cancel, then opens it for the next record.
+    view.rerender(dialog(false))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    view.rerender(dialog(true))
+    expect(await screen.findByRole('textbox', { name: /Reason/ })).toHaveValue('')
+    expect(screen.getByRole('button', { name: 'Acknowledge' })).toBeDisabled()
+  })
+
+  it('shows a failed save inside the dialog', async () => {
+    renderDialog({
+      error: new ApiRequestError(409, { code: 'CONFLICT', message: 'This form was changed. Reload it.' }, null),
+    })
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('This form was changed. Reload it.')
+    expect(alert).toHaveTextContent('reloaded')
   })
 })

@@ -36,6 +36,7 @@ class DicomWebArchive implements ImagingArchive {
 
   private static final Pattern UID = Pattern.compile("^[0-9]+(\\.[0-9]+)*$");
   private static final int MAX_BODY = 5 * 1024 * 1024;
+  private static final int MAX_PAGES = 50;
   private static final DateTimeFormatter DICOM_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
   private final ImagingArchiveProperties props;
@@ -79,7 +80,21 @@ class DicomWebArchive implements ImagingArchive {
 
   @Override
   public List<Study> studiesBetween(LocalDate from, LocalDate to) {
-    return query("StudyDate=" + DICOM_DATE.format(from) + "-" + DICOM_DATE.format(to));
+    // Page through the window: a busy department can have more studies than one answer holds, and a
+    // study the sweep never sees would never link. MAX_PAGES bounds a misbehaving archive.
+    String criteria = "StudyDate=" + DICOM_DATE.format(from) + "-" + DICOM_DATE.format(to);
+    List<Study> all = new ArrayList<>();
+    for (int page = 0; page < MAX_PAGES; page++) {
+      int offset = page * props.maxResults();
+      List<Study> batch = query(criteria + (offset == 0 ? "" : "&offset=" + offset));
+      all.addAll(batch);
+      if (batch.size() < props.maxResults()) {
+        return all;
+      }
+    }
+    throw new UnavailableException(
+        "The archive returned more than " + MAX_PAGES + " pages of studies; shorten the look-back",
+        null);
   }
 
   @Override
@@ -120,9 +135,14 @@ class DicomWebArchive implements ImagingArchive {
           "Authorization",
           "Basic " + Base64.getEncoder().encodeToString(pair.getBytes(StandardCharsets.UTF_8)));
     }
-    HttpResponse<byte[]> res;
+    HttpResponse<java.io.InputStream> res;
+    byte[] body;
     try {
-      res = http.send(req.build(), HttpResponse.BodyHandlers.ofByteArray());
+      res = http.send(req.build(), HttpResponse.BodyHandlers.ofInputStream());
+      // Read at most one byte over the cap, so an oversized answer never fills the memory.
+      try (java.io.InputStream in = res.body()) {
+        body = in.readNBytes(MAX_BODY + 1);
+      }
     } catch (java.io.IOException e) {
       throw new UnavailableException("The archive did not answer", e);
     } catch (InterruptedException e) {
@@ -140,12 +160,12 @@ class DicomWebArchive implements ImagingArchive {
     if (code < 200 || code >= 300) {
       throw new UnavailableException("The archive answered with status " + code, null);
     }
-    if (res.body().length > MAX_BODY) {
+    if (body.length > MAX_BODY) {
       throw new UnavailableException("The archive answer was too large", null);
     }
     JsonNode root;
     try {
-      root = json.readTree(res.body());
+      root = json.readTree(body);
     } catch (RuntimeException e) {
       throw new UnavailableException("The archive answer was not DICOM JSON", e);
     }

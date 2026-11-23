@@ -350,9 +350,18 @@ class DowntimeTests {
                 .andExpect(status().isCreated()),
             "$.id");
     String invoice = issuedInvoice(encounter);
+    // Choosing the invoice needs invoice access: the coordinator who keyed the form cannot.
     send(
             post("/api/v1/downtime/entries/{id}/propose", pay),
             coordinator,
+            "{\"version\": 0, \"action\": \"APPLY\", \"note\": \"Receipt book\", \"invoice_id\": \"%s\"}"
+                .formatted(invoice))
+        .andExpect(status().isForbidden());
+    TestUser cashier2 =
+        user(Permissions.BILLING_READ, Permissions.INVOICE_READ, Permissions.DOWNTIME_RECORD);
+    send(
+            post("/api/v1/downtime/entries/{id}/propose", pay),
+            cashier2,
             "{\"version\": 0, \"action\": \"APPLY\", \"note\": \"Receipt book\", \"invoice_id\": \"%s\"}"
                 .formatted(invoice))
         .andExpect(status().isOk());
@@ -536,12 +545,71 @@ class DowntimeTests {
   }
 
   @Test
+  void keyedContentsAreShownOnlyToRolesThatMayReadThemAndClinicalFormsNeedClinicalRights()
+      throws Exception {
+    String episode =
+        read(
+            declare(coordinator, NOW.minus(2, ChronoUnit.HOURS), null)
+                .andExpect(status().isCreated()),
+            "$.id");
+    issue("REGISTRATION", 2);
+    issue("TRIAGE", 2);
+    Instant at = NOW.minus(1, ChronoUnit.HOURS);
+    // The clerk wrote a malformed patient number on the paper form.
+    String reg =
+        read(
+            key(
+                    episode,
+                    clerk,
+                    registrationForm(1, "Hidden", at)
+                        .replace(
+                            "\"family_name\"",
+                            "\"written_patient_number\": \"12345\", \"family_name\""))
+                .andExpect(status().isCreated()),
+            "$.id");
+    send(get("/api/v1/downtime/entries/{id}/candidates", reg), clerk2, "")
+        .andExpect(status().isOk());
+    String tri =
+        read(
+            key(
+                    episode,
+                    nurse,
+                    "{\"form_type\": \"TRIAGE\", \"form_number\": 1, \"registration_form_number\": 1, \"occurred_at\": \"%s\", \"triage\": {\"pulse_bpm\": 88}}"
+                        .formatted(at))
+                .andExpect(status().isCreated()),
+            "$.id");
+
+    // The clerk (patient access) sees the registration; the cashier and the coordinator do not.
+    send(get("/api/v1/downtime/entries/{id}", reg), clerk2, "")
+        .andExpect(jsonPath("$.data.family_name").value("Hidden"));
+    send(get("/api/v1/downtime/entries/{id}", reg), cashier, "")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.form_label").exists())
+        .andExpect(jsonPath("$.data").doesNotExist());
+    send(get("/api/v1/downtime/episodes/{id}/entries", episode), coordinator, "")
+        .andExpect(
+            jsonPath("$[*].data")
+                .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue())));
+    // Vitals only for clinical staff (or whoever keyed them).
+    send(get("/api/v1/downtime/entries/{id}", tri), clerk2, "")
+        .andExpect(jsonPath("$.data").doesNotExist());
+    send(get("/api/v1/downtime/entries/{id}", tri), nurse, "")
+        .andExpect(jsonPath("$.data.pulse_bpm").value(88));
+    // Voiding a triage form needs the clinical right to record observations.
+    send(get("/api/v1/downtime/entries/{id}", tri), cashier, "").andExpect(status().isOk());
+    decide("void", tri, cashier, 0, "Looks wrong").andExpect(status().isForbidden());
+  }
+
+  @Test
   void episodesAndFormsAreInvisibleOutsideTheFacilityAndOrganization() throws Exception {
     String episode =
         read(
             declare(coordinator, NOW.minus(2, ChronoUnit.HOURS), null)
                 .andExpect(status().isCreated()),
             "$.id");
+    issue("REGISTRATION", 2);
+    key(episode, clerk, registrationForm(1, "Isolated", NOW.minus(1, ChronoUnit.HOURS)))
+        .andExpect(status().isCreated());
     UUID otherFacility = fixtures.facility(orgId, "GH2");
     TestUser elsewhere = fixtures.user(orgId);
     fixtures.grant(
@@ -559,12 +627,28 @@ class DowntimeTests {
     fixtures.grant(foreign, foreignFacility, Permissions.DOWNTIME_MANAGE);
     send(get("/api/v1/downtime/episodes/{id}", episode), foreign, "")
         .andExpect(status().isNotFound());
-    assertThat(
-            OrganizationContext.callAs(
-                otherOrg,
-                () ->
-                    jdbc.sql("SELECT count(*) FROM downtime_episodes").query(Long.class).single()))
-        .isZero();
+    // Every downtime table is isolated by organization (row-level security).
+    for (String table :
+        new String[] {
+          "downtime_episodes",
+          "downtime_form_counters",
+          "downtime_form_batches",
+          "downtime_entries",
+          "downtime_entry_events"
+        }) {
+      assertThat(
+              OrganizationContext.callAs(
+                  orgId,
+                  () -> jdbc.sql("SELECT count(*) FROM " + table).query(Long.class).single()))
+          .as(table)
+          .isPositive();
+      assertThat(
+              OrganizationContext.callAs(
+                  otherOrg,
+                  () -> jdbc.sql("SELECT count(*) FROM " + table).query(Long.class).single()))
+          .as(table)
+          .isZero();
+    }
     send(get("/api/v1/downtime/episodes", episode), user(Permissions.PATIENT_READ), "")
         .andExpect(status().isForbidden());
   }

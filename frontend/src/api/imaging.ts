@@ -30,3 +30,14 @@ export const findArchiveStudies = (accession: string, signal?: AbortSignal) =>
   apiFetch<ArchiveStudy[]>(`/api/v1/imaging/archive/studies?accession_number=${encodeURIComponent(accession)}`, {
     signal,
   })
+
+/** A link the browser may open: only http(s) URLs, so a misconfigured viewer template can never become a script link. */
+export function safeViewerHref(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    const u = new URL(url)
+    return u.protocol === 'https:' || u.protocol === 'http:' ? u.href : null
+  } catch {
+    return null
+  }
+}

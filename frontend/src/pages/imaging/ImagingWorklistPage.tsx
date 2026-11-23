@@ -2,6 +2,7 @@ import { Anchor, Badge, Button, Card, Checkbox, Group, Stack, Table, Text } from
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { safeViewerHref } from '../../api/imaging'
 import { Permission } from '../../api/types'
 import { checkArchive, getWorklist, recordStep, STEP_LABEL, type WorklistItem } from '../../api/imagingWork'
 import { useCurrentMe } from '../../auth/MeContext'
@@ -28,6 +29,7 @@ export function ImagingWorklistPage() {
       setConfirm(null)
       refresh()
     },
+    onError: refresh,
   })
   const check = useMutation({ mutationFn: checkArchive, onSuccess: refresh })
   const canLink = hasPermission(me, Permission.IMAGING_LINK)
@@ -48,7 +50,6 @@ export function ImagingWorklistPage() {
         checked={finished}
         onChange={(e) => setFinished(e.currentTarget.checked)}
       />
-      {step.isError && <ErrorState error={step.error} />}
       {check.isError && <ErrorState error={check.error} />}
       <QueryState query={worklist} loadingLabel="Loading imaging orders…">
         {(items) =>
@@ -101,10 +102,10 @@ export function ImagingWorklistPage() {
                         {i.studies.length === 0
                           ? '—'
                           : i.studies.map((s) =>
-                              s.viewer_url ? (
+                              safeViewerHref(s.viewer_url) ? (
                                 <Anchor
                                   key={s.id}
-                                  href={s.viewer_url}
+                                  href={safeViewerHref(s.viewer_url)!}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   display="block"
@@ -121,12 +122,12 @@ export function ImagingWorklistPage() {
                       <Table.Td>
                         <Group gap="xs">
                           {i.step === 'ORDERED' && (
-                            <Button size="xs" onClick={() => setConfirm({ item: i, step: 'arrived' })}>
+                            <Button size="xs" onClick={() => (step.reset(), setConfirm({ item: i, step: 'arrived' }))}>
                               Patient arrived
                             </Button>
                           )}
                           {i.step === 'ARRIVED' && (
-                            <Button size="xs" onClick={() => setConfirm({ item: i, step: 'examined' })}>
+                            <Button size="xs" onClick={() => (step.reset(), setConfirm({ item: i, step: 'examined' }))}>
                               Examination done
                             </Button>
                           )}
@@ -155,6 +156,7 @@ export function ImagingWorklistPage() {
         title={confirm?.step === 'arrived' ? 'Record that the patient arrived?' : 'Record the examination as done?'}
         confirmLabel="Record"
         busy={step.isPending}
+        error={step.error}
         onConfirm={() => confirm && step.mutate(confirm)}
         onCancel={() => setConfirm(null)}
       >

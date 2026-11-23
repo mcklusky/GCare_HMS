@@ -338,6 +338,106 @@ class ImagingWorklistTests {
         .isInstanceOf(DataAccessException.class);
   }
 
+  private String accessionOf(String order) {
+    return OrganizationContext.callAs(
+        orgId,
+        () ->
+            jdbc.sql("SELECT accession_number FROM imaging_orders WHERE order_id = ?::uuid")
+                .params(order)
+                .query(String.class)
+                .single());
+  }
+
+  @Test
+  void anUnlinkedPairingStaysUnlinkedAndArchiveChangesSendAStudyBackToReview() throws Exception {
+    // 1. A person unlinks an automatic link: the next archive check must not link it again.
+    String[] o = imagingOrder();
+    send(get("/api/v1/imaging/worklist"), radiographer, "").andExpect(status().isOk());
+    String accession = accessionOf(o[0]);
+    STUB.body = "[" + study("1.2.3.300", accession, o[1]) + "]";
+    String studyId =
+        read(
+            send(post("/api/v1/imaging/orders/{id}/check-archive", o[0]), radiographer, "")
+                .andExpect(jsonPath("$.studies.length()").value(1)),
+            "$.studies[0].id");
+    send(
+            post("/api/v1/imaging/studies/{id}/unlink", studyId),
+            radiographer,
+            "{\"version\": 1, \"note\": \"Wrong examination\"}")
+        .andExpect(status().isOk());
+    send(post("/api/v1/imaging/orders/{id}/check-archive", o[0]), radiographer2, "")
+        .andExpect(jsonPath("$.studies.length()").value(0));
+    send(get("/api/v1/imaging/studies/unlinked"), radiographer, "")
+        .andExpect(
+            jsonPath("$[?(@.id == '" + studyId + "')].unmatched_reason")
+                .value(
+                    org.hamcrest.Matchers.hasItem(
+                        org.hamcrest.Matchers.containsString("unlinked"))));
+
+    // 2. The archive changes the patient ID of a linked study: it returns to review.
+    String[] o2 = imagingOrder();
+    send(get("/api/v1/imaging/worklist"), radiographer, "").andExpect(status().isOk());
+    String accession2 = accessionOf(o2[0]);
+    STUB.body = "[" + study("1.2.3.301", accession2, o2[1]) + "]";
+    String study2 =
+        read(
+            send(post("/api/v1/imaging/orders/{id}/check-archive", o2[0]), radiographer, "")
+                .andExpect(jsonPath("$.studies.length()").value(1)),
+            "$.studies[0].id");
+    STUB.body = "[" + study("1.2.3.301", accession2, "P-CORRECTED-1") + "]";
+    send(post("/api/v1/imaging/orders/{id}/check-archive", o2[0]), radiographer, "")
+        .andExpect(jsonPath("$.studies.length()").value(0));
+    send(get("/api/v1/imaging/studies/{id}/history", study2), radiographer, "")
+        .andExpect(
+            jsonPath("$[*].event_type")
+                .value(
+                    org.hamcrest.Matchers.contains(
+                        "DISCOVERED", "AUTO_LINKED", "ARCHIVE_CHANGED")));
+
+    // 3. An order the department started from the orders worklist still moves on here.
+    String[] o3 = imagingOrder();
+    send(post("/api/v1/orders/{id}/start", o3[0]), radiographer, "{\"version\": 0}")
+        .andExpect(status().isOk());
+    send(post("/api/v1/imaging/orders/{id}/arrived", o3[0]), radiographer, "{\"version\": 0}")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.step").value("ARRIVED"));
+    send(post("/api/v1/imaging/orders/{id}/examined", o3[0]), radiographer, "{\"version\": 1}")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.order_status").value("COMPLETED"));
+  }
+
+  @Test
+  void proposalsAndTheirHistoryStayWithinTheFacility() throws Exception {
+    String[] o = imagingOrder();
+    send(get("/api/v1/imaging/worklist"), radiographer, "").andExpect(status().isOk());
+    STUB.body = "[" + study("1.2.3.310", accessionOf(o[0]), "TYPO-310") + "]";
+    send(post("/api/v1/imaging/orders/{id}/check-archive", o[0]), radiographer, "")
+        .andExpect(status().isOk());
+    String studyId =
+        read(send(get("/api/v1/imaging/studies/unlinked"), radiographer, ""), "$[0].id");
+    send(
+            post("/api/v1/imaging/studies/{id}/propose", studyId),
+            radiographer,
+            "{\"version\": 0, \"accession_number\": \"%s\", \"note\": \"Checked\"}"
+                .formatted(accessionOf(o[0])))
+        .andExpect(status().isOk());
+
+    UUID other = fixtures.facility(orgId, "GH2");
+    TestUser elsewhere = fixtures.user(orgId);
+    fixtures.grant(elsewhere, other, Permissions.IMAGING_WORKLIST, Permissions.IMAGING_LINK);
+    send(get("/api/v1/imaging/studies/unlinked"), elsewhere, "")
+        .andExpect(jsonPath("$[?(@.id == '" + studyId + "')]").isEmpty());
+    send(get("/api/v1/imaging/studies/{id}/history", studyId), elsewhere, "")
+        .andExpect(status().isNotFound());
+    send(
+            post("/api/v1/imaging/studies/{id}/send-back", studyId),
+            elsewhere,
+            "{\"version\": 1, \"note\": \"Not mine\"}")
+        .andExpect(status().isNotFound());
+    send(get("/api/v1/imaging/worklist"), elsewhere, "")
+        .andExpect(jsonPath("$[?(@.order_id == '" + o[0] + "')]").isEmpty());
+  }
+
   @Test
   void othersCannotSeeOrActAndArchiveFailuresAreReported() throws Exception {
     String[] o = imagingOrder();

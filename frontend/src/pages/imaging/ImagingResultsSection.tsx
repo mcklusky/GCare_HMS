@@ -10,11 +10,12 @@ import {
   type ImagingResult,
   type Report,
 } from '../../api/radiologyReports'
+import { safeViewerHref } from '../../api/imaging'
 import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { ErrorState, QueryState } from '../../components/states'
+import { QueryState } from '../../components/states'
 
 /**
  * Imaging results on a visit or in the patient chart (task 6.4; docs/26): signed reports, critical
@@ -37,6 +38,8 @@ export function ImagingResultsSection({ encounterId, patientId }: { encounterId?
       void queryClient.invalidateQueries({ queryKey: key })
       void queryClient.invalidateQueries({ queryKey: ['critical-results'] })
     },
+    // Someone may have acknowledged it first (409): reload so the dialog's message matches the list.
+    onError: () => void queryClient.invalidateQueries({ queryKey: key }),
   })
   const canAck = hasPermission(me, Permission.CRITICAL_RESULT_ACKNOWLEDGE)
 
@@ -45,7 +48,6 @@ export function ImagingResultsSection({ encounterId, patientId }: { encounterId?
       <Title order={2} size="h4" mb="xs">
         Imaging results
       </Title>
-      {ack.isError && <ErrorState error={ack.error} />}
       <QueryState query={results} loadingLabel="Loading imaging results…">
         {(list) =>
           list.length === 0 ? (
@@ -53,7 +55,7 @@ export function ImagingResultsSection({ encounterId, patientId }: { encounterId?
           ) : (
             <Stack>
               {list.map((r) => (
-                <Result key={r.order_id} result={r} canAck={canAck} onAck={setAcking} />
+                <Result key={r.order_id} result={r} canAck={canAck} onAck={(c) => (ack.reset(), setAcking(c))} />
               ))}
             </Stack>
           )
@@ -65,6 +67,7 @@ export function ImagingResultsSection({ encounterId, patientId }: { encounterId?
         confirmLabel="Acknowledge"
         requireReason
         busy={ack.isPending}
+        error={ack.error}
         onConfirm={(note) => acking && ack.mutate({ c: acking, note: note ?? '' })}
         onCancel={() => setAcking(null)}
       >
@@ -108,8 +111,8 @@ function Result({
       </Group>
       {r.studies.map(
         (s) =>
-          s.viewer_url && (
-            <Anchor key={s.id} href={s.viewer_url} target="_blank" rel="noopener noreferrer" size="sm">
+          safeViewerHref(s.viewer_url) && (
+            <Anchor key={s.id} href={safeViewerHref(s.viewer_url)!} target="_blank" rel="noopener noreferrer" size="sm">
               Open images ({s.modalities.join(', ') || 'study'}, {s.instance_count ?? '?'} images)
               {r.report_state === 'NOT_YET_REPORTED' ? ' — not yet reported' : ''}
             </Anchor>

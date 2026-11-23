@@ -139,7 +139,7 @@ export function EpisodePage() {
           )
         }
       </QueryState>
-      {selected && canRecord && <EntryPanel id={selected} entries={entries.data ?? []} />}
+      {selected && canRecord && <EntryPanel key={selected} id={selected} entries={entries.data ?? []} />}
     </Stack>
   )
 }
@@ -159,6 +159,7 @@ function EpisodeActions({ episode }: { episode: Episode }) {
       setClosing(false)
       refresh()
     },
+    onError: refresh,
   })
   if (episode.status === 'CLOSED') return null
   const open = episode.counts.PENDING + episode.counts.PROPOSED
@@ -183,19 +184,19 @@ function EpisodeActions({ episode }: { episode: Episode }) {
               ? 'Every keyed form is reconciled or voided.'
               : `${open} form(s) still wait for reconciliation.`}
           </Text>
-          <Button variant="default" disabled={open > 0} onClick={() => setClosing(true)}>
+          <Button variant="default" disabled={open > 0} onClick={() => (close.reset(), setClosing(true))}>
             Close episode
           </Button>
         </Group>
       )}
       {ending.isError && <ErrorState error={ending.error} />}
-      {close.isError && <ErrorState error={close.error} />}
       <ConfirmDialog
         opened={closing}
         title="Close this downtime episode?"
         confirmLabel="Close episode"
         requireReason
         busy={close.isPending}
+        error={close.error}
         onConfirm={(note) => close.mutate(note ?? '')}
         onCancel={() => setClosing(false)}
       >
@@ -508,6 +509,7 @@ function EntryPanel({ id, entries }: { id: string; entries: Entry[] }) {
       setDeciding(null)
       refresh(x)
     },
+    onError: (_e, v) => refresh(v.x),
   })
   const TITLES: Record<EntryDecision, string> = {
     approve: 'Approve this proposal?',
@@ -528,9 +530,14 @@ function EntryPanel({ id, entries }: { id: string; entries: Entry[] }) {
               Paper time {new Date(x.occurred_at).toLocaleString()}
               {x.registration_form_label && ` · patient's registration form ${x.registration_form_label}`}
             </Text>
+            {x.data === null && (
+              <Text size="sm" c="dimmed">
+                The keyed contents are shown only to staff who may see this kind of record.
+              </Text>
+            )}
             <Table aria-label={`Keyed values of ${x.form_label}`}>
               <Table.Tbody>
-                {Object.entries(x.data)
+                {Object.entries(x.data ?? {})
                   .filter(([, v]) => v !== null && v !== '' && v !== false)
                   .map(([k, v]) => (
                     <Table.Tr key={k}>
@@ -559,7 +566,6 @@ function EntryPanel({ id, entries }: { id: string; entries: Entry[] }) {
                 )}
               </Group>
             )}
-            {decide.isError && <ErrorState error={decide.error} />}
             {x.status === 'PENDING' && !x.needs_second_person && (
               <Group>
                 <Button onClick={() => setDeciding('reconcile')}>Reconcile</Button>
@@ -569,7 +575,7 @@ function EntryPanel({ id, entries }: { id: string; entries: Entry[] }) {
               </Group>
             )}
             {x.status === 'PENDING' && x.needs_second_person && (
-              <ProposeForm entry={x} entries={entries} onDone={() => refresh(x)} />
+              <ProposeForm key={`${x.id}-${x.version}`} entry={x} entries={entries} onDone={() => refresh(x)} />
             )}
             {x.status === 'PROPOSED' && (
               <Group>
@@ -606,6 +612,7 @@ function EntryPanel({ id, entries }: { id: string; entries: Entry[] }) {
             danger={deciding === 'void'}
             requireReason
             busy={decide.isPending}
+            error={decide.error}
             onConfirm={(note) => deciding && decide.mutate({ x, d: deciding, note: note ?? '' })}
             onCancel={() => setDeciding(null)}
           >
@@ -619,14 +626,20 @@ function EntryPanel({ id, entries }: { id: string; entries: Entry[] }) {
   )
 }
 
+/** What the approver checks against the paper form: the chosen patient, visit and invoice by name, not by id. */
 function describeProposal(x: Entry): string {
   const p = x.proposal ?? {}
+  const label = (k: string) => (typeof p[k] === 'string' ? (p[k] as string) : null)
   if (p.action === 'VOID') return 'void this form'
   if (x.form_type === 'REGISTRATION')
     return p.patient_id
-      ? `match to an existing patient${p.encounter_id ? ' and their open visit' : ' and open a visit'}`
+      ? `match to existing patient ${label('patient_label') ?? '(details not available)'}` +
+          (p.encounter_id
+            ? ` and their open visit ${label('encounter_label') ?? ''}`.trimEnd()
+            : ' and open a new visit')
       : 'register a new patient and open a visit'
-  if (x.form_type === 'PAYMENT') return 'record the payment on the selected invoice'
+  if (x.form_type === 'PAYMENT')
+    return `record the payment on invoice ${label('invoice_label') ?? '(details not available)'}`
   return 'create the order on the patient’s visit'
 }
 
@@ -702,7 +715,14 @@ function ProposeForm({ entry, entries, onDone }: { entry: Entry; entries: Entry[
       {isReg && canMatch && (
         <QueryState query={candidates} loadingLabel="Looking for existing records…">
           {() => (
-            <Radio.Group label="Patient" value={choice} onChange={setChoice}>
+            <Radio.Group
+              label="Patient"
+              value={choice}
+              onChange={(v) => {
+                setChoice(v)
+                setVisit(null)
+              }}
+            >
               <Stack gap={4} mt={4}>
                 {unique.map((p) => (
                   <Radio

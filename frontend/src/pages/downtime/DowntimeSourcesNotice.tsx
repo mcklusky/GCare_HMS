@@ -11,6 +11,13 @@ export function DowntimeSourcesNotice({ encounterId }: { encounterId: string }) 
     queryKey: ['downtime-sources', encounterId],
     queryFn: ({ signal }) => listDowntimeSources(encounterId, signal),
   })
+  if (sources.isError)
+    return (
+      <Alert color="red" title="Could not check for paper (downtime) records" role="alert">
+        Parts of this visit may have been entered later from paper forms; their paper times could not be loaded. Reload
+        the page before relying on recorded times.
+      </Alert>
+    )
   if (!sources.data || sources.data.length === 0) return null
   return (
     <Alert color="orange" title="Entered after downtime from paper forms">

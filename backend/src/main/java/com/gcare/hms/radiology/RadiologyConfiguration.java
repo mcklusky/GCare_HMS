@@ -1,5 +1,6 @@
 package com.gcare.hms.radiology;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -14,10 +15,23 @@ class RadiologyConfiguration {
 
   /** DICOMweb when a base URL is configured; otherwise an archive that reports "not configured". */
   @Bean
-  ImagingArchive imagingArchive(ImagingArchiveProperties props, JsonMapper json) {
-    return props.baseUrl() == null
-        ? new DicomWebArchive.NotConfigured()
-        : new DicomWebArchive(props, json);
+  ImagingArchive imagingArchive(
+      ImagingArchiveProperties props,
+      JsonMapper json,
+      @Value("${gcare.imaging.archive.organization-id:}") String organizationId) {
+    if (props.baseUrl() == null) {
+      return new DicomWebArchive.NotConfigured();
+    }
+    if (organizationId.isBlank()) {
+      // Single-organization development only: in a shared deployment every organization could
+      // query this archive. Production binds it (docs/25, docs/27).
+      LoggerFactory.getLogger(RadiologyConfiguration.class)
+          .warn(
+              "The imaging archive is not bound to an organization; set"
+                  + " gcare.imaging.archive.organization-id before more than one organization uses"
+                  + " this HMS");
+    }
+    return new DicomWebArchive(props, json);
   }
 
   /** The scheduled archive check, only when the archive is bound to an organization. */

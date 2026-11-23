@@ -186,7 +186,7 @@ describe('downtime', () => {
     const proposed = (by: { id: string; display_name: string }): Entry => ({
       ...REG,
       status: 'PROPOSED',
-      proposal: { action: 'APPLY', patient_id: 'p9' },
+      proposal: { action: 'APPLY', patient_id: 'p9', patient_label: 'P0000009-1 · Synthetic, Nine · 1970-01-01' },
       proposed_by: by,
       proposed_at: '2026-11-23T11:20:00Z',
       proposal_note: 'Same person',
@@ -215,7 +215,11 @@ describe('downtime', () => {
     fakeBackend(routes(proposed({ id: 'other', display_name: 'Other Clerk' })))
     renderApp('/downtime/episodes/ep1')
     await userEvent.click(await screen.findByRole('button', { name: 'REG-000001' }))
-    expect(await screen.findByText(/match to an existing patient and open a visit/)).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        /match to existing patient P0000009-1 · Synthetic, Nine · 1970-01-01 and open a new visit/,
+      ),
+    ).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Approve' }))
     const dialog = await screen.findByRole('dialog', { name: 'Approve this proposal?' })
     await userEvent.type(within(dialog).getByRole('textbox', { name: /Reason/ }), 'Checked against paper')

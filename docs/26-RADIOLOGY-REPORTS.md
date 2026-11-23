@@ -31,6 +31,11 @@ Requirements: FR-012 (image viewing), FR-013 (radiology reporting). Code: `backe
 | Clinician | adds `RADIOLOGY_REPORT_READ`, `CRITICAL_RESULT_ACKNOWLEDGE` |
 | Triage nurse | adds `RADIOLOGY_REPORT_READ` |
 
+### Review fixes (2026-11-23, docs/27)
+- The reporting list and the critical-results list filter by facility in the database query, before their limit, so one facility's backlog never hides another facility's urgent work or critical results.
+- Reading a visit's or patient's imaging results is audited against that visit or patient.
+- A contact time with an implausible year is refused (400), and a draft on an order cancelled after the examination cannot be signed.
+
 ## Not built yet
 
 - Time limits, escalation and paging for unacknowledged critical results (clinical governance first).
@@ -43,6 +48,7 @@ Requirements: FR-012 (image viewing), FR-013 (radiology reporting). Code: `backe
 2. Which findings count as critical (a facility list), and must the receiving clinician read back?
 3. Is a printable/signed PDF report needed for patients or referrers?
 4. Should a second radiologist review (double-read) any modalities?
+5. **Amending a critical report:** today an amendment that stays critical needs a new documented contact and creates a second critical result to acknowledge; an amendment that removes "critical" leaves the original's open result open until acknowledged. Is that the wanted behaviour, or should an amendment supersede the open result? (Found in the 2026-11-23 review; not changed without a clinical decision.)
 
 ## Change log
 | Date | Change | By |

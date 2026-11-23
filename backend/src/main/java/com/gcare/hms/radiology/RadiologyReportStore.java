@@ -5,6 +5,7 @@ import com.gcare.hms.radiology.RadiologyReportApi.Communication;
 import com.gcare.hms.radiology.RadiologyReportApi.CommunicationMethod;
 import com.gcare.hms.radiology.RadiologyReportApi.ReportStatus;
 import com.gcare.hms.radiology.RadiologyReportApi.Sections;
+import com.gcare.hms.shared.security.FacilityScope;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -160,19 +161,25 @@ class RadiologyReportStore {
         .list();
   }
 
-  /** Examined imaging orders without a signed report, or with an open draft. */
-  List<UUID> ordersToReport() {
-    return jdbc.sql(
+  /**
+   * Examined imaging orders without a signed report, or with an open draft, in the facilities of
+   * {@code scope} (filtered before the limit, so one facility's backlog never hides another's).
+   */
+  List<UUID> ordersToReport(FacilityScope scope) {
+    var spec =
+        jdbc.sql(
             """
             SELECT io.order_id FROM imaging_orders io JOIN clinical_orders o ON o.id = io.order_id
             WHERE io.examined_at IS NOT NULL AND o.status <> 'CANCELLED'
               AND (NOT EXISTS (SELECT 1 FROM radiology_reports r WHERE r.order_id = io.order_id AND r.status = 'SIGNED')
                    OR EXISTS (SELECT 1 FROM radiology_reports r WHERE r.order_id = io.order_id AND r.status = 'DRAFT'))
-            ORDER BY (o.priority = 'URGENT') DESC, io.examined_at
-            LIMIT 300
-            """)
-        .query(UUID.class)
-        .list();
+            """
+                + (scope.allFacilities() ? "" : " AND io.facility_id IN (:fac)")
+                + " ORDER BY (o.priority = 'URGENT') DESC, io.examined_at LIMIT 300");
+    if (!scope.allFacilities()) {
+      spec = spec.param("fac", scope.facilityIds());
+    }
+    return spec.query(UUID.class).list();
   }
 
   void insertCritical(UUID report, UUID org, UUID facility, UUID order, UUID by, Communication c) {
@@ -201,10 +208,18 @@ class RadiologyReportStore {
         .optional();
   }
 
-  List<CriticalRow> openCritical() {
-    return jdbc.sql(CRITICAL + " WHERE c.acknowledged_at IS NULL ORDER BY c.flagged_at LIMIT 300")
-        .query(this::mapCritical)
-        .list();
+  /** Open critical results in the facilities of {@code scope}, filtered before the limit. */
+  List<CriticalRow> openCritical(FacilityScope scope) {
+    var spec =
+        jdbc.sql(
+            CRITICAL
+                + " WHERE c.acknowledged_at IS NULL"
+                + (scope.allFacilities() ? "" : " AND c.facility_id IN (:fac)")
+                + " ORDER BY c.flagged_at LIMIT 300");
+    if (!scope.allFacilities()) {
+      spec = spec.param("fac", scope.facilityIds());
+    }
+    return spec.query(this::mapCritical).list();
   }
 
   int acknowledge(UUID report, long version, UUID by, String note) {
