@@ -147,5 +147,8 @@ Scripts and procedure: [23-OPERATIONS-READINESS.md](23-OPERATIONS-READINESS.md) 
 ## Imaging archive (evaluation)
 Local candidate archive (synthetic only): `docker compose --profile imaging up -d orthanc` (127.0.0.1:8142 HTTP, :4342 DICOM); load a study with `bash infra/imaging/load-synthetic-studies.sh P-000001 ACC-000001 CR "Synthetic chest"`. Point the backend at it with `GCARE_IMAGING_ARCHIVE_BASE_URL`, `..._USERNAME`, `..._PASSWORD`, `..._VIEWER_URL_TEMPLATE` (values in [24-IMAGING-ARCHIVE-EVALUATION.md](24-IMAGING-ARCHIVE-EVALUATION.md) §3). API: `GET /api/v1/imaging/archive/status`, `GET /api/v1/imaging/archive/studies?accession_number=`. Screen `/admin/imaging-archive`. Demo: `demo.pacsadmin`.
 
+## Imaging worklist
+API: `GET /api/v1/imaging/worklist`, `POST /api/v1/imaging/orders/{id}/arrived|examined|check-archive`, `GET /api/v1/imaging/studies/unlinked`, `/studies/{id}/history`, `POST /studies/{id}/propose|approve|send-back|unlink`. Screens `/imaging`, `/imaging/studies`. Scheduled archive check: set `GCARE_IMAGING_ARCHIVE_ORGANIZATION_ID` (+ `GCARE_IMAGING_SYNC_INTERVAL`, default PT5M). Demo: `demo.radiographer`, `demo.radiographer2` ([25-IMAGING-WORKLIST.md](25-IMAGING-WORKLIST.md)).
+
 ## Health and metrics
 Application port: `/actuator/health`, `/livez`, `/readyz` (status only). Management port `MANAGEMENT_PORT` (default 9091, bound to `MANAGEMENT_ADDRESS` 127.0.0.1): `/actuator/health` with details, `/actuator/prometheus`. Example alert rules: `infra/monitoring/alert-rules.yml` (provisional thresholds).

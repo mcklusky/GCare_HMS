@@ -357,6 +357,38 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001020",
+      "username": "demo.radiographer",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Radiographer",
+      "email": "demo.radiographer@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001021",
+      "username": "demo.radiographer2",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "RadiographerTwo",
+      "email": "demo.radiographer2@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
     }
   ]
 }

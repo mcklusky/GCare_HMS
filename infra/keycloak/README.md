@@ -25,6 +25,7 @@ It exists so developers can sign in locally. **It is not a production configurat
 | `demo.cashier` | `…1013` | DEMO-ORG, CASHIER at DEMO-GH | Starts, edits and issues visit invoices; takes payments and pays out refunds in a shift; requests refunds and exemptions |
 | `demo.manager` | `…1014` | DEMO-ORG, DEPARTMENT_MANAGER at DEMO-GH | Sees and exports visit, order and registration reports and the dashboard |
 | `demo.clinlead`, `demo.clinlead2` | `…1015`, `…1016` | DEMO-ORG, CLINICAL_LEAD at DEMO-GH | Propose and approve (each other's) triage settings |
+| `demo.radiographer`, `demo.radiographer2` | `…1020`, `…1021` | DEMO-ORG, RADIOGRAPHER at DEMO-GH | Imaging worklist, archive checks, propose and approve (each other's) study links |
 | `demo.pacsadmin` | `…1019` | DEMO-ORG, IMAGING_ADMINISTRATOR at DEMO-GH | Checks the imaging archive and looks up studies by accession number |
 | `demo.downtime` | `…1018` | DEMO-ORG, DOWNTIME_COORDINATOR at DEMO-GH | Declares downtime, prints numbered forms, keys them; cannot create records |
 | `demo.admin2` | `…1017` | DEMO-ORG, ORGANIZATION_ADMIN (organization-wide) | Second administrator, to approve branding and billing options |

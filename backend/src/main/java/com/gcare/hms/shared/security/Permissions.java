@@ -55,6 +55,8 @@ public final class Permissions {
   public static final String DOWNTIME_MANAGE = "DOWNTIME_MANAGE";
   public static final String DOWNTIME_RECORD = "DOWNTIME_RECORD";
   public static final String IMAGING_ARCHIVE_ADMIN = "IMAGING_ARCHIVE_ADMIN";
+  public static final String IMAGING_WORKLIST = "IMAGING_WORKLIST";
+  public static final String IMAGING_LINK = "IMAGING_LINK";
 
   public static final Set<String> ALL =
       Set.of(
@@ -103,7 +105,9 @@ public final class Permissions {
           CONFIG_ORGANIZATION_MANAGE,
           DOWNTIME_MANAGE,
           DOWNTIME_RECORD,
-          IMAGING_ARCHIVE_ADMIN);
+          IMAGING_ARCHIVE_ADMIN,
+          IMAGING_WORKLIST,
+          IMAGING_LINK);
 
   private Permissions() {}
 }

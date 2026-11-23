@@ -18,6 +18,8 @@ import { DowntimePage } from './pages/downtime/DowntimePage'
 import { EpisodePage } from './pages/downtime/EpisodePage'
 import { FormsPrintPage } from './pages/downtime/FormsPrintPage'
 import { ImagingArchivePage } from './pages/imaging/ImagingArchivePage'
+import { ImagingWorklistPage } from './pages/imaging/ImagingWorklistPage'
+import { StudyQueuePage } from './pages/imaging/StudyQueuePage'
 import { ShiftPage } from './pages/billing/ShiftPage'
 import { ShiftReviewPage } from './pages/billing/ShiftReviewPage'
 import { TariffsPage } from './pages/billing/TariffsPage'
@@ -257,6 +259,22 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.IMAGING_ARCHIVE_ADMIN}>
             <ImagingArchivePage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'imaging',
+        element: (
+          <RequirePermission permission={Permission.IMAGING_WORKLIST}>
+            <ImagingWorklistPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'imaging/studies',
+        element: (
+          <RequirePermission permission={Permission.IMAGING_LINK}>
+            <StudyQueuePage />
           </RequirePermission>
         ),
       },

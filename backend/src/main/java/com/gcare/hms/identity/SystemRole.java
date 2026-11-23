@@ -19,6 +19,8 @@ import static com.gcare.hms.shared.security.Permissions.EXEMPTION_REQUEST;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
 import static com.gcare.hms.shared.security.Permissions.IMAGING_ARCHIVE_ADMIN;
+import static com.gcare.hms.shared.security.Permissions.IMAGING_LINK;
+import static com.gcare.hms.shared.security.Permissions.IMAGING_WORKLIST;
 import static com.gcare.hms.shared.security.Permissions.INVOICE_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.INVOICE_READ;
 import static com.gcare.hms.shared.security.Permissions.INVOICE_VOID;
@@ -241,7 +243,17 @@ public enum SystemRole {
   IMAGING_ADMINISTRATOR(
       "Imaging administrator",
       "Checks the imaging archive connection and looks up studies by accession number (metadata only). No clinical access.",
-      Set.of(IMAGING_ARCHIVE_ADMIN));
+      Set.of(IMAGING_ARCHIVE_ADMIN)),
+
+  /**
+   * PROVISIONAL (task 6.3; docs/25): sees the imaging worklist, records arrival and examination
+   * done, checks the archive and proposes or approves (not their own) links between studies and
+   * orders.
+   */
+  RADIOGRAPHER(
+      "Radiographer",
+      "Sees the imaging worklist, records arrival and examination done, checks the archive and links studies to orders (a second person approves reviewed links).",
+      Set.of(PATIENT_READ, ORDER_READ, ORDER_PROCESS, IMAGING_WORKLIST, IMAGING_LINK));
 
   private final String displayName;
   private final String description;

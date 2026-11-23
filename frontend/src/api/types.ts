@@ -85,6 +85,8 @@ export const Permission = {
   DOWNTIME_MANAGE: 'DOWNTIME_MANAGE',
   DOWNTIME_RECORD: 'DOWNTIME_RECORD',
   IMAGING_ARCHIVE_ADMIN: 'IMAGING_ARCHIVE_ADMIN',
+  IMAGING_WORKLIST: 'IMAGING_WORKLIST',
+  IMAGING_LINK: 'IMAGING_LINK',
 } as const
 
 export type PermissionCode = (typeof Permission)[keyof typeof Permission]
