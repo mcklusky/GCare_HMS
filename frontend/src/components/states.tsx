@@ -1,8 +1,9 @@
-import { Alert, Button, Card, Center, Group, Loader, Stack, Text, ThemeIcon, Title } from '@mantine/core'
-import { IconAlertTriangle, IconInbox, IconLock, IconRefresh } from '@tabler/icons-react'
+import { Alert, Button, Center, Group, Loader, Stack, Text, ThemeIcon, Title } from '@mantine/core'
+import { IconAlertTriangle, IconCalendar, IconClock, IconInbox, IconLock, IconRefresh } from '@tabler/icons-react'
 import type { UseQueryResult } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { ApiRequestError } from '../api/client'
+import { formatDate, formatTime } from './time'
 
 /**
  * Standard list/page states (02-UI-UX: every list has loading, empty, error, permission-denied
@@ -177,8 +178,8 @@ export function PageHeader({
 }
 
 /**
- * A compact headline number: tinted icon tile, small label, number; optional note underneath.
- * `tone` colours the icon only (never the only signal).
+ * KPI card: tinted icon tile and an uppercase label, the number underneath, an optional note.
+ * `tone` (a Mantine colour) tints the icon only; the label always names the figure.
  */
 export function StatCard({
   label,
@@ -194,27 +195,68 @@ export function StatCard({
   hint?: ReactNode
 }) {
   return (
-    <Card withBorder padding="sm">
-      <Group wrap="nowrap" gap="sm" align="center">
+    <div className="gcare-kpi-card">
+      <Group gap={10} wrap="nowrap" align="center">
         {icon && (
           <ThemeIcon size={32} radius="md" variant="light" color={tone} aria-hidden>
             {icon}
           </ThemeIcon>
         )}
-        <Stack gap={0} miw={0}>
-          <Text size="xs" c="dimmed" fw={500} truncate>
-            {label}
-          </Text>
-          <Text className="gcare-stat-value" fz={20} fw={650}>
-            {value}
-          </Text>
-          {hint && (
-            <Text size="xs" c="dimmed" truncate>
-              {hint}
-            </Text>
-          )}
-        </Stack>
+        <Text className="gcare-kpi-label" lineClamp={2}>
+          {label}
+        </Text>
       </Group>
-    </Card>
+      <Text className="gcare-stat-value" fz={24} fw={700} mt={10}>
+        {value}
+      </Text>
+      {hint && (
+        <Text size="xs" c="dimmed" mt={2}>
+          {hint}
+        </Text>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Small coloured label for a type or status. Text stays readable on its tint (dark shade of the
+ * colour in light mode, light shade in dark mode); `dot` adds a status dot.
+ */
+export function Pill({ color, dot, children }: { color: string; dot?: boolean; children: ReactNode }) {
+  const style = {
+    '--pill-bg-light': `var(--mantine-color-${color}-0)`,
+    '--pill-fg-light': `color-mix(in srgb, var(--mantine-color-${color}-9), #000 35%)`,
+    '--pill-bg-dark': `color-mix(in srgb, var(--mantine-color-${color}-6) 20%, transparent)`,
+    '--pill-fg-dark': `var(--mantine-color-${color}-2)`,
+  } as CSSProperties
+  return (
+    <span className="gcare-pill" data-dot={dot || undefined} style={style}>
+      {children}
+    </span>
+  )
+}
+
+/** Today's date and the time in the facility's zone, for page headers; refreshes every minute. */
+export function TodayStamp() {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <Stack gap={2} align="flex-end">
+      <Group gap={6} wrap="nowrap">
+        <IconCalendar size={14} aria-hidden style={{ color: 'var(--gcare-text-2)' }} />
+        <Text size="sm" c="dimmed">
+          {formatDate(now)}
+        </Text>
+      </Group>
+      <Group gap={6} wrap="nowrap">
+        <IconClock size={14} aria-hidden style={{ color: 'var(--gcare-text-2)' }} />
+        <Text size="sm" c="dimmed">
+          {formatTime(now, { hour: '2-digit', minute: '2-digit' })}
+        </Text>
+      </Group>
+    </Stack>
   )
 }

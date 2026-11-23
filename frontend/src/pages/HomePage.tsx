@@ -1,14 +1,32 @@
 import { Badge, Box, Card, Grid, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core'
-import { IconChevronRight } from '@tabler/icons-react'
+import {
+  IconActivity,
+  IconChevronRight,
+  IconClipboardList,
+  IconClock,
+  IconStethoscope,
+  IconUserPlus,
+  IconUsers,
+} from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { getDashboard } from '../api/reports'
 import { Permission, type Me } from '../api/types'
 import { useFacilityContext } from '../auth/facilityContextValue'
-import { PageHeader } from '../components/states'
+import { PageHeader, StatCard, TodayStamp } from '../components/states'
 import { displayZone, formatDate } from '../components/time'
 import { visibleNavSections } from '../shell/navigation'
+
+/** Icon and colour per dashboard tile, by position; colour only decorates, the label names the figure. */
+const TILE_LOOKS = [
+  { tone: 'blue', icon: IconUsers },
+  { tone: 'orange', icon: IconClock },
+  { tone: 'violet', icon: IconStethoscope },
+  { tone: 'teal', icon: IconClipboardList },
+  { tone: 'pink', icon: IconUserPlus },
+  { tone: 'cyan', icon: IconActivity },
+]
 
 /**
  * Landing page after sign-in, dense console layout: today's numbers in one KPI strip (report users
@@ -35,31 +53,40 @@ export function HomePage({ me }: { me: Me }) {
       <PageHeader
         title={`Welcome, ${me.display_name}`}
         description={`${current ? current.name : 'No facility assigned'} · ${formatDate(today)}`}
+        actions={<TodayStamp />}
       />
 
       {mayReport && dashboard.data && dashboard.data.tiles.length > 0 && (
-        <Card withBorder padding={0} component="section" aria-labelledby="home-today">
-          <Text id="home-today" className="gcare-nav-section" px="md" pt="sm">
-            Today at this facility
-          </Text>
-          <div className="gcare-kpis">
-            {dashboard.data.tiles.map((t) => (
-              <div key={t.key} className="gcare-kpi">
-                <Text size="xs" c="dimmed" fw={500}>
-                  {t.label}
-                </Text>
-                <Text className="gcare-stat-value" fz={22} fw={650} mt={2}>
-                  {t.value === null ? '—' : t.value}
-                  {t.value !== null && t.currency && (
-                    <Text span size="xs" c="dimmed" fw={600} ml={4}>
-                      {t.currency}
-                    </Text>
-                  )}
-                </Text>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <section aria-label="Today at this facility">
+          <SimpleGrid cols={{ base: 1, xs: 2, md: 3, xl: 5 }} spacing="md">
+            {dashboard.data.tiles.map((t, i) => {
+              const look = TILE_LOOKS[i % TILE_LOOKS.length]
+              return (
+                <StatCard
+                  key={t.key}
+                  label={t.label}
+                  tone={look.tone}
+                  icon={<look.icon size={18} />}
+                  value={
+                    t.value === null ? (
+                      '—'
+                    ) : (
+                      <>
+                        {t.value}
+                        {t.currency && (
+                          <Text span size="sm" c="dimmed" fw={600} ml={4}>
+                            {t.currency}
+                          </Text>
+                        )}
+                      </>
+                    )
+                  }
+                  hint="Today at this facility"
+                />
+              )
+            })}
+          </SimpleGrid>
+        </section>
       )}
 
       <Grid gap="lg">
