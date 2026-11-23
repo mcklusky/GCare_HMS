@@ -30,7 +30,13 @@ export function IncompleteBadge() {
  */
 export function PatientBanner({ patient }: { patient: PatientSummary }) {
   return (
-    <Paper withBorder p="md" bg="gray.0" aria-label="Patient identity" component="section">
+    <Paper
+      withBorder
+      p="md"
+      aria-label="Patient identity"
+      component="section"
+      style={{ borderLeft: '4px solid var(--mantine-primary-color-filled)' }}
+    >
       <Stack gap={4}>
         <Group gap="sm">
           <Text fw={700} size="lg">

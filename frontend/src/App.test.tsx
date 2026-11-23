@@ -13,6 +13,30 @@ async function expectNoAxeViolations(container: HTMLElement) {
   expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
 }
 
+describe('shell', () => {
+  it('groups the navigation in sections and switches between light and dark', async () => {
+    fakeBackend({
+      'GET /api/v1/me': {
+        body: me({ permissions: ['FACILITY_READ', 'PATIENT_READ', 'ENCOUNTER_READ'], facilities: [FACILITY_A] }),
+      },
+    })
+    const { container } = renderApp()
+    await screen.findByRole('heading', { name: 'Welcome, Test Admin' })
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' })
+    expect(within(nav).getByText('Patients & visits')).toBeInTheDocument()
+    expect(within(nav).getByText('Administration')).toBeInTheDocument()
+    expect(within(nav).queryByText('Billing')).not.toBeInTheDocument()
+    // Shortcut cards on the home page follow the same permissions.
+    expect(screen.getByRole('region', { name: 'Patients & visits' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Switch to dark mode' }))
+    await waitFor(() => expect(document.documentElement).toHaveAttribute('data-mantine-color-scheme', 'dark'))
+    await userEvent.click(screen.getByRole('button', { name: 'Switch to light mode' }))
+    await waitFor(() => expect(document.documentElement).toHaveAttribute('data-mantine-color-scheme', 'light'))
+    await expectNoAxeViolations(container)
+  })
+})
+
 describe('sign-in', () => {
   it('shows the sign-in page when there is no session and starts the Keycloak flow', async () => {
     fakeBackend({ 'GET /api/v1/me': UNAUTHENTICATED })
@@ -45,7 +69,10 @@ describe('sign-in', () => {
       'GET /api/v1/me': () =>
         // fails the first attempt and the automatic retry
         ++calls <= 2
-          ? { status: 500, body: { code: 'INTERNAL_ERROR', message: 'Unexpected error', correlation_id: 'corr-1234abcd' } }
+          ? {
+              status: 500,
+              body: { code: 'INTERNAL_ERROR', message: 'Unexpected error', correlation_id: 'corr-1234abcd' },
+            }
           : { body: me() },
     })
 
@@ -200,7 +227,10 @@ describe('facilities', () => {
       'GET /api/v1/me': { body: me() },
       'GET /api/v1/facilities': () =>
         ++calls <= 2
-          ? { status: 500, body: { code: 'INTERNAL_ERROR', message: 'Unexpected error', correlation_id: 'corr-5678efgh' } }
+          ? {
+              status: 500,
+              body: { code: 'INTERNAL_ERROR', message: 'Unexpected error', correlation_id: 'corr-5678efgh' },
+            }
           : { body: [FACILITY_A] },
     })
 

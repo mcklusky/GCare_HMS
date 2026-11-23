@@ -15,7 +15,7 @@ import { Permission } from '../../api/types'
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
-import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, ErrorState, PageHeader, QueryState } from '../../components/states'
 import { formatTime } from '../../components/time'
 
 /**
@@ -55,7 +55,10 @@ export function QueuePage() {
 
   return (
     <Stack>
-      <PageTitle>Queue</PageTitle>
+      <PageHeader
+        title="Queue"
+        description="Open visits at this facility: configured urgency first, then arrival time."
+      />
       <Group align="end">
         <Select
           label="Department"

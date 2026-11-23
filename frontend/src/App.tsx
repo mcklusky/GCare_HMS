@@ -18,7 +18,7 @@ export function AppProviders({
   env?: 'default' | 'test'
 }) {
   return (
-    <MantineProvider theme={theme} env={env}>
+    <MantineProvider theme={theme} env={env} defaultColorScheme="auto">
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </MantineProvider>
   )

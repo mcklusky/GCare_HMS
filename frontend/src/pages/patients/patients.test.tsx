@@ -53,7 +53,10 @@ describe('patient search', () => {
       'GET /api/v1/me': { body: CLERK },
       'GET /api/v1/patients?name=Testperson&size=25': {
         status: 400,
-        body: { code: 'SEARCH_TOO_BROAD', message: 'Search with a patient number, … or a name together with a birth year.' },
+        body: {
+          code: 'SEARCH_TOO_BROAD',
+          message: 'Search with a patient number, … or a name together with a birth year.',
+        },
       },
     })
 
@@ -62,6 +65,24 @@ describe('patient search', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Search' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Add one more detail')
+  })
+
+  it('the header quick search finds a patient by number without putting it in the URL or storage', async () => {
+    fakeBackend({
+      'GET /api/v1/me': { body: CLERK },
+      'GET /api/v1/patients?number=10000016&size=25': { body: { items: [SUMMARY], page: 0, size: 25, total: 1 } },
+    })
+
+    renderApp('/')
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: 'Quick search by patient number' }),
+      '10000016{Enter}',
+    )
+
+    expect(await screen.findByRole('table', { name: /1 matching patient/ })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Patient number' })).toHaveValue('10000016')
+    expect(window.location.href).not.toContain('10000016')
+    expect(JSON.stringify({ ...localStorage, ...sessionStorage })).not.toContain('10000016')
   })
 
   it('lists matches with number, name and age, and links to the record', async () => {
@@ -75,7 +96,10 @@ describe('patient search', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Search' }))
 
     const table = await screen.findByRole('table', { name: /1 matching patient/ })
-    expect(within(table).getByRole('link', { name: 'TESTPERSON, Alpha' })).toHaveAttribute('href', `/patients/${SUMMARY.id}`)
+    expect(within(table).getByRole('link', { name: 'TESTPERSON, Alpha' })).toHaveAttribute(
+      'href',
+      `/patients/${SUMMARY.id}`,
+    )
     expect(within(table).getByText('P1000001-6')).toBeInTheDocument()
   })
 })
@@ -90,7 +114,10 @@ describe('registration with duplicate check', () => {
         posts.push(body)
         return body.duplicate_review
           ? { status: 201, body: { ...DETAIL, id: 'new-id', patient_number: 'P1000004-0' } }
-          : { status: 409, body: { code: 'DUPLICATE_CANDIDATES', message: 'Possible duplicates', candidates: [LIKELY] } }
+          : {
+              status: 409,
+              body: { code: 'DUPLICATE_CANDIDATES', message: 'Possible duplicates', candidates: [LIKELY] },
+            }
       },
       'GET /api/v1/patients/new-id': { body: { ...DETAIL, id: 'new-id', patient_number: 'P1000004-0' } },
       'GET /api/v1/patients/new-id/history': { body: [] },
@@ -104,7 +131,10 @@ describe('registration with duplicate check', () => {
     const panel = await screen.findByRole('region', { name: 'This patient may already be registered' })
     expect(within(panel).getByText('Likely duplicate')).toBeInTheDocument()
     expect(within(panel).getByText(/Same phone number, Same birth date/)).toBeInTheDocument()
-    expect(within(panel).getByRole('link', { name: /This is the patient/ })).toHaveAttribute('href', `/patients/${SUMMARY.id}`)
+    expect(within(panel).getByRole('link', { name: /This is the patient/ })).toHaveAttribute(
+      'href',
+      `/patients/${SUMMARY.id}`,
+    )
 
     await userEvent.click(within(panel).getByRole('button', { name: /None of these is the patient/ }))
     const dialog = await screen.findByRole('dialog', { name: 'Register a new record?' })
@@ -125,7 +155,11 @@ describe('registration with duplicate check', () => {
       'GET /api/v1/me': { body: CLERK },
       'POST /api/v1/patients': {
         status: 409,
-        body: { code: 'DUPLICATE_CANDIDATES', message: 'Possible duplicates', candidates: [{ ...LIKELY, band: 'POSSIBLE' }] },
+        body: {
+          code: 'DUPLICATE_CANDIDATES',
+          message: 'Possible duplicates',
+          candidates: [{ ...LIKELY, band: 'POSSIBLE' }],
+        },
       },
     })
 
@@ -298,8 +332,12 @@ describe('linking duplicates', () => {
   it('requests a link from the review queue, choosing the record to keep', async () => {
     let sent: unknown = null
     fakeBackend({
-      'GET /api/v1/me': { body: me({ permissions: ['PATIENT_READ', 'PATIENT_DUPLICATE_REVIEW', 'PATIENT_LINK_REQUEST'] }) },
-      'GET /api/v1/patient-duplicate-flags?status=OPEN&size=50': { body: { items: [FLAG], page: 0, size: 50, total: 1 } },
+      'GET /api/v1/me': {
+        body: me({ permissions: ['PATIENT_READ', 'PATIENT_DUPLICATE_REVIEW', 'PATIENT_LINK_REQUEST'] }),
+      },
+      'GET /api/v1/patient-duplicate-flags?status=OPEN&size=50': {
+        body: { items: [FLAG], page: 0, size: 50, total: 1 },
+      },
       'POST /api/v1/patient-links': (init) => {
         sent = JSON.parse(String(init.body))
         return { status: 201, body: LINK }
@@ -376,7 +414,13 @@ describe('linking duplicates', () => {
 
   it('a retired record points to the record in use; approvers can reverse the link', async () => {
     let sent: unknown = null
-    const approved: PatientLink = { ...LINK, status: 'APPROVED', decided_by: 'u3', decision_note: 'Checked', version: 1 }
+    const approved: PatientLink = {
+      ...LINK,
+      status: 'APPROVED',
+      decided_by: 'u3',
+      decision_note: 'Checked',
+      version: 1,
+    }
     fakeBackend(
       patientPageFakes({
         'GET /api/v1/me': { body: me({ permissions: ['PATIENT_READ', 'PATIENT_LINK_APPROVE'] }) },
@@ -392,7 +436,9 @@ describe('linking duplicates', () => {
     )
 
     renderApp(`/patients/${SUMMARY.id}`)
-    const notice = (await screen.findByText('This record is no longer in use')).closest('[role="status"]') as HTMLElement
+    const notice = (await screen.findByText('This record is no longer in use')).closest(
+      '[role="status"]',
+    ) as HTMLElement
     expect(within(notice).getByRole('link', { name: 'P1000002-4' })).toHaveAttribute('href', '/patients/other')
     await userEvent.click(await screen.findByRole('button', { name: 'Reverse link' }))
     const dialog = await screen.findByRole('dialog', { name: 'Reverse this link?' })
@@ -405,9 +451,13 @@ describe('linking duplicates', () => {
   it('review page with link requests has no automated violations', async () => {
     fakeBackend({
       'GET /api/v1/me': {
-        body: me({ permissions: ['PATIENT_READ', 'PATIENT_DUPLICATE_REVIEW', 'PATIENT_LINK_REQUEST', 'PATIENT_LINK_APPROVE'] }),
+        body: me({
+          permissions: ['PATIENT_READ', 'PATIENT_DUPLICATE_REVIEW', 'PATIENT_LINK_REQUEST', 'PATIENT_LINK_APPROVE'],
+        }),
       },
-      'GET /api/v1/patient-duplicate-flags?status=OPEN&size=50': { body: { items: [FLAG], page: 0, size: 50, total: 1 } },
+      'GET /api/v1/patient-duplicate-flags?status=OPEN&size=50': {
+        body: { items: [FLAG], page: 0, size: 50, total: 1 },
+      },
       'GET /api/v1/patient-links?status=REQUESTED&size=50': { body: { items: [LINK], page: 0, size: 50, total: 1 } },
     })
 

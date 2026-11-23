@@ -2,7 +2,7 @@ import { Alert, Anchor, Button, Group, Select, SimpleGrid, Stack, Table, Text, T
 import { IconSearch, IconUserPlus } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { ApiRequestError } from '../../api/client'
 import {
   IDENTIFIER_LABEL,
@@ -18,7 +18,8 @@ import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { IncompleteBadge } from '../../components/PatientBadges'
-import { EmptyState, ErrorState, LoadingState, PageTitle } from '../../components/states'
+import { EmptyState, ErrorState, LoadingState, PageHeader } from '../../components/states'
+import { takeQuickSearch } from '../../shell/quickSearch'
 
 const EMPTY: SearchCriteria = {
   number: '',
@@ -36,8 +37,23 @@ const EMPTY: SearchCriteria = {
  */
 export function PatientSearchPage() {
   const me = useCurrentMe()
-  const [form, setForm] = useState<SearchCriteria>(EMPTY)
-  const [submitted, setSubmitted] = useState<SearchCriteria | null>(null)
+  const location = useLocation()
+  // A number typed in the header's quick search arrives in memory (shell/quickSearch.ts).
+  const [initial] = useState(() => {
+    const n = takeQuickSearch()
+    return n ? { ...EMPTY, number: n } : null
+  })
+  const [form, setForm] = useState<SearchCriteria>(initial ?? EMPTY)
+  const [submitted, setSubmitted] = useState<SearchCriteria | null>(initial)
+  const [seenKey, setSeenKey] = useState(location.key)
+  if (location.key !== seenKey) {
+    setSeenKey(location.key)
+    const n = takeQuickSearch()
+    if (n) {
+      setForm({ ...EMPTY, number: n })
+      setSubmitted({ ...EMPTY, number: n })
+    }
+  }
 
   const results = useQuery({
     queryKey: ['patients', 'search', submitted],
@@ -46,8 +62,7 @@ export function PatientSearchPage() {
     retry: false,
   })
 
-  const set = (key: keyof SearchCriteria) => (value: string | null) =>
-    setForm((f) => ({ ...f, [key]: value ?? '' }))
+  const set = (key: keyof SearchCriteria) => (value: string | null) => setForm((f) => ({ ...f, [key]: value ?? '' }))
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -60,14 +75,17 @@ export function PatientSearchPage() {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <PageTitle>Find a patient</PageTitle>
-        {hasPermission(me, Permission.PATIENT_REGISTER) && (
-          <Button component={Link} to="/patients/new" leftSection={<IconUserPlus size={18} aria-hidden />}>
-            Register new patient
-          </Button>
-        )}
-      </Group>
+      <PageHeader
+        title="Find a patient"
+        description="Search before registering, so the same person never gets two records."
+        actions={
+          hasPermission(me, Permission.PATIENT_REGISTER) && (
+            <Button component={Link} to="/patients/new" leftSection={<IconUserPlus size={18} aria-hidden />}>
+              Register new patient
+            </Button>
+          )
+        }
+      />
 
       <form onSubmit={onSubmit} aria-label="Patient search">
         <Stack>

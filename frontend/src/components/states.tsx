@@ -1,4 +1,4 @@
-import { Alert, Button, Center, Group, Loader, Stack, Text, Title } from '@mantine/core'
+import { Alert, Button, Card, Center, Group, Loader, Stack, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertTriangle, IconInbox, IconLock, IconRefresh } from '@tabler/icons-react'
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
@@ -102,8 +102,75 @@ export function QueryState<T>({
 /** Page title. Receives focus after navigation so screen-reader users hear where they are. */
 export function PageTitle({ children }: { children: ReactNode }) {
   return (
-    <Title order={1} size="h2" id="page-title" tabIndex={-1} mb="md">
+    <Title order={1} id="page-title" tabIndex={-1} mb="md">
       {children}
     </Title>
+  )
+}
+
+/** Page title with an optional one-line description and actions on the right (wraps on small screens). */
+export function PageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: ReactNode
+  description?: ReactNode
+  actions?: ReactNode
+}) {
+  return (
+    <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm" mb="xs">
+      <Stack gap={4}>
+        <Title order={1} id="page-title" tabIndex={-1}>
+          {title}
+        </Title>
+        {description && (
+          <Text size="sm" c="dimmed" maw={720}>
+            {description}
+          </Text>
+        )}
+      </Stack>
+      {actions && <Group gap="sm">{actions}</Group>}
+    </Group>
+  )
+}
+
+/** A headline number with its label, e.g. on the home page. `tone` colours the icon only (never the only signal). */
+export function StatCard({
+  label,
+  value,
+  icon,
+  tone = 'clinical',
+  hint,
+}: {
+  label: string
+  value: ReactNode
+  icon?: ReactNode
+  tone?: string
+  hint?: ReactNode
+}) {
+  return (
+    <Card withBorder>
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <Stack gap={4}>
+          <Text size="sm" c="dimmed" fw={500}>
+            {label}
+          </Text>
+          <Text className="gcare-stat-value" fz={28} fw={700}>
+            {value}
+          </Text>
+          {hint && (
+            <Text size="xs" c="dimmed">
+              {hint}
+            </Text>
+          )}
+        </Stack>
+        {icon && (
+          <ThemeIcon size={40} radius="md" variant="light" color={tone} aria-hidden>
+            {icon}
+          </ThemeIcon>
+        )}
+      </Group>
+    </Card>
   )
 }

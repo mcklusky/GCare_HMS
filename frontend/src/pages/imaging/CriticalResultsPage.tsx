@@ -13,7 +13,7 @@ import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { EmptyState, PageHeader, QueryState } from '../../components/states'
 import { formatDateTime } from '../../components/time'
 
 /** Critical radiology results not yet acknowledged (task 6.4; docs/26). */
@@ -34,11 +34,10 @@ export function CriticalResultsPage() {
 
   return (
     <Stack>
-      <PageTitle>Critical results</PageTitle>
-      <Text size="sm" c="dimmed">
-        Critical radiology results not yet acknowledged in the HMS, oldest first. The radiologist has already told
-        someone directly; acknowledging records that the treating team has acted on it.
-      </Text>
+      <PageHeader
+        title="Critical results"
+        description="Critical radiology results not yet acknowledged in the HMS, oldest first. The radiologist has already told someone directly; acknowledging records that the treating team has acted on it."
+      />
       <QueryState query={open} loadingLabel="Loading critical results…">
         {(list) =>
           list.length === 0 ? (

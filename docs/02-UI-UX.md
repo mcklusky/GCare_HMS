@@ -38,3 +38,11 @@ Load approved charges/tariff snapshot → collect payment → server confirms tr
 
 ## UI approval artifacts
 Before implementation sign off: workflow swimlanes per department, field dictionary, role-to-screen/action matrix, paper/downtime forms, patient identity banner, radiology status model, invoice/receipt examples, localization conventions, and representative low-bandwidth/device review.
+
+## Visual design (product owner, 2026-11-23)
+- **Style: calm clinical.** Teal accent (`clinical` palette; filled buttons use shade 7, white text 5.5:1) on a soft grey page with white cards, rounded corners and quiet shadows. Tokens live in `frontend/src/theme.ts` and `frontend/src/index.css`; pages use the theme, not raw colours.
+- **Light and dark.** The default follows the computer's setting, with a switch in the header. Printing (receipts, paper forms) is always black on white without the shell.
+- **Shell.** The sidebar is grouped into sections (Patients & visits, Diagnostics, Billing, Operations, Administration) and shows only what the role allows. The header has a quick search by patient number (held in memory only, never in the URL or browser storage), the working facility, the light/dark switch and the account menu.
+- **Building blocks.** `PageHeader` (title, one-line description, actions), `StatCard`, the patient identity banner with a teal edge, and tables with quiet uppercase headers and row highlight.
+- **Fonts.** No web fonts are downloaded (offline-capable, no third-party requests): Inter when installed, otherwise the system font.
+- **Restyled so far:** Home (today's numbers for report users, shortcuts by section), Find a patient, Queue, Visit banner and Critical results. Other screens use the new theme automatically and move to `PageHeader` as they are touched.

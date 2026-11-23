@@ -238,7 +238,7 @@ export function PendingLinks() {
 
 function LinkCell({ label, patient }: { label: string; patient: PatientSummary }) {
   return (
-    <Card withBorder padding="sm" bg="gray.0">
+    <Card withBorder padding="sm" bg="var(--gcare-page)">
       <Text size="xs" c="dimmed">
         {label}
       </Text>

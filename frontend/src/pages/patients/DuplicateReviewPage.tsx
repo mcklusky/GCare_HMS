@@ -111,7 +111,7 @@ export function DuplicateReviewPage() {
 
 function PatientCell({ patient }: { patient: PatientSummary }) {
   return (
-    <Card withBorder padding="sm" bg="gray.0">
+    <Card withBorder padding="sm" bg="var(--gcare-page)">
       <Anchor component={Link} to={`/patients/${patient.id}`} fw={600}>
         {displayName(patient)}
       </Anchor>
