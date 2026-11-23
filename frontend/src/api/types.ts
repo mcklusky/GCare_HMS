@@ -56,6 +56,8 @@ export const Permission = {
   ENCOUNTER_REOPEN: 'ENCOUNTER_REOPEN',
   OBSERVATION_READ: 'OBSERVATION_READ',
   OBSERVATION_RECORD: 'OBSERVATION_RECORD',
+  CLINICAL_NOTE_READ: 'CLINICAL_NOTE_READ',
+  CLINICAL_NOTE_WRITE: 'CLINICAL_NOTE_WRITE',
 } as const
 
 export type PermissionCode = (typeof Permission)[keyof typeof Permission]

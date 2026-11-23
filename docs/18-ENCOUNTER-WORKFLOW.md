@@ -63,6 +63,25 @@ Local demo users: `demo.nurse`, `demo.clinician` (see `infra/keycloak/README.md`
 - The encounter module reads patient, department and user names through read-only joins for display. Writes go only to its own tables. Revisit if modules move to separate schemas.
 - Clinical notes, diagnoses, orders and the clinician workspace are tasks 3.2–3.4.
 
+## 7. Clinical notes and diagnoses (task 3.2)
+
+Decisions: OD-10 fixed sections; OD-09 free-text diagnoses, codes later (`project-record/open-decisions.md`). Section names are provisional.
+
+- **Note sections:** history, examination, assessment, plan. Each is optional free text, but a signed note needs at least one.
+- **Draft:** private to its author (others do not see it, even with read permission). Saved with `version`; a stale save answers 409. A draft can be discarded; it is kept but no longer shown.
+- **Sign:** only by the author. Afterwards the note **never changes**: the database refuses updates to any note that is not a draft, and the application role can only update draft columns.
+- **Amend:** any clinician with `CLINICAL_NOTE_WRITE` starts an amendment of a signed note with a **reason**; it begins as a copy and is signed like a note, with its own author and time. The original stays unchanged and is shown as "amended later". Amendments are allowed after the visit closes; new notes need an open visit.
+- **Drafts and closed visits:** a draft started while the visit was open may still be signed after it closes (late signing). Not limited in time (not invented).
+- **Diagnoses:** free text (≤500 characters) with certainty *provisional* or *confirmed*; author and time recorded; open visits only. Corrections: "entered in error" with a reason (stays visible, crossed out). `code`/`code_system` stay empty until a coding system is chosen.
+- **Permissions (provisional):** `CLINICAL_NOTE_READ` (triage nurse, clinician), `CLINICAL_NOTE_WRITE` (clinician).
+- Audit records note and diagnosis ids and actions; never note text or diagnosis wording.
+
+Further questions for the clinical lead:
+
+6. May a clinician amend another clinician's note, or only their own?
+7. Should late signing (after the visit closed) be limited in time?
+8. Are the section names right for the pilot departments?
+
 ## Open questions for the workflow owner
 
 1. Visit types beyond new/follow-up? Emergency arrivals in the pilot?
@@ -75,3 +94,4 @@ Local demo users: `demo.nurse`, `demo.clinician` (see `infra/keycloak/README.md`
 | Date | Change | By |
 |---|---|---|
 | 2026-11-23 | Provisional defaults written at product owner's request; triage scale and alarm limits left empty for a clinical lead | Engineering (Claude Code), task 3.1 |
+| 2026-11-23 | Clinical notes (fixed sections, draft/sign/amend) and free-text diagnoses per OD-10/OD-09 decisions | Engineering (Claude Code), task 3.2 |

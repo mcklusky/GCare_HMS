@@ -18,6 +18,8 @@ import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { PatientBanner } from '../../components/PatientBadges'
 import { ErrorState, PageTitle, QueryState } from '../../components/states'
+import { DiagnosesSection } from './DiagnosesSection'
+import { NotesSection } from './NotesSection'
 import { TriageSection } from './TriageSection'
 
 const DIALOG: Record<
@@ -110,6 +112,12 @@ export function EncounterPage() {
             </Card>
             {hasPermission(me, Permission.OBSERVATION_READ) && (
               <TriageSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
+            )}
+            {hasPermission(me, Permission.CLINICAL_NOTE_READ) && (
+              <>
+                <DiagnosesSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
+                <NotesSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
+              </>
             )}
           </Stack>
         )}

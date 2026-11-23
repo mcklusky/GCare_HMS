@@ -12,8 +12,8 @@ Decisions the documents mark as required before a specific build step. Once deci
 | OD-06 | Duplicate scoring and manual review rules | 04, ADR-006 | Phase 2 | Must be encoded in acceptance tests | User (asked engineering to invent defaults) | **PROVISIONAL**: points-based scoring, configurable weights, never automatic; see 17-PATIENT-IDENTITY-POLICY.md §3–4. Scenarios need registration-leadership sign-off (Phase 2 exit) | 2026-11-23 |
 | OD-07 | Patient merge vs link semantics | 04, 05 | Phase 2 | Includes reversal/unmerge policy | User (asked engineering to invent defaults) | **PROVISIONAL**: link, never merge; two-person approval; reversible unlink; see 17-PATIENT-IDENTITY-POLICY.md §5 | 2026-11-23 |
 | OD-08 | Patient identifier format (check digit, issuing scope) | FR-005 | Phase 2 |  |  |  |  |
-| OD-09 | Terminology systems (diagnoses, procedures, units) | 04 | Phase 3 |  |  |  |  |
-| OD-10 | Clinical note data structure | 04 | Phase 3 | Free text vs structured sections/templates |  |  |  |
+| OD-09 | Terminology systems (diagnoses, procedures, units) | 04 | Phase 3 |  | User (accepted recommendation) | **Partial**: diagnoses are free text for now, with empty `code`/`code_system` columns; no code list is bundled or invented. The coding system (e.g. ICD-10/ICD-11 and its licence) is still open; codes will be added by a reviewed process. Units: fixed per measure (docs/18 §3). Procedures: not yet needed | 2026-11-23 |
+| OD-10 | Clinical note data structure | 04 | Phase 3 | Free text vs structured sections/templates | User (accepted recommendation) | Fixed sections, each free text: history, examination, assessment, plan (section names PROVISIONAL). Draft → sign → amend; signed notes immutable (docs/18 §7) | 2026-11-23 |
 | OD-11 | Invoice tax and exemption representation | 04 | Phase 4 |  |  |  |  |
 | OD-12 | Retention, deletion and legal hold | 04, 15 | Schema freeze | See [retention-schedule.md](retention-schedule.md) |  |  |  |
 | OD-13 | Audit retention and tamper-evidence | 04 | Task 1.2 audit design |  |  |  |  |

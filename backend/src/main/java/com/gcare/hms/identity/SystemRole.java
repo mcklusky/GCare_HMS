@@ -1,6 +1,8 @@
 package com.gcare.hms.identity;
 
 import static com.gcare.hms.shared.security.Permissions.AUDIT_READ;
+import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_READ;
+import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_WRITE;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_OPEN;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_READ;
@@ -80,7 +82,8 @@ public enum SystemRole {
   TRIAGE_NURSE(
       "Triage nurse",
       "Sees department queues and records triage observations.",
-      Set.of(PATIENT_READ, ENCOUNTER_READ, OBSERVATION_READ, OBSERVATION_RECORD)),
+      Set.of(
+          PATIENT_READ, ENCOUNTER_READ, OBSERVATION_READ, OBSERVATION_RECORD, CLINICAL_NOTE_READ)),
 
   /**
    * Calls, transfers, closes and reopens visits and records observations (docs/18). PROVISIONAL
@@ -88,14 +91,17 @@ public enum SystemRole {
    */
   CLINICIAN(
       "Clinician",
-      "Sees patients from the department queue: calls, transfers, closes and reopens visits.",
+      "Sees patients from the department queue: calls, transfers, closes and reopens visits;"
+          + " writes and signs notes.",
       Set.of(
           PATIENT_READ,
           ENCOUNTER_READ,
           ENCOUNTER_MANAGE,
           ENCOUNTER_REOPEN,
           OBSERVATION_READ,
-          OBSERVATION_RECORD));
+          OBSERVATION_RECORD,
+          CLINICAL_NOTE_READ,
+          CLINICAL_NOTE_WRITE));
 
   private final String displayName;
   private final String description;

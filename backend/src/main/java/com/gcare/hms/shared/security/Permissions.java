@@ -26,6 +26,8 @@ public final class Permissions {
   public static final String ENCOUNTER_REOPEN = "ENCOUNTER_REOPEN";
   public static final String OBSERVATION_READ = "OBSERVATION_READ";
   public static final String OBSERVATION_RECORD = "OBSERVATION_RECORD";
+  public static final String CLINICAL_NOTE_READ = "CLINICAL_NOTE_READ";
+  public static final String CLINICAL_NOTE_WRITE = "CLINICAL_NOTE_WRITE";
 
   public static final Set<String> ALL =
       Set.of(
@@ -45,7 +47,9 @@ public final class Permissions {
           ENCOUNTER_MANAGE,
           ENCOUNTER_REOPEN,
           OBSERVATION_READ,
-          OBSERVATION_RECORD);
+          OBSERVATION_RECORD,
+          CLINICAL_NOTE_READ,
+          CLINICAL_NOTE_WRITE);
 
   private Permissions() {}
 }
