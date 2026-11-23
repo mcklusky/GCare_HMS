@@ -1,27 +1,53 @@
 # GCare HMS — Claude Code instructions
-
-Hospital management system. **Patient safety, data integrity and security take priority over speed.** This is not a CRUD app.
-
-@docs/07-CLAUDE.md
-
-## Where things are
-- Requirements and plan: [docs/README.md](docs/README.md) (index), [docs/01-PRD.md](docs/01-PRD.md) (FR-001–FR-046), [docs/06-PLAN.md](docs/06-PLAN.md), [docs/16-TRACEABILITY.md](docs/16-TRACEABILITY.md).
-- Column/endpoint/task detail: [docs/detail/](docs/detail/). Core docs win on conflict; known conflicts are listed in [docs/README.md](docs/README.md#detail-reconciliation-notes).
-- Decisions: [docs/REVIEW.md](docs/REVIEW.md) (ADR register) and [docs/project-record/open-decisions.md](docs/project-record/open-decisions.md).
-- `GCare_HMS_PRD_v1_4.docx` is superseded (it says Django). Do not build from it.
-
-## Current state (2026-11-23)
-- Phase 1 in progress ([docs/08-FIRST-SPRINT.md](docs/08-FIRST-SPRINT.md)). Done: 1.1 scaffold; 1.2 schema V1 (organizations, facilities, departments, audit_events), RLS isolation, audit service, error format, correlation IDs; 1.3 Keycloak sign-in and permissions; 1.4 app shell (Mantine, React Router, TanStack Query; ADR-013). Phase 2: 2.1 patient records, numbers, search and duplicate scoring (backend); 2.2 registration/search/record screens, corrections with history, duplicate review queue. Commands and the isolation model are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
-- Organization-owned queries only work inside `OrganizationContext.callAs(...)`. Every new tenant table needs RLS + grants + an isolation test (DEVELOPMENT.md, migration workflow).
-- Decided: `organization`/`organization_id` naming (ADR-009); shared DB with `organization_id` + PostgreSQL RLS (ADR-010); pinned versions (ADR-011).
-- Decided: Keycloak sign-in, GCare-side authorization (OD-03, ADR-012). Branches awaiting review in order: `phase1/1.2-foundation-data` -> `phase1/1.3-keycloak-auth` -> `phase1/1.4-app-shell` -> `phase2/2.1-patient-core` -> `phase2/2.2-registration` (each stacked on the previous).
-- Patient identity rules (OD-05/06/07) are PROVISIONAL defaults invented at the user's request ([docs/17-PATIENT-IDENTITY-POLICY.md](docs/17-PATIENT-IDENTITY-POLICY.md)); never present them as approved. Registration leadership must sign off the scenarios before real patients.
-- Services check permissions with `@PreAuthorize("hasAuthority('<PERMISSION>')")` plus `CurrentUser.require().scopeOf(...)` for facility scope. Never trust organization/facility IDs from the client.
-- Backend is deny-by-default (`shared/security/SecurityConfig`). Never loosen it to make a feature work.
-- Frontend UI uses the shared states in `frontend/src/components/states.tsx` and `ConfirmDialog` (reason required for corrections/reversals). On Windows run frontend tests from `C:\...` (upper-case drive).
-- JDK: if `java` is not on PATH, a portable Temurin 21 is at `~/.jdks/jdk-21*`. Set `JAVA_HOME` to it.
-- Project-record files are empty templates. Never fill them with invented values.
-
-## Working rules for this repo
-- Reference FR IDs and plan task IDs in commits/PRs; update the Tests/Evidence columns in `docs/16-TRACEABILITY.md` only with tests that actually ran.
-- Synthetic data only. Never commit `.env`, credentials, real patient data or production extracts.
+- **Priority:** hospital management system. Patient safety, data integrity and security come before speed. Not a CRUD app.
+- **Full rules:** docs/07-CLAUDE.md (summary), docs/detail/07-CLAUDE-DETAIL.md. Read them only when a task touches their area.
+**Stack** (versions pinned, ADR-011)
+- Backend: Spring Boot 4.2 modular monolith on Java 21, Spring Security 7, Jackson 3 (`tools.jackson`)
+- Database: PostgreSQL 18 with Flyway and row-level security
+- Frontend: React + TypeScript (Vite) with Mantine 9, React Router, TanStack Query and Tabler icons (ADR-013)
+- Never add Django, a second backend, microservices or another database without an ADR. `GCare_HMS_PRD_v1_4.docx` is superseded.
+**Paths**
+- Backend `backend/src/main/java/com/gcare/hms/`: `audit`, `identity`, `organization`, `patient`, plus `shared/{security,tenancy,web}`
+  - Placeholder modules (package-info only): `billing`, `encounter`, `integration`, `orders`, `radiology`, `reporting`
+- Migrations: `backend/src/main/resources/db/migration/V<n>__*.sql` (V1–V4 so far; never edit an applied one)
+- Frontend: `frontend/src/{api,auth,shell,components,pages/<feature>,test}`
+- Local infra: `docker-compose.yml` (Postgres, Keycloak on 127.0.0.1:8180); realm in `infra/keycloak/gcare-realm.local.json`
+- Docs in `docs/`: README (index), 01-PRD (FR-001–046), 06-PLAN (tasks), 16-TRACEABILITY, 17-PATIENT-IDENTITY-POLICY, REVIEW (ADRs), DEVELOPMENT (commands)
+**Auth** (ADR-012)
+- Keycloak OIDC with authorization code + PKCE. The backend is the confidential client; the browser holds only the HttpOnly `GCARE_SESSION` cookie.
+- CSRF: cookie `XSRF-TOKEN`, header `X-XSRF-TOKEN` on every non-GET request
+- GCare authorizes, not Keycloak:
+  - each identity is linked via `user_identities`
+  - `identity/CurrentUserFilter` reloads the user and permissions on every request and sets `OrganizationContext`
+- Services: `@PreAuthorize("hasAuthority('<PERMISSION>')")` + `CurrentUser.require().scopeOf(...)` for facility scope.
+- Deny-by-default `shared/security/SecurityConfig`. Never loosen it. Never trust organization or facility IDs sent by the client.
+- Config `AUTH_ISSUER_URI` / `AUTH_CLIENT_SECRET` have no defaults (fail closed). Local demo users `demo.*`, password `Local-Demo-Only-1!`.
+**Backend conventions**
+- Versioned `/api/v1` REST with DTOs, Bean Validation, OpenAPI, and business rules in the service layer
+- Errors go through `shared/web/ApiException` subtypes, giving one consistent error format
+- Tenant queries run only inside `shared/tenancy/OrganizationContext.callAs(...)`. Every new tenant table needs RLS, grants and an isolation test.
+- Audit sensitive reads and every mutation. Audit metadata holds field names and criteria types, never values or clinical content.
+- Optional JSON booleans are `Boolean`, not `boolean` (Jackson 3 fails on missing primitives)
+- Corrections and reversals need a version, a reason and history. Never silently merge or overwrite records.
+**Frontend conventions**
+- Use the shared states in `components/states.tsx`, `ConfirmDialog` (reason required) and `StatusBadge`
+- Navigation is gated by permission in `shell/navigation.ts`; this is for usability only, the API enforces
+- No patient data in URLs, localStorage or sessionStorage
+- Accessible, responsive UI with loading, empty and error states; tests use axe-core
+**Testing and commands**
+- Backend: `./mvnw verify` (Testcontainers, Spotless with UNIX line endings). If `java` is missing, set `JAVA_HOME` to `~/.jdks/jdk-21*`.
+- Frontend: `npm run lint`, `typecheck`, `test` and `build`. On Windows run Vitest from an upper-case `C:\` path.
+- Test the feature plus authorization, tenant isolation, audit and failure paths
+- Never claim a test passed unless it ran. Update 16-TRACEABILITY only with tests that ran.
+**Domain rules**
+- Patient identity rules (OD-05/06/07, docs/17) are PROVISIONAL. Never present them as approved.
+- Do not invent clinical rules, tariffs, legal values or national interface contracts
+- Money: decimal types, an explicit currency, a tariff snapshot and idempotent payments
+- Imaging goes to a PACS/DICOM archive, never PostgreSQL
+**Git and data**
+- One branch and PR per plan task (`phaseN/N.M-name`). Reference FR and task IDs.
+- Synthetic data only. Never commit `.env`, secrets, real patient data or production extracts.
+- Project-record templates stay empty; never fill them with invented values
+- No force-push or deploy without explicit approval
+**State (2026-11-23)**
+- Done 1.1–1.4, 2.1–2.2 (PRs stacked 1.2→1.3→1.4→2.1→2.2). Next: 2.3 controlled duplicate linking (link only, never merge).

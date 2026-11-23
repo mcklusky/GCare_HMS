@@ -2,7 +2,7 @@
 
 Read `docs/README.md`, `docs/01-PRD.md` through `docs/06-PLAN.md`, and `docs/REVIEW.md` before implementation. These documents define the baseline; unresolved decisions must be surfaced, not silently guessed.
 
-> Full rule set (frontend, backend, database, security, clinical, financial, multi-hospital, DICOM, API, testing, Git and environment rules): [detail/07-CLAUDE-DETAIL.md](detail/07-CLAUDE-DETAIL.md). The repository-root `CLAUDE.md` imports this file so Claude Code loads it automatically.
+> Full rule set (frontend, backend, database, security, clinical, financial, multi-hospital, DICOM, API, testing, Git and environment rules): [detail/07-CLAUDE-DETAIL.md](detail/07-CLAUDE-DETAIL.md). The repository-root `CLAUDE.md` no longer imports this file. It carries a short summary of these rules and points here; read this file when a task needs the full wording.
 
 ## Approved stack
 Frontend: React + TypeScript. Backend: Java + Spring Boot modular monolith. Persistence: PostgreSQL with Flyway migrations. Do not introduce Django, a second backend language/framework, microservices, or another database without an explicit recorded architecture decision. Integrate imaging through approved DICOM archive/PACS and viewer; never store image payloads in PostgreSQL or build a replacement diagnostic viewer.
