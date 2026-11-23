@@ -5,7 +5,7 @@ Configurable hospital management system for multi-facility organizations. Pilot 
 **Stack (approved):** React + TypeScript · Java + Spring Boot modular monolith · PostgreSQL (Flyway) · external DICOM archive/PACS and diagnostic viewer.
 
 ## Status
-Documentation and planning baseline only; application code has not been started. See [docs/README.md](docs/README.md) for the full document set and [docs/08-FIRST-SPRINT.md](docs/08-FIRST-SPRINT.md) for the first sprint.
+Phase 1 foundation in progress: backend and frontend skeletons, local PostgreSQL, CI. There are no clinical features yet, and every API request is denied until authentication lands (task 1.3). See [docs/README.md](docs/README.md) for the document set and [docs/08-FIRST-SPRINT.md](docs/08-FIRST-SPRINT.md) for sprint progress.
 
 ## Repository layout
 | Path | Contents |
@@ -14,10 +14,13 @@ Documentation and planning baseline only; application code has not been started.
 | `docs/detail/` | Detailed drafts (tables, endpoints, task acceptance criteria) |
 | `docs/project-record/` | Site-specific approvals and evidence (templates until filled) |
 | `GCare_HMS_PRD_v1_4.docx` | Superseded source PRD, kept for history |
-| `backend/`, `frontend/` | Created in Phase 1 (not yet present) |
+| `backend/` | Spring Boot 4.2 / Java 21 modular monolith (Maven wrapper) |
+| `frontend/` | React 19 + TypeScript + Vite |
+| `docker-compose.yml` | Local PostgreSQL 18 |
+| `.github/` | CI workflow and Dependabot |
 
 ## Local setup
-Not yet available. Phase 1 will add documented commands for building and running the backend and frontend from a fresh checkout. Copy `.env.example` to `.env` for local values; never commit `.env`.
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). In short: `docker compose up -d postgres`, then `cd backend && ./mvnw spring-boot:run`, then `cd frontend && npm ci && npm run dev`.
 
 ## Data policy
 Synthetic data only in development, demo and test environments. No real patient data, credentials or production extracts in this repository.

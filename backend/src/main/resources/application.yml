@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: gcare-hms-backend
+  datasource:
+    # Local defaults match .env.example / docker-compose.yml. Override with env vars in every other environment.
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:gcare_hms_dev}
+    username: ${DB_USERNAME:gcare}
+    password: ${DB_PASSWORD:gcare}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate # schema is owned by Flyway migrations only
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jackson:
+    time-zone: UTC
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true

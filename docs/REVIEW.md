@@ -22,6 +22,9 @@ The user confirms that the previously listed pilot decisions and approvals are c
 | ADR-006 | Identity and duplicate policy | Stable internal ID; controlled duplicate review/linking | Pilot decisions approved; encode exact policy in acceptance tests |
 | ADR-007 | Hosting/security/operations | Per approved pilot decision | Approved by user; record selected topology and RPO/RTO in deployment record |
 | ADR-008 | National integration | Only approved interfaces | Approved boundary; implement only against supplied partner contract |
+| ADR-009 | Scope entity naming (OD-01) | `organization` / `organization_id` | Accepted by user 2026-11-23 |
+| ADR-010 | Tenant isolation (OD-02) | Shared DB, `organization_id` + PostgreSQL row-level security; one hospital per environment until hosting approved | Accepted by user 2026-11-23 |
+| ADR-011 | Pinned versions (OD-04) | Java 21, Spring Boot 4.2.0, PostgreSQL 18, Node 24, React 19, Vite 8, TypeScript 7 | Accepted by user 2026-11-23. Spring Boot 4.2 and Node 24 replace the 3.x/22 originally suggested, because they were the current stable releases at setup |
 
 ## Remaining execution controls (not approval requests)
 - Capture approver names, dates, versioned workflow diagrams, tariff tables, permission matrix, local privacy/hosting review, modality conformance details, network diagram, backup/restore targets and support contacts in the project record.

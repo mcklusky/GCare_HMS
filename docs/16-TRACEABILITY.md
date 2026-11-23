@@ -11,7 +11,7 @@ Detailed task numbers use the draft's own numbering (its Phase 0–1 both map to
 | FR | Requirement | Scope | Baseline task | Detailed task | Test focus | Tests | Evidence |
 |---|---|---|---|---|---|---|---|
 | FR-001 | Facility and department configuration | Pilot | 1.2 | 1.3 | Scope hierarchy, tenant/facility isolation | | |
-| FR-002 | User and access administration | Pilot | 1.3 | 1.4, 1.5 | Deny-by-default, role/scope denial, privileged-action audit | | |
+| FR-002 | User and access administration | Pilot | 1.3 | 1.4, 1.5 | Deny-by-default, role/scope denial, privileged-action audit | `SecurityBaselineTests` (deny-by-default only) | Local `mvnw verify` 2026-11-23: 5/5 passed |
 | FR-003 | Patient search and identity | Pilot | 2.1, 2.3 | 2.3, 2.5 | Scoped search, matches shown before create, no auto-merge | | |
 | FR-004 | Patient registration | Pilot | 2.2 | 2.2, 2.4 | Unknown/incomplete details allowed, provenance | | |
 | FR-005 | Patient identifier | Pilot | 2.1 | 2.1 | Uniqueness, check digit/collision protection, stability | | |

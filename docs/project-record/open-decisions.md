@@ -4,10 +4,10 @@ Decisions the documents mark as required before a specific build step. Once deci
 
 | ID | Decision | Source | Needed before | Options / notes | Owner | Decision | Date |
 |---|---|---|---|---|---|---|---|
-| OD-01 | Top-level scope entity name: `tenant` vs `organization` | Baseline 04 vs detail 04 | First Flyway migration | Naming only; pick one and use it in schema, API and code |  |  |  |
-| OD-02 | Tenant isolation topology | 03, 04, FR-032, FR-045 | First Flyway migration | Shared DB with tenant keys (optionally row-level security) vs dedicated deployment. FR-032 defaults to isolated deployment until a hosting model is approved |  |  |  |
+| OD-01 | Top-level scope entity name: `tenant` vs `organization` | Baseline 04 vs detail 04 | First Flyway migration | Naming only; pick one and use it in schema, API and code | User (accepted recommendation) | Use `organization` / `organization_id` everywhere (schema, API, code). Baseline `Tenant` wording in 04-DATA-MODEL is read as "organization". See ADR-009. | 2026-11-23 |
+| OD-02 | Tenant isolation topology | 03, 04, FR-032, FR-045 | First Flyway migration | Shared DB with tenant keys (optionally row-level security) vs dedicated deployment. FR-032 defaults to isolated deployment until a hosting model is approved | User (accepted recommendation) | Shared database; `organization_id` on every tenant-owned table, enforced by PostgreSQL row-level security plus service-layer scoping. Deploy one hospital per environment until a hosting model is approved (FR-032). See ADR-010. | 2026-11-23 |
 | OD-03 | Identity provider and session model | 03, 08 | Task 1.3 | OIDC provider vs Spring Security local accounts; drives CSRF and token handling |  |  |  |
-| OD-04 | Java LTS / Spring Boot / Node / React versions and upgrade policy | 08 | Task 1.1 | Pin in build files |  |  |  |
+| OD-04 | Java LTS / Spring Boot / Node / React versions and upgrade policy | 08 | Task 1.1 | Pin in build files | User (accepted recommendation) | Java 21 LTS (Temurin), Spring Boot 4.2.0, PostgreSQL 18, Node 24 LTS, React 19, Vite 8, TypeScript 7. Upgrades via reviewed PR; Dependabot weekly. See ADR-011. | 2026-11-23 |
 | OD-05 | Searchable demographics and normalization | 04 | Phase 2 schema |  |  |  |  |
 | OD-06 | Duplicate scoring and manual review rules | 04, ADR-006 | Phase 2 | Must be encoded in acceptance tests |  |  |  |
 | OD-07 | Patient merge vs link semantics | 04, 05 | Phase 2 | Includes reversal/unmerge policy |  |  |  |
