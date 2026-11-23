@@ -74,6 +74,22 @@ public class GlobalExceptionHandler {
         HttpStatus.BAD_REQUEST, ApiError.of("MALFORMED_REQUEST", "Request could not be read"));
   }
 
+  /** A required query parameter or header is missing (found by the endpoint sweep, task 5.4). */
+  @ExceptionHandler(org.springframework.web.bind.ServletRequestBindingException.class)
+  ResponseEntity<ApiError> handleMissingParameter(
+      org.springframework.web.bind.ServletRequestBindingException e) {
+    if (e instanceof org.springframework.web.bind.MissingServletRequestParameterException m) {
+      return respond(
+          HttpStatus.BAD_REQUEST,
+          ApiError.of(
+              "VALIDATION_FAILED",
+              "Request is invalid",
+              Map.of(m.getParameterName(), List.of("is required"))));
+    }
+    return respond(
+        HttpStatus.BAD_REQUEST, ApiError.of("MALFORMED_REQUEST", "Request could not be read"));
+  }
+
   @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
   ResponseEntity<ApiError> handleStale(ObjectOptimisticLockingFailureException e) {
     return respond(

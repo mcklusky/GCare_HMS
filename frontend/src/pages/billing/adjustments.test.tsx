@@ -200,9 +200,12 @@ describe('on the invoice', () => {
       cashier_name: 'Test Cashier',
     }
     fakeBackend({ 'GET /api/v1/me': { body: CASHIER }, 'GET /api/v1/refunds/rf1/receipt': { body: receipt } })
-    renderApp('/billing/refund-receipts/rf1')
+    const view = renderApp('/billing/refund-receipts/rf1')
     expect(await screen.findByRole('heading', { name: 'Refund receipt RCT-000002' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Receipt' })).toHaveTextContent('Amount refunded4.00 USD')
+    expect(
+      (await axe.run(view.container, { rules: { 'color-contrast': { enabled: false } } })).violations.map((v) => v.id),
+    ).toEqual([])
   })
 })
 

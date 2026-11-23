@@ -18,6 +18,7 @@ Implementation baseline: React + TypeScript frontend; Java + Spring Boot modular
 - [20 — Operational Reports](20-REPORTING.md) (reports, dashboard, export decisions; **provisional** roles)
 - [21 — Configuration and Branding](21-CONFIGURATION.md) (versioned settings, two-person approval, branding; **provisional** roles)
 - [22 — Downtime Forms and Reconciliation](22-DOWNTIME.md) (numbered paper forms, reconciliation queue, second person; **provisional** roles)
+- [23 — Operations Readiness](23-OPERATIONS-READINESS.md) (encrypted backup + restore drill, security sweep, accessibility, health/metrics, alert rules, UAT checklist)
 - [18 — Encounter Workflow](18-ENCOUNTER-WORKFLOW.md) (**provisional** visit lifecycle and queues; triage scale and alarm limits left for a clinical lead)
 - [Consistency Review and Decision Register](REVIEW.md)
 

@@ -216,9 +216,12 @@ describe('shifts', () => {
       },
     })
 
-    renderApp('/billing/shift-reviews')
+    const view = renderApp('/billing/shift-reviews')
     const count = await screen.findByRole('table', { name: 'Cash count of Test Cashier' })
     expect(count).toHaveTextContent('-1.00 USD')
+    expect(
+      (await axe.run(view.container, { rules: { 'color-contrast': { enabled: false } } })).violations.map((v) => v.id),
+    ).toEqual([])
     await userEvent.click(screen.getByRole('button', { name: 'Sign off' }))
     const dialog = await screen.findByRole('dialog', { name: 'Sign off this shift?' })
     await userEvent.type(within(dialog).getByRole('textbox', { name: /Reason/ }), 'Checked drawer')

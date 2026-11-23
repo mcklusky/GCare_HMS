@@ -141,3 +141,8 @@ The issuer must match the token's `iss` exactly (scheme, host, port, no trailing
 
 ## Backups
 Local Compose data (`gcare-pgdata` volume) is disposable. Backup and restore for shared environments are owned by the operator named in [project-record/deployment-record.md](project-record/deployment-record.md) and tested before pilot ([06-PLAN.md](06-PLAN.md) Phase 5).
+
+Scripts and procedure: [23-OPERATIONS-READINESS.md](23-OPERATIONS-READINESS.md) §2 (`infra/backup/backup.sh`, `restore.sh`). Local restore drill (throwaway key, scratch database, verified): `bash infra/backup/drill-local.sh` (on Git Bash prefix `MSYS_NO_PATHCONV=1`).
+
+## Health and metrics
+Application port: `/actuator/health`, `/livez`, `/readyz` (status only). Management port `MANAGEMENT_PORT` (default 8081, bound to `MANAGEMENT_ADDRESS` 127.0.0.1): `/actuator/health` with details, `/actuator/prometheus`. Example alert rules: `infra/monitoring/alert-rules.yml` (provisional thresholds).

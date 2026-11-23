@@ -73,6 +73,18 @@ describe('application shell', () => {
     expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main')
   })
 
+  it('is usable from the keyboard: the skip link comes first and main content is a landmark', async () => {
+    fakeBackend({ 'GET /api/v1/me': { body: me() } })
+
+    renderApp()
+
+    await screen.findByRole('heading', { name: 'Welcome, Test Admin' })
+    await userEvent.tab()
+    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveFocus()
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'main')
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+  })
+
   it('hides navigation the user has no permission for, and guards the page', async () => {
     fakeBackend({ 'GET /api/v1/me': { body: me({ permissions: ['AUDIT_READ'], facilities: [] }) } })
 
@@ -160,6 +172,7 @@ describe('facilities', () => {
 
     await userEvent.click(within(table).getByRole('link', { name: FACILITY_A.name }))
     expect(await screen.findByRole('table', { name: 'Departments' })).toHaveTextContent('Outpatient (synthetic)')
+    await expectNoAxeViolations(container)
   })
 
   it('shows an empty state', async () => {

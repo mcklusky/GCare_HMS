@@ -3,6 +3,8 @@
 # these values only satisfy the required settings. KeycloakSignInTests uses a real Keycloak.
 AUTH_ISSUER_URI: http://keycloak.test.invalid/realms/gcare
 AUTH_CLIENT_SECRET: test-only-not-a-secret
+# Random management port, so test contexts with real servers never clash.
+MANAGEMENT_PORT: "0"
 
 springdoc:
   api-docs:

@@ -52,15 +52,33 @@ server:
     include-binding-errors: never
 
 management:
+  # Detailed health and metrics only on the management port, bound to the local/internal network
+  # (task 5.4; docs/23). Never published through the public proxy.
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+    address: ${MANAGEMENT_ADDRESS:127.0.0.1}
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
-      show-details: never
+      show-details: always
       probes:
         enabled: true
+        add-additional-paths: true # /livez and /readyz on the application port, status only
+      group:
+        liveness:
+          show-details: never
+        readiness:
+          include: readinessState,db
+          show-details: never
+        # Minimal public up/down check on the application port: status only, no components.
+        public:
+          include: livenessState,readinessState,db
+          show-components: never
+          show-details: never
+          additional-path: server:/actuator/health
 
 springdoc:
   api-docs:

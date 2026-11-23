@@ -87,11 +87,14 @@ describe('downtime', () => {
       'GET /api/v1/me': { body: me({ permissions: ['DOWNTIME_MANAGE'], facilities: [FACILITY_A] }) },
       'GET /api/v1/downtime/forms/b1': { body: batch },
     })
-    renderApp('/downtime/forms/b1/print')
+    const view = renderApp('/downtime/forms/b1/print')
     expect(await screen.findByRole('region', { name: 'Form TRI-000004' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Form TRI-000006' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Form TRI-000007' })).not.toBeInTheDocument()
     expect(screen.getAllByText("Patient's registration form number (REG-…)")).toHaveLength(3)
+    expect(
+      (await axe.run(view.container, { rules: { 'color-contrast': { enabled: false } } })).violations.map((v) => v.id),
+    ).toEqual([])
   }, 20_000)
 
   it('keys a triage form exactly as written, with the patient’s registration form number', async () => {
@@ -152,8 +155,12 @@ describe('downtime', () => {
         return { body: { ...REG, status: 'PROPOSED' } }
       },
     })
-    renderApp('/downtime/episodes/ep1')
+    const view = renderApp('/downtime/episodes/ep1')
     await userEvent.click(await screen.findByRole('button', { name: 'REG-000001' }))
+    await screen.findByRole('radio', { name: /register a new patient/ })
+    expect(
+      (await axe.run(view.container, { rules: { 'color-contrast': { enabled: false } } })).violations.map((v) => v.id),
+    ).toEqual([])
     const section = await screen.findByRole('region', { name: 'Propose reconciliation of REG-000001' })
     await userEvent.click(await within(section).findByRole('radio', { name: /register a new patient/ }))
     await userEvent.type(within(section).getByRole('textbox', { name: /Note for the approver/ }), 'Not the same')

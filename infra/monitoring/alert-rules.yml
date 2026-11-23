@@ -1,0 +1,79 @@
+# Example Prometheus alert rules for GCare HMS (task 5.4; docs/23).
+#
+# PROVISIONAL: no monitoring server has been chosen yet, and the thresholds and durations below are
+# engineering starting points, not approved service levels. The operations owner tunes them during
+# the pilot. The backup-age rule uses the maximum age the operator exports from the approved RPO
+# (BACKUP_MAX_AGE_SECONDS in infra/backup/backup.sh); without it, that rule never fires.
+#
+# Scrape the management port only (default 127.0.0.1:8081, path /actuator/prometheus), job
+# "gcare-hms"; collect backup metrics with node_exporter's textfile collector (BACKUP_METRICS_FILE).
+groups:
+  - name: gcare-hms
+    rules:
+      - alert: GcareBackendDown
+        expr: up{job="gcare-hms"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "GCare backend {{ $labels.instance }} is not answering"
+          action: "Check the service and its logs; start the downtime procedure (docs/12, docs/22) if users are affected."
+
+      - alert: GcareDatabaseUnreachable
+        expr: hikaricp_connections_active{job="gcare-hms"} == 0 and on(instance) hikaricp_connections_pending{job="gcare-hms"} > 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Requests wait for database connections and none are active"
+          action: "Check PostgreSQL availability and network; see readiness on the management port (/actuator/health)."
+
+      - alert: GcareServerErrors
+        expr: |
+          sum by (instance) (rate(http_server_requests_seconds_count{job="gcare-hms", status=~"5.."}[5m]))
+            / sum by (instance) (rate(http_server_requests_seconds_count{job="gcare-hms"}[5m])) > 0.05
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "More than 5% of requests fail with a server error"
+          action: "Look up correlation ids in the logs; never copy patient data into tickets."
+
+      - alert: GcareSlowRequests
+        expr: |
+          histogram_quantile(0.95, sum by (le, instance) (rate(http_server_requests_seconds_bucket{job="gcare-hms"}[5m]))) > 2
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "95th percentile response time above 2 s"
+          action: "Check database load, connection pool and host resources."
+
+      - alert: GcareConnectionPoolSaturated
+        expr: hikaricp_connections_pending{job="gcare-hms"} > 0
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Requests keep waiting for database connections"
+          action: "Check for slow queries or an undersized pool."
+
+      - alert: GcareHeapHigh
+        expr: |
+          sum by (instance) (jvm_memory_used_bytes{job="gcare-hms", area="heap"})
+            / sum by (instance) (jvm_memory_max_bytes{job="gcare-hms", area="heap"}) > 0.9
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "JVM heap above 90% for 15 minutes"
+          action: "Check memory settings and recent changes; plan a restart in a quiet period if it persists."
+
+      - alert: GcareBackupTooOld
+        expr: time() - gcare_backup_last_success_timestamp_seconds > gcare_backup_max_age_seconds
+        labels: { severity: critical }
+        annotations:
+          summary: "No successful backup of {{ $labels.database }} within the approved maximum age"
+          action: "Run infra/backup/backup.sh by hand, check its log and free disk space; tell the operations owner."
+
+      - alert: GcareBackupNeverReported
+        expr: absent(gcare_backup_last_success_timestamp_seconds)
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          summary: "No backup metrics found"
+          action: "Check that the backup job runs with BACKUP_METRICS_FILE and that the textfile collector reads it."
