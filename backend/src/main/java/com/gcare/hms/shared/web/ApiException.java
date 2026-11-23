@@ -1,5 +1,7 @@
 package com.gcare.hms.shared.web;
 
+import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -23,6 +25,33 @@ public abstract class ApiException extends RuntimeException {
 
   public String code() {
     return code;
+  }
+
+  /** Field-level messages, keyed by request field name; empty for most errors. */
+  public Map<String, List<String>> fieldErrors() {
+    return Map.of();
+  }
+
+  /** 400: a business rule on the request failed (same shape as Bean Validation errors). */
+  public static class Invalid extends ApiException {
+    private final Map<String, List<String>> fieldErrors;
+
+    public Invalid(String field, String message) {
+      super(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Request is invalid");
+      this.fieldErrors = Map.of(field, List.of(message));
+    }
+
+    @Override
+    public Map<String, List<String>> fieldErrors() {
+      return fieldErrors;
+    }
+  }
+
+  /** 400 with a specific code, for requests that are well-formed but not acceptable. */
+  public static class BadRequest extends ApiException {
+    public BadRequest(String code, String message) {
+      super(HttpStatus.BAD_REQUEST, code, message);
+    }
   }
 
   /** 404: the resource does not exist or is outside the caller's scope (no disclosure). */

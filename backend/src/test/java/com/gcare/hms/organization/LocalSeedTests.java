@@ -77,6 +77,8 @@ class LocalSeedTests {
     assertThat(load("00000000-0000-4000-8000-000000001002").permissions())
         .containsExactly(Permissions.AUDIT_READ);
     assertThat(load("00000000-0000-4000-8000-000000001003").permissions()).isEmpty();
+    assertThat(load("00000000-0000-4000-8000-000000001005").permissions())
+        .containsExactlyInAnyOrderElementsOf(SystemRole.REGISTRATION_CLERK.permissions());
     assertThat(directory.findLink(LOCAL_ISSUER, "00000000-0000-4000-8000-000000001004")).isEmpty();
   }
 

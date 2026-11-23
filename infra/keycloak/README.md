@@ -14,6 +14,7 @@ It exists so developers can sign in locally. **It is not a production configurat
 | `demo.admin` | `…1001` | DEMO-ORG, ORGANIZATION_ADMIN (organization-wide) | Signs in; can list facilities |
 | `demo.auditor` | `…1002` | DEMO-ORG, AUDITOR | Signs in; facility list is 403 |
 | `demo.unassigned` | `…1003` | DEMO-ORG, no roles | Signs in; sees only `/me` with no permissions |
+| `demo.clerk` | `…1005` | DEMO-ORG, REGISTRATION_CLERK at DEMO-GH | Signs in; can search and register patients |
 | `demo.unlinked` | `…1004` | not linked | Sign-in refused (`login_error=account_not_enabled`), audited |
 
 Values such as brute-force limits, password policy and session lifetimes are **local defaults only**.

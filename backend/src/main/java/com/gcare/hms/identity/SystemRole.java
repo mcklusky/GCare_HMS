@@ -3,6 +3,8 @@ package com.gcare.hms.identity;
 import static com.gcare.hms.shared.security.Permissions.AUDIT_READ;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
+import static com.gcare.hms.shared.security.Permissions.PATIENT_READ;
+import static com.gcare.hms.shared.security.Permissions.PATIENT_REGISTER;
 import static com.gcare.hms.shared.security.Permissions.USER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.USER_READ;
 
@@ -10,8 +12,9 @@ import java.util.Set;
 
 /**
  * Roles the platform creates in every organization (docs/05-API.md, minimum authorization matrix).
- * Only administrative roles exist so far: clinical, billing and other roles come with their
- * features and the signed-off permission matrix (docs/project-record/permission-matrix.md).
+ * Only administrative and registration roles exist so far: clinical, billing and other roles come
+ * with their features and the signed-off permission matrix
+ * (docs/project-record/permission-matrix.md).
  */
 public enum SystemRole {
   /** Scoped users and configuration; no implicit clinical access. */
@@ -21,7 +24,16 @@ public enum SystemRole {
       Set.of(FACILITY_READ, FACILITY_MANAGE, USER_READ, USER_MANAGE)),
 
   /** Reads the audit trail; no mutation. */
-  AUDITOR("Auditor", "Reads the audit trail. Cannot change anything.", Set.of(AUDIT_READ));
+  AUDITOR("Auditor", "Reads the audit trail. Cannot change anything.", Set.of(AUDIT_READ)),
+
+  /**
+   * Patient demographics at the front desk (docs/05-API.md matrix: "Registration"). PROVISIONAL
+   * until the permission matrix is signed off; duplicate review and linking come with task 2.2/2.3.
+   */
+  REGISTRATION_CLERK(
+      "Registration clerk",
+      "Searches and registers patients at assigned facilities. No clinical access.",
+      Set.of(PATIENT_READ, PATIENT_REGISTER));
 
   private final String displayName;
   private final String description;

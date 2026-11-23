@@ -24,7 +24,7 @@ Decisions covered: OD-05 (searchable demographics and normalization), OD-06 (dup
 | Patient number | Exact, after removing `P`, hyphens and spaces; check digit validated |
 | Identifier (national ID, passport, NHIS/insurance no., other) | Exact on type + normalized value (upper case, spaces and hyphens removed) |
 | Phone | Digits only, compared on the last 9 digits (drops country code and leading 0). *Configurable digit count per organization.* |
-| Family and given names | Normalized: Unicode accents removed, lower case, punctuation (`'`, `-`, `.`) removed, spaces collapsed. Fuzzy match with PostgreSQL trigram similarity |
+| Family and given names | Normalized: Unicode accents removed, lower case, apostrophes and full stops removed, hyphens become spaces, spaces collapsed (`Mary-Jane` = `Mary Jane`). Fuzzy match with trigram similarity |
 | Date of birth | Exact, or by year when either record's date is estimated |
 | Sex | Exact (`FEMALE`, `MALE`, `OTHER`, `UNKNOWN`) |
 
@@ -41,7 +41,7 @@ Candidates are scored when a new registration is about to be saved and on reques
 | Same phone (normalized) | +30 |
 | Family name equal / similar (trigram ≥ 0.6) | +20 / +10 |
 | Given name equal / similar | +15 / +8 |
-| Given and family names swapped | +15 |
+| Given and family names swapped | scored as if they were in the right fields |
 | Date of birth equal | +25 |
 | Same birth year (either date estimated), or dates within 1 day | +10 |
 | Sex equal (both known) | +5 |
@@ -53,6 +53,8 @@ Candidates are scored when a new registration is about to be saved and on reques
 | ≥ 80 | **Likely duplicate** | Shown first, highlighted. To create a new record anyway the clerk must type a reason; the new record is put in the duplicate review queue. |
 | 50–79 | **Possible duplicate** | Shown for review. Creating a new record needs an explicit "None of these is the patient" confirmation (no reason required). |
 | < 50 | Not shown | — |
+
+**Cap:** a score can only reach *Likely* if an identifier matched or the given names match (equal or similar). Otherwise it is capped at 79. This keeps twins and relatives who share a surname, birth date and phone from being flagged as the same person without stronger evidence.
 
 **Review queue:** records created despite a likely duplicate, and pairs reported by staff ("this may be the same person"), go to a queue for users with permission `PATIENT_DUPLICATE_REVIEW` (registration supervisor). The reviewer chooses **not a duplicate** (the pair is not suggested again) or **request link** (§5).
 
@@ -86,3 +88,4 @@ Changing a name, birth date, sex or identifier creates a new version with the pr
 | Date | Change | By |
 |---|---|---|
 | 2026-11-23 | Provisional defaults written at product owner's request | Engineering (Claude Code) |
+| 2026-11-23 | Swapped names score as if in the right fields (scenario 4 was otherwise missed); cap at 79 without identifier or given-name evidence (scenario 6); hyphens become spaces | Engineering (Claude Code), found while encoding §4 as tests |

@@ -74,6 +74,6 @@ class AdminBootstrapTests {
             fixtures.count(
                 "SELECT count(*) FROM roles r JOIN organizations o ON o.id = r.organization_id"
                     + " WHERE o.code = 'BOOT-ORG'"))
-        .isEqualTo(2);
+        .isEqualTo(com.gcare.hms.identity.SystemRole.values().length);
   }
 }

@@ -85,6 +85,13 @@ Isolation is enforced by PostgreSQL row-level security, so a missed `WHERE` clau
 - **Audited automatically:** `SIGNED_IN`, `SIGN_IN_REFUSED`, `SIGN_IN_FAILED`, `SIGNED_OUT`, `SESSION_ENDED` and `ACCESS_DENIED`.
 - **Tests:** MockMvc tests sign in with `IdentityFixtures.user(...).signedIn()`; `KeycloakSignInTests` runs the real flow against Keycloak in Testcontainers.
 
+## Patients (task 2.1)
+- Rules are **provisional** ([17-PATIENT-IDENTITY-POLICY.md](17-PATIENT-IDENTITY-POLICY.md)); weights and thresholds are configuration (`gcare.patient.matching.*`). Change the policy document, `DuplicateScoringScenarioTests` and the configuration together.
+- `POST /api/v1/patients` answers **409 `DUPLICATE_CANDIDATES`** with scored candidates when likely/possible duplicates exist. The client resends with `duplicate_review.reviewed_candidate_ids` naming every candidate, plus a `reason` for likely duplicates; those pairs go to `patient_duplicate_flags` for review. Nothing is ever linked or merged automatically.
+- Search needs a number, identifier, phone, or a name with birth date/year or sex (`SEARCH_TOO_BROAD` otherwise). Patients are organization-wide: `PATIENT_READ` anywhere allows searching; registering needs `PATIENT_REGISTER` at the facility.
+- Audit metadata for patients holds criteria *types* and counts only, never names, numbers or free-text reasons.
+- Local demo: `demo.clerk` (registration clerk at DEMO-GH) and three fictional patients `P1000001-6`, `P1000002-4`, `P1000003-2`.
+
 ## First administrator (admin bootstrap)
 For a new environment, after Keycloak is set up and the administrator's Keycloak account exists:
 1. Copy the account's ID from the Keycloak admin console (Users → the user → ID). That is the `subject`.

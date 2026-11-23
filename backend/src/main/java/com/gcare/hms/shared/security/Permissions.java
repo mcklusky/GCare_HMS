@@ -14,9 +14,18 @@ public final class Permissions {
   public static final String USER_READ = "USER_READ";
   public static final String USER_MANAGE = "USER_MANAGE";
   public static final String AUDIT_READ = "AUDIT_READ";
+  public static final String PATIENT_READ = "PATIENT_READ";
+  public static final String PATIENT_REGISTER = "PATIENT_REGISTER";
 
   public static final Set<String> ALL =
-      Set.of(FACILITY_READ, FACILITY_MANAGE, USER_READ, USER_MANAGE, AUDIT_READ);
+      Set.of(
+          FACILITY_READ,
+          FACILITY_MANAGE,
+          USER_READ,
+          USER_MANAGE,
+          AUDIT_READ,
+          PATIENT_READ,
+          PATIENT_REGISTER);
 
   private Permissions() {}
 }

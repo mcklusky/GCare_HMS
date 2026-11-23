@@ -60,6 +60,18 @@ public class FacilityQueryService {
     return all.stream().filter(f -> f.status() == UnitStatus.ACTIVE).toList();
   }
 
+  /**
+   * For other modules: the facility if it exists in the current organization and is active. Does
+   * not check the caller's permissions; the calling service must do that.
+   */
+  @Transactional(readOnly = true)
+  public java.util.Optional<FacilitySummary> findActive(UUID facilityId) {
+    return facilities
+        .findById(facilityId)
+        .filter(f -> f.getStatus() == UnitStatus.ACTIVE)
+        .map(FacilitySummary::of);
+  }
+
   private List<FacilitySummary> inScope(FacilityScope scope) {
     if (scope.isEmpty()) {
       return List.of();

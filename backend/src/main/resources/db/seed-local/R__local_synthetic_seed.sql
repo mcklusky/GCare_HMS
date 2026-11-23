@@ -76,3 +76,53 @@ VALUES
     ('00000000-0000-4000-8000-000000000602', '00000000-0000-4000-8000-000000000001',
      '00000000-0000-4000-8000-000000000402', '00000000-0000-4000-8000-000000000302')
 ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Registration (task 2.1). demo.clerk is a REGISTRATION_CLERK at DEMO-GH.
+-- Patients are obviously fictional. Numbers follow docs/17 (Luhn check digit).
+-- ---------------------------------------------------------------------------
+INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
+VALUES ('00000000-0000-4000-8000-000000000303', '00000000-0000-4000-8000-000000000001', 'REGISTRATION_CLERK', 'Registration clerk',
+        'Searches and registers patients at assigned facilities. No clinical access.', true, 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000303', 'PATIENT_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000303', 'PATIENT_REGISTER')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (id, organization_id, username, display_name, email, status)
+VALUES ('00000000-0000-4000-8000-000000000404', '00000000-0000-4000-8000-000000000001', 'demo.clerk', 'Demo Registration Clerk', 'demo.clerk@example.invalid', 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_identities (id, organization_id, user_id, issuer, subject)
+VALUES ('00000000-0000-4000-8000-000000000504', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000404', 'http://localhost:8180/realms/gcare',
+        '00000000-0000-4000-8000-000000001005')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
+VALUES ('00000000-0000-4000-8000-000000000603', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000404', '00000000-0000-4000-8000-000000000303', '00000000-0000-4000-8000-000000000101')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO patients (id, organization_id, patient_number, registration_facility_id, status, family_name,
+    given_names, family_name_norm, given_names_norm, birth_date, birth_date_estimated, sex, phone,
+    phone_norm, details_incomplete, registration_source, created_by)
+VALUES
+    ('00000000-0000-4000-8000-000000000701', '00000000-0000-4000-8000-000000000001', 'P1000001-6', '00000000-0000-4000-8000-000000000101', 'ACTIVE', 'Testperson', 'Alpha',
+     'testperson', 'alpha', '1985-03-02', false, 'FEMALE', '0000000001', '000000001', false, 'WALK_IN', '00000000-0000-4000-8000-000000000404'),
+    ('00000000-0000-4000-8000-000000000702', '00000000-0000-4000-8000-000000000001', 'P1000002-4', '00000000-0000-4000-8000-000000000101', 'ACTIVE', 'Testperson', 'Bravo',
+     'testperson', 'bravo', '2010-11-20', false, 'MALE', '0000000001', '000000001', false, 'WALK_IN', '00000000-0000-4000-8000-000000000404'),
+    ('00000000-0000-4000-8000-000000000703', '00000000-0000-4000-8000-000000000001', 'P1000003-2', '00000000-0000-4000-8000-000000000101', 'ACTIVE', NULL, NULL,
+     NULL, NULL, '1970-01-01', true, 'UNKNOWN', NULL, NULL, true, 'EMERGENCY', '00000000-0000-4000-8000-000000000404')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO patient_identifiers (id, organization_id, patient_id, identifier_type, value, value_norm,
+    issuer, verified, status, source, created_by)
+VALUES ('00000000-0000-4000-8000-000000000801', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000701',
+        'NATIONAL_ID', 'TEST-0000-0001', 'TEST00000001', 'Fictional issuer', true, 'ACTIVE', 'REGISTRATION', '00000000-0000-4000-8000-000000000404')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO patient_number_counters (organization_id, next_value)
+VALUES ('00000000-0000-4000-8000-000000000001', 1000004)
+ON CONFLICT (organization_id) DO UPDATE SET next_value = GREATEST(patient_number_counters.next_value, 1000004);
