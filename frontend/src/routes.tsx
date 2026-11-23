@@ -17,6 +17,7 @@ import { SettingsPage } from './pages/admin/SettingsPage'
 import { DowntimePage } from './pages/downtime/DowntimePage'
 import { EpisodePage } from './pages/downtime/EpisodePage'
 import { FormsPrintPage } from './pages/downtime/FormsPrintPage'
+import { ImagingArchivePage } from './pages/imaging/ImagingArchivePage'
 import { ShiftPage } from './pages/billing/ShiftPage'
 import { ShiftReviewPage } from './pages/billing/ShiftReviewPage'
 import { TariffsPage } from './pages/billing/TariffsPage'
@@ -248,6 +249,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.DOWNTIME_MANAGE}>
             <FormsPrintPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'admin/imaging-archive',
+        element: (
+          <RequirePermission permission={Permission.IMAGING_ARCHIVE_ADMIN}>
+            <ImagingArchivePage />
           </RequirePermission>
         ),
       },

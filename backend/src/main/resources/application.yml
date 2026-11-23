@@ -55,7 +55,7 @@ management:
   # Detailed health and metrics only on the management port, bound to the local/internal network
   # (task 5.4; docs/23). Never published through the public proxy.
   server:
-    port: ${MANAGEMENT_PORT:8081}
+    port: ${MANAGEMENT_PORT:9091}
     address: ${MANAGEMENT_ADDRESS:127.0.0.1}
   endpoints:
     web:

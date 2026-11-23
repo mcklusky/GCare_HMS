@@ -31,5 +31,18 @@ services:
     volumes:
       - ./infra/keycloak/gcare-realm.local.json:/opt/keycloak/data/import/gcare-realm.json:ro
 
+  # Imaging archive for EVALUATION only (task 6.1, docs/24): Orthanc is a candidate, not a selected
+  # product (OD-14). Synthetic studies only. Start with: docker compose --profile imaging up -d orthanc
+  orthanc:
+    image: jodogne/orthanc-plugins:1.12.10
+    profiles: ["imaging"]
+    ports:
+      - "127.0.0.1:${ORTHANC_HTTP_PORT:-8142}:8042" # DICOMweb + viewer, localhost only
+      - "127.0.0.1:${ORTHANC_DICOM_PORT:-4342}:4242" # DICOM (C-STORE/C-FIND) for modality tests
+    volumes:
+      - ./infra/imaging/orthanc.local.json:/etc/orthanc/orthanc.json:ro
+      - gcare-orthanc:/var/lib/orthanc/db
+
 volumes:
   gcare-pgdata:
+  gcare-orthanc:

@@ -524,3 +524,31 @@ INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facili
 VALUES
     ('00000000-0000-4000-8000-000000000616', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000417', '00000000-0000-4000-8000-000000000314', '00000000-0000-4000-8000-000000000101')
 ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Imaging archive evaluation (task 6.1). demo.pacsadmin checks the archive and looks up studies.
+-- ---------------------------------------------------------------------------
+INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
+VALUES
+    ('00000000-0000-4000-8000-000000000315', '00000000-0000-4000-8000-000000000001', 'IMAGING_ADMINISTRATOR', 'Imaging administrator', 'Checks the imaging archive connection and looks up studies by accession number (metadata only). No clinical access.', true, 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000315', 'IMAGING_ARCHIVE_ADMIN')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (id, organization_id, username, display_name, email, status)
+VALUES
+    ('00000000-0000-4000-8000-000000000418', '00000000-0000-4000-8000-000000000001', 'demo.pacsadmin', 'Demo Imaging Administrator', 'demo.pacsadmin@example.invalid', 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_identities (id, organization_id, user_id, issuer, subject)
+VALUES
+    ('00000000-0000-4000-8000-000000000518', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000418', 'http://localhost:8180/realms/gcare', '00000000-0000-4000-8000-000000001019')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
+VALUES
+    ('00000000-0000-4000-8000-000000000617', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000418', '00000000-0000-4000-8000-000000000315', '00000000-0000-4000-8000-000000000101')
+ON CONFLICT (id) DO NOTHING;

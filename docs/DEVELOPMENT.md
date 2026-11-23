@@ -144,5 +144,8 @@ Local Compose data (`gcare-pgdata` volume) is disposable. Backup and restore for
 
 Scripts and procedure: [23-OPERATIONS-READINESS.md](23-OPERATIONS-READINESS.md) §2 (`infra/backup/backup.sh`, `restore.sh`). Local restore drill (throwaway key, scratch database, verified): `bash infra/backup/drill-local.sh` (on Git Bash prefix `MSYS_NO_PATHCONV=1`).
 
+## Imaging archive (evaluation)
+Local candidate archive (synthetic only): `docker compose --profile imaging up -d orthanc` (127.0.0.1:8142 HTTP, :4342 DICOM); load a study with `bash infra/imaging/load-synthetic-studies.sh P-000001 ACC-000001 CR "Synthetic chest"`. Point the backend at it with `GCARE_IMAGING_ARCHIVE_BASE_URL`, `..._USERNAME`, `..._PASSWORD`, `..._VIEWER_URL_TEMPLATE` (values in [24-IMAGING-ARCHIVE-EVALUATION.md](24-IMAGING-ARCHIVE-EVALUATION.md) §3). API: `GET /api/v1/imaging/archive/status`, `GET /api/v1/imaging/archive/studies?accession_number=`. Screen `/admin/imaging-archive`. Demo: `demo.pacsadmin`.
+
 ## Health and metrics
-Application port: `/actuator/health`, `/livez`, `/readyz` (status only). Management port `MANAGEMENT_PORT` (default 8081, bound to `MANAGEMENT_ADDRESS` 127.0.0.1): `/actuator/health` with details, `/actuator/prometheus`. Example alert rules: `infra/monitoring/alert-rules.yml` (provisional thresholds).
+Application port: `/actuator/health`, `/livez`, `/readyz` (status only). Management port `MANAGEMENT_PORT` (default 9091, bound to `MANAGEMENT_ADDRESS` 127.0.0.1): `/actuator/health` with details, `/actuator/prometheus`. Example alert rules: `infra/monitoring/alert-rules.yml` (provisional thresholds).

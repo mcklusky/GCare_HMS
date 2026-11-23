@@ -7,6 +7,7 @@ import {
   IconCreditCard,
   IconDiscount,
   IconPlugConnectedX,
+  IconPhoto,
   IconReceiptRefund,
   IconReportMoney,
   IconSettings,
@@ -83,6 +84,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/admin/settings',
     icon: IconSettings,
     permission: [Permission.CONFIG_CLINICAL_MANAGE, Permission.CONFIG_ORGANIZATION_MANAGE],
+  },
+  {
+    label: 'Imaging archive',
+    to: '/admin/imaging-archive',
+    icon: IconPhoto,
+    permission: Permission.IMAGING_ARCHIVE_ADMIN,
   },
   {
     label: 'Exemption reasons',

@@ -74,4 +74,11 @@ public abstract class ApiException extends RuntimeException {
       super(HttpStatus.UNPROCESSABLE_CONTENT, "INVALID_TRANSITION", message);
     }
   }
+
+  /** 503: an external system the request depends on (e.g. the imaging archive) did not answer. */
+  public static class Unavailable extends ApiException {
+    public Unavailable(String code, String message) {
+      super(HttpStatus.SERVICE_UNAVAILABLE, code, message);
+    }
+  }
 }

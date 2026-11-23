@@ -5,7 +5,7 @@
 # the pilot. The backup-age rule uses the maximum age the operator exports from the approved RPO
 # (BACKUP_MAX_AGE_SECONDS in infra/backup/backup.sh); without it, that rule never fires.
 #
-# Scrape the management port only (default 127.0.0.1:8081, path /actuator/prometheus), job
+# Scrape the management port only (default 127.0.0.1:9091, path /actuator/prometheus), job
 # "gcare-hms"; collect backup metrics with node_exporter's textfile collector (BACKUP_METRICS_FILE).
 groups:
   - name: gcare-hms

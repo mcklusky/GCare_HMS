@@ -39,7 +39,7 @@ Requirements: FR-036 (monitoring and alerting), FR-037 (accessibility), FR-027 (
 ## 5. Health, metrics and alerting
 
 - Application port: `/actuator/health`, `/livez`, `/readyz` answer status only (no components). Everything else under `/actuator` is refused there.
-- Management port (`MANAGEMENT_PORT`, default 8081; `MANAGEMENT_ADDRESS`, default 127.0.0.1): health details (including the database), `info` and Prometheus metrics at `/actuator/prometheus`; nothing else (`ManagementPortTests`). Do not publish this port through the proxy.
+- Management port (`MANAGEMENT_PORT`, default 9091; `MANAGEMENT_ADDRESS`, default 127.0.0.1): health details (including the database), `info` and Prometheus metrics at `/actuator/prometheus`; nothing else (`ManagementPortTests`). Do not publish this port through the proxy.
 - `infra/monitoring/alert-rules.yml` (checked with `promtool`): backend down, database unreachable, server errors above 5%, slow responses, connection pool saturated, heap high, backup older than the approved maximum, backup metrics missing. Thresholds are **provisional engineering starting points**; the operations owner tunes them and decides who is paged.
 
 ## 6. UAT checklist (to run with pilot users; outcomes left empty)

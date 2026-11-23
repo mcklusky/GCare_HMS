@@ -18,6 +18,7 @@ import static com.gcare.hms.shared.security.Permissions.EXEMPTION_REASON_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.EXEMPTION_REQUEST;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
+import static com.gcare.hms.shared.security.Permissions.IMAGING_ARCHIVE_ADMIN;
 import static com.gcare.hms.shared.security.Permissions.INVOICE_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.INVOICE_READ;
 import static com.gcare.hms.shared.security.Permissions.INVOICE_VOID;
@@ -231,7 +232,16 @@ public enum SystemRole {
   DOWNTIME_COORDINATOR(
       "Downtime coordinator",
       "Declares, ends and closes downtime episodes, issues numbered paper forms and keys them. Cannot create patients, visits, orders or payments.",
-      Set.of(DOWNTIME_MANAGE, DOWNTIME_RECORD));
+      Set.of(DOWNTIME_MANAGE, DOWNTIME_RECORD)),
+
+  /**
+   * PROVISIONAL (task 6.1; docs/24): the PACS/imaging administrator. Checks the archive connection
+   * and looks up studies by accession number for the evaluation and support. No clinical access.
+   */
+  IMAGING_ADMINISTRATOR(
+      "Imaging administrator",
+      "Checks the imaging archive connection and looks up studies by accession number (metadata only). No clinical access.",
+      Set.of(IMAGING_ARCHIVE_ADMIN));
 
   private final String displayName;
   private final String description;

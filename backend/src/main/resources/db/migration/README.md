@@ -8,6 +8,7 @@ Schema is owned here; Hibernate only validates it (`ddl-auto: validate`).
 - V3 (task 2.1) adds patients, identifiers (with provenance), per-organization patient-number counters and the duplicate review flags. Uses `pg_trgm` for fuzzy names. Rules: docs/17-PATIENT-IDENTITY-POLICY.md (provisional).
 - V4 (task 2.2) adds `patient_changes` (append-only correction history) and review decisions on `patient_duplicate_flags` (one open item per pair).
 - V5 (task 2.3) adds `patient_links` (request, decision, unlink; requester and decider must differ, enforced by a CHECK) and `patients.linked_to_patient_id` (set exactly when status is LINKED).
+- V16 (task 6.1) adds the `IMAGING_ARCHIVE_ADMIN` permission only; no imaging tables (DICOM stays in the external archive).
 - V15 (task 5.3) adds `downtime_episodes`, numbered form counters and batches, `downtime_entries` (keyed data immutable by trigger, two-person CHECK for registration/order/payment, one live keying per form number) and `downtime_entry_events`.
 - V14 (task 5.2) adds `config_versions` (jsonb values, two-person CHECK, one active and one pending per setting, values immutable by trigger) and `facility_logos` (PNG/JPEG ≤ 256 KiB).
 - V13 (task 5.1) adds the report permissions only; reports read existing tables.

@@ -1,0 +1,23 @@
+{
+  // LOCAL EVALUATION ONLY (task 6.1; docs/24). Orthanc is a candidate, not a selected product
+  // (OD-14). Synthetic studies only; never send real patient images here.
+  "Name" : "GCare local evaluation archive (synthetic only)",
+  "StorageDirectory" : "/var/lib/orthanc/db",
+  "IndexDirectory" : "/var/lib/orthanc/db",
+  "RemoteAccessAllowed" : true,
+  "AuthenticationEnabled" : true,
+  "RegisteredUsers" : { "gcare-local" : "local-dev-only-not-a-secret" },
+  "DicomAet" : "GCARE_EVAL",
+  "DicomPort" : 4242,
+  "HttpPort" : 8042,
+  "Plugins" : [
+    "/usr/local/share/orthanc/plugins/libOrthancDicomWeb.so",
+    "/usr/local/share/orthanc/plugins/libOrthancExplorer2.so",
+    "/usr/local/share/orthanc/plugins/libStoneWebViewer.so",
+    "/usr/local/share/orthanc/plugins/libOrthancGdcm.so",
+    "/usr/local/share/orthanc/plugins/libModalityWorklists.so"
+  ],
+  "Worklists" : { "Enable" : true, "Database" : "/var/lib/orthanc/worklists" },
+  "DicomWeb" : { "Enable" : true, "Root" : "/dicom-web/", "EnableWado" : true, "Ssl" : false },
+  "OrthancExplorer2" : { "Enable" : true, "IsDefaultOrthancUI" : false }
+}
