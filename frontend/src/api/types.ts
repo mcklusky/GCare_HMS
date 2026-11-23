@@ -62,6 +62,10 @@ export const Permission = {
   ORDER_READ: 'ORDER_READ',
   ORDER_CREATE: 'ORDER_CREATE',
   ORDER_PROCESS: 'ORDER_PROCESS',
+  BILLING_READ: 'BILLING_READ',
+  BILLING_CATALOG_MANAGE: 'BILLING_CATALOG_MANAGE',
+  PRICE_PROPOSE: 'PRICE_PROPOSE',
+  PRICE_APPROVE: 'PRICE_APPROVE',
 } as const
 
 export type PermissionCode = (typeof Permission)[keyof typeof Permission]

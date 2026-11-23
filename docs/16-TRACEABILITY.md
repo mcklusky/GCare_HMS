@@ -26,7 +26,7 @@ Detailed task numbers use the draft's own numbering (its Phase 0–1 both map to
 | FR-014 | Critical result communication | Pilot (radiology only) | 6.4 | 6.3 | Recipient, acknowledgement, escalation, unresolved state | | |
 | FR-015 | Laboratory workflow | Later | Later modules | 6.1 | — | | |
 | FR-016 | Medication and pharmacy | Later | Later modules | Phase 7 | — | | |
-| FR-017 | Billing and tariff catalog | Pilot | 4.1, 4.2 | 4.1, 4.2 | Effective dating, tariff snapshot, decimal + currency | | |
+| FR-017 | Billing and tariff catalog | Pilot | 4.1, 4.2 | 4.1, 4.2 | Effective dating, tariff snapshot, decimal + currency | `TariffTests` (finance-only catalog, two-person approval, DB refuses changes to decided prices, effective-dated price change, ISO 4217 + minor-unit validation, no retroactive approval, tax rates empty until approved, audit without amounts, isolation); frontend `billing.test.tsx` (money display, decimal-string amounts, approvals, accessibility) | Local `mvnw verify` 2026-11-23: passed (148 tests); local `vitest run`: passed (66 tests). Tariff EMPTY by design; snapshot on invoices is task 4.2 |
 | FR-018 | Payments and receipts | Pilot | 4.3, 4.4 | 4.3, 4.4 | Idempotency, receipt uniqueness, authorized reversal | | |
 | FR-019 | Program eligibility | Pilot | 4.4 | 4.4 | Evidence, approver, effective dates, audit | | |
 | FR-020 | Inventory | Later | Later modules | Phase 7 | — | | |

@@ -1,6 +1,8 @@
 package com.gcare.hms.identity;
 
 import static com.gcare.hms.shared.security.Permissions.AUDIT_READ;
+import static com.gcare.hms.shared.security.Permissions.BILLING_CATALOG_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.BILLING_READ;
 import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_READ;
 import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_WRITE;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_MANAGE;
@@ -21,6 +23,8 @@ import static com.gcare.hms.shared.security.Permissions.PATIENT_LINK_REQUEST;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_READ;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_REGISTER;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_UPDATE;
+import static com.gcare.hms.shared.security.Permissions.PRICE_APPROVE;
+import static com.gcare.hms.shared.security.Permissions.PRICE_PROPOSE;
 import static com.gcare.hms.shared.security.Permissions.USER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.USER_READ;
 
@@ -121,7 +125,22 @@ public enum SystemRole {
   SERVICE_DEPARTMENT_STAFF(
       "Service department staff",
       "Sees the order worklist and starts, completes or cancels orders. No access to notes.",
-      Set.of(PATIENT_READ, ORDER_READ, ORDER_PROCESS));
+      Set.of(PATIENT_READ, ORDER_READ, ORDER_PROCESS)),
+
+  /**
+   * Maintains billable services and proposes prices and tax rates (docs/19). PROVISIONAL until the
+   * finance owner approves the permission matrix.
+   */
+  FINANCE_OFFICER(
+      "Finance officer",
+      "Maintains billable services and proposes prices and tax rates. No clinical access.",
+      Set.of(BILLING_READ, BILLING_CATALOG_MANAGE, PRICE_PROPOSE)),
+
+  /** Second person for money: approves or rejects prices and tax rates proposed by others. */
+  FINANCE_MANAGER(
+      "Finance manager",
+      "Approves or rejects prices and tax rates proposed by others. No clinical access.",
+      Set.of(BILLING_READ, PRICE_PROPOSE, PRICE_APPROVE));
 
   private final String displayName;
   private final String description;

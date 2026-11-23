@@ -1,5 +1,7 @@
 import {
   IconBuildingHospital,
+  IconCash,
+  IconChecklist,
   IconClipboardList,
   IconCopy,
   IconHome,
@@ -31,6 +33,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'My workspace', to: '/workspace', icon: IconLayoutDashboard, permission: Permission.ENCOUNTER_MANAGE },
   { label: 'Queue', to: '/queue', icon: IconStethoscope, permission: Permission.ENCOUNTER_READ },
   { label: 'Worklist', to: '/orders', icon: IconClipboardList, permission: Permission.ORDER_PROCESS },
+  { label: 'Tariffs', to: '/billing/tariffs', icon: IconCash, permission: Permission.BILLING_READ },
+  { label: 'Price approvals', to: '/billing/approvals', icon: IconChecklist, permission: Permission.PRICE_APPROVE },
   { label: 'Facilities', to: '/facilities', icon: IconBuildingHospital, permission: Permission.FACILITY_READ },
   { label: 'Order catalog', to: '/admin/order-catalog', icon: IconListDetails, permission: Permission.ORDER_CATALOG_MANAGE },
 ]

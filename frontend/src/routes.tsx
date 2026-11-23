@@ -5,6 +5,8 @@ import { WorkspacePage } from './pages/encounters/WorkspacePage'
 import { QueuePage } from './pages/encounters/QueuePage'
 import { FacilitiesPage, FacilityDepartmentsPage } from './pages/FacilitiesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { PriceApprovalsPage } from './pages/billing/PriceApprovalsPage'
+import { TariffsPage } from './pages/billing/TariffsPage'
 import { OrderCatalogPage } from './pages/orders/OrderCatalogPage'
 import { WorklistPage } from './pages/orders/WorklistPage'
 import { DuplicateReviewPage } from './pages/patients/DuplicateReviewPage'
@@ -105,6 +107,22 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.ORDER_CATALOG_MANAGE}>
             <OrderCatalogPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/tariffs',
+        element: (
+          <RequirePermission permission={Permission.BILLING_READ}>
+            <TariffsPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/approvals',
+        element: (
+          <RequirePermission permission={Permission.PRICE_APPROVE}>
+            <PriceApprovalsPage />
           </RequirePermission>
         ),
       },

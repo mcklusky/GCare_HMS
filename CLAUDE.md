@@ -9,7 +9,7 @@
 **Paths**
 - Backend `backend/src/main/java/com/gcare/hms/`: `audit`, `identity`, `organization`, `patient`, plus `shared/{security,tenancy,web}`
   - Placeholder modules (package-info only): `billing`, `encounter`, `integration`, `orders`, `radiology`, `reporting`
-- Migrations: `backend/src/main/resources/db/migration/V<n>__*.sql` (V1–V8 so far; never edit an applied one)
+- Migrations: `backend/src/main/resources/db/migration/V<n>__*.sql` (V1–V9 so far; never edit an applied one)
 - Frontend: `frontend/src/{api,auth,shell,components,pages/<feature>,test}`
 - Local infra: `docker-compose.yml` (Postgres, Keycloak on 127.0.0.1:8180); realm in `infra/keycloak/gcare-realm.local.json`
 - Docs in `docs/`: README (index), 01-PRD (FR-001–046), 06-PLAN (tasks), 16-TRACEABILITY, 17-PATIENT-IDENTITY-POLICY, REVIEW (ADRs), DEVELOPMENT (commands)
@@ -50,4 +50,4 @@
 - Project-record templates stay empty; never fill them with invented values
 - No force-push or deploy without explicit approval
 **State (2026-11-23)**
-- Done 1.1–1.4, 2.1–2.3, 3.1–3.4 (PRs stacked 1.2→…→3.3→3.4). Gates for Phases 1–2 not yet signed off. Encounter workflow PROVISIONAL (docs/18); triage scale/alarm limits empty until a clinical lead sets them. Notes: fixed sections, signed = immutable (OD-10); diagnoses free text, coding open (OD-09). Order catalog admin-managed, empty by design. Phase 3 code done; its exit needs end-to-end UAT with role checks. Next: 4.1 billing (tariffs needed).
+- Done 1.1–1.4, 2.1–2.3, 3.1–3.4, 4.1 (PRs stacked 1.2→…→3.4→4.1). Gates for Phases 1–2 not yet signed off. Encounter workflow PROVISIONAL (docs/18); triage scale/alarm limits empty until a clinical lead sets them. Notes: fixed sections, signed = immutable (OD-10); diagnoses free text, coding open (OD-09). Order catalog admin-managed, empty by design. Phase 3 code done; its exit needs end-to-end UAT with role checks. Billing (docs/19): prices entered by finance, any ISO currency never converted, tax rate configurable, two-person approval; never invent prices. Next: 4.2 invoices.

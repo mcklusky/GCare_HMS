@@ -14,7 +14,7 @@ Decisions the documents mark as required before a specific build step. Once deci
 | OD-08 | Patient identifier format (check digit, issuing scope) | FR-005 | Phase 2 |  |  |  |  |
 | OD-09 | Terminology systems (diagnoses, procedures, units) | 04 | Phase 3 |  | User (accepted recommendation) | **Partial**: diagnoses are free text for now, with empty `code`/`code_system` columns; no code list is bundled or invented. The coding system (e.g. ICD-10/ICD-11 and its licence) is still open; codes will be added by a reviewed process. Units: fixed per measure (docs/18 §3). Procedures: not yet needed | 2026-11-23 |
 | OD-10 | Clinical note data structure | 04 | Phase 3 | Free text vs structured sections/templates | User (accepted recommendation) | Fixed sections, each free text: history, examination, assessment, plan (section names PROVISIONAL). Draft → sign → amend; signed notes immutable (docs/18 §7) | 2026-11-23 |
-| OD-11 | Invoice tax and exemption representation | 04 | Phase 4 |  |  |  |  |
+| OD-11 | Invoice tax and exemption representation | 04 | Phase 4 |  | User | **Partial**: tax is a configurable, effective-dated rate (code + percentage), empty by default, with two-person approval (docs/19). Whether any tax applies, and exemption representation, remain open for the finance owner | 2026-11-23 |
 | OD-12 | Retention, deletion and legal hold | 04, 15 | Schema freeze | See [retention-schedule.md](retention-schedule.md) |  |  |  |
 | OD-13 | Audit retention and tamper-evidence | 04 | Task 1.2 audit design |  |  |  |  |
 | OD-14 | Archive/viewer product and capacity | 03, ADR-004 | Phase 6 | Orthanc is a candidate only |  |  |  |

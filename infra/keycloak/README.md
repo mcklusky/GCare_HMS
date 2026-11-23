@@ -20,6 +20,8 @@ It exists so developers can sign in locally. **It is not a production configurat
 | `demo.nurse` | `…1008` | DEMO-ORG, TRIAGE_NURSE at DEMO-GH | Sees queues, records triage observations |
 | `demo.clinician` | `…1009` | DEMO-ORG, CLINICIAN at DEMO-GH | Calls in, transfers, closes and reopens visits; records observations |
 | `demo.lab` | `…1010` | DEMO-ORG, SERVICE_DEPARTMENT_STAFF at DEMO-GH | Works the order worklist (start, complete, cancel) |
+| `demo.finance` | `…1011` | DEMO-ORG, FINANCE_OFFICER at DEMO-GH | Billable services; proposes prices and tax rates |
+| `demo.financemgr` | `…1012` | DEMO-ORG, FINANCE_MANAGER at DEMO-GH | Approves or rejects prices and tax rates (second person) |
 | `demo.unlinked` | `…1004` | not linked | Sign-in refused (`login_error=account_not_enabled`), audited |
 
 Values such as brute-force limits, password policy and session lifetimes are **local defaults only**.
