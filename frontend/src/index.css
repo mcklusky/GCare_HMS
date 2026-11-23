@@ -344,6 +344,106 @@ kbd.gcare-kbd {
   overflow-wrap: anywhere;
 }
 
+/* Left-aligned description list (summaries inside cards). */
+.gcare-dl-left {
+  font-size: var(--mantine-font-size-xs);
+  gap: 2px 12px;
+}
+
+.gcare-dl-left dd {
+  text-align: left;
+}
+
+/* ---------- Settings ---------- */
+
+.gcare-setting-item {
+  border-top: 0;
+  padding-block: 9px;
+  text-align: left;
+}
+
+.gcare-setting-item[data-active] {
+  background: var(--gcare-tint);
+}
+
+.gcare-setting-item[data-active] .gcare-row-arrow {
+  opacity: 1;
+}
+
+/* Reason + Propose on one row, like a composer. */
+.gcare-propose-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--gcare-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--gcare-subtle);
+}
+
+.gcare-logo-field {
+  padding: 8px 10px;
+  border: 1px dashed var(--gcare-border-strong);
+  border-radius: var(--mantine-radius-md);
+}
+
+.gcare-logo-box {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border: 1px solid var(--gcare-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--gcare-surface);
+  color: var(--gcare-text-2);
+}
+
+/* Receipt preview: paper-like card on a tinted backdrop. */
+.gcare-preview {
+  position: sticky;
+  top: 72px;
+  padding: 12px;
+  border-radius: var(--mantine-radius-lg);
+  background: var(--gcare-subtle);
+}
+
+.gcare-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--gcare-border);
+  border-radius: var(--mantine-radius-sm);
+  background: #ffffff;
+  color: #17262a;
+  box-shadow: var(--mantine-shadow-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.gcare-receipt-rule {
+  border-top: 1px dashed #c9d2d2;
+}
+
+.gcare-receipt-lines {
+  display: grid;
+  gap: 6px;
+}
+
+.gcare-receipt-lines span {
+  height: 6px;
+  border-radius: 3px;
+  background: #e8eded;
+}
+
+.gcare-receipt-lines span:nth-child(2) {
+  width: 80%;
+}
+
+.gcare-receipt-lines span:nth-child(3) {
+  width: 55%;
+}
+
 /* ---------- Motion and print ---------- */
 
 @media (prefers-reduced-motion: reduce) {
