@@ -35,6 +35,9 @@ import static com.gcare.hms.shared.security.Permissions.PRICE_APPROVE;
 import static com.gcare.hms.shared.security.Permissions.PRICE_PROPOSE;
 import static com.gcare.hms.shared.security.Permissions.REFUND_APPROVE;
 import static com.gcare.hms.shared.security.Permissions.REFUND_REQUEST;
+import static com.gcare.hms.shared.security.Permissions.REPORT_EXPORT;
+import static com.gcare.hms.shared.security.Permissions.REPORT_OPERATIONS_READ;
+import static com.gcare.hms.shared.security.Permissions.REPORT_REVENUE_READ;
 import static com.gcare.hms.shared.security.Permissions.SHIFT_REVIEW;
 import static com.gcare.hms.shared.security.Permissions.USER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.USER_READ;
@@ -157,7 +160,7 @@ public enum SystemRole {
   /** Second person for money: approves or rejects prices and tax rates proposed by others. */
   FINANCE_MANAGER(
       "Finance manager",
-      "Approves prices, tax rates, refunds and exemptions requested by others. Voids issued invoices and signs off cashier shifts. No clinical access.",
+      "Approves prices, tax rates, refunds and exemptions requested by others. Voids issued invoices, signs off cashier shifts and sees revenue reports. No clinical access.",
       Set.of(
           BILLING_READ,
           PRICE_PROPOSE,
@@ -166,7 +169,9 @@ public enum SystemRole {
           INVOICE_VOID,
           SHIFT_REVIEW,
           REFUND_APPROVE,
-          EXEMPTION_APPROVE)),
+          EXEMPTION_APPROVE,
+          REPORT_REVENUE_READ,
+          REPORT_EXPORT)),
 
   /**
    * PROVISIONAL (task 4.2; docs/19): starts visit invoices, adds or removes charges with a reason
@@ -181,7 +186,17 @@ public enum SystemRole {
           INVOICE_MANAGE,
           PAYMENT_RECORD,
           REFUND_REQUEST,
-          EXEMPTION_REQUEST));
+          EXEMPTION_REQUEST)),
+
+  /**
+   * PROVISIONAL (task 5.1; docs/20): the PRD's department manager. Sees aggregated visit, order and
+   * registration reports and the dashboard for facilities in scope, and may export them. No patient
+   * records, no revenue.
+   */
+  DEPARTMENT_MANAGER(
+      "Department manager",
+      "Sees and exports aggregated visit, order and registration reports and the dashboard. No patient records.",
+      Set.of(REPORT_OPERATIONS_READ, REPORT_EXPORT));
 
   private final String displayName;
   private final String description;

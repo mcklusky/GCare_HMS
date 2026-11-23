@@ -306,7 +306,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
 VALUES
     ('00000000-0000-4000-8000-000000000309', '00000000-0000-4000-8000-000000000001', 'FINANCE_OFFICER', 'Finance officer', 'Maintains billable services and proposes prices and tax rates. No clinical access.', true, 'ACTIVE'),
-    ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000001', 'FINANCE_MANAGER', 'Finance manager', 'Approves prices, tax rates, refunds and exemptions requested by others. Voids issued invoices and signs off cashier shifts. No clinical access.', true, 'ACTIVE')
+    ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000001', 'FINANCE_MANAGER', 'Finance manager', 'Approves prices, tax rates, refunds and exemptions requested by others. Voids issued invoices, signs off cashier shifts and sees revenue reports. No clinical access.', true, 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO role_permissions (organization_id, role_id, permission_code)
@@ -419,4 +419,35 @@ ON CONFLICT DO NOTHING;
 INSERT INTO exemption_reasons (id, organization_id, code, name, status, created_by)
 VALUES
     ('00000000-0000-4000-8000-000000000971', '00000000-0000-4000-8000-000000000001', 'DEMO-REASON', 'Demo reason (fictional)', 'ACTIVE', '00000000-0000-4000-8000-000000000401')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Reports (task 5.1). demo.manager sees operational reports; demo.financemgr adds revenue reports.
+-- ---------------------------------------------------------------------------
+INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
+VALUES
+    ('00000000-0000-4000-8000-000000000312', '00000000-0000-4000-8000-000000000001', 'DEPARTMENT_MANAGER', 'Department manager', 'Sees and exports aggregated visit, order and registration reports and the dashboard. No patient records.', true, 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000310', 'REPORT_REVENUE_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000310', 'REPORT_EXPORT'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000312', 'REPORT_OPERATIONS_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000312', 'REPORT_EXPORT')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (id, organization_id, username, display_name, email, status)
+VALUES
+    ('00000000-0000-4000-8000-000000000413', '00000000-0000-4000-8000-000000000001', 'demo.manager', 'Demo Department Manager', 'demo.manager@example.invalid', 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_identities (id, organization_id, user_id, issuer, subject)
+VALUES
+    ('00000000-0000-4000-8000-000000000513', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000413', 'http://localhost:8180/realms/gcare', '00000000-0000-4000-8000-000000001014')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
+VALUES
+    ('00000000-0000-4000-8000-000000000612', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000413', '00000000-0000-4000-8000-000000000312', '00000000-0000-4000-8000-000000000101')
 ON CONFLICT (id) DO NOTHING;

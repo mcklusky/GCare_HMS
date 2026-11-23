@@ -47,6 +47,9 @@ public final class Permissions {
   public static final String EXEMPTION_REQUEST = "EXEMPTION_REQUEST";
   public static final String EXEMPTION_APPROVE = "EXEMPTION_APPROVE";
   public static final String EXEMPTION_REASON_MANAGE = "EXEMPTION_REASON_MANAGE";
+  public static final String REPORT_OPERATIONS_READ = "REPORT_OPERATIONS_READ";
+  public static final String REPORT_REVENUE_READ = "REPORT_REVENUE_READ";
+  public static final String REPORT_EXPORT = "REPORT_EXPORT";
 
   public static final Set<String> ALL =
       Set.of(
@@ -87,7 +90,10 @@ public final class Permissions {
           REFUND_APPROVE,
           EXEMPTION_REQUEST,
           EXEMPTION_APPROVE,
-          EXEMPTION_REASON_MANAGE);
+          EXEMPTION_REASON_MANAGE,
+          REPORT_OPERATIONS_READ,
+          REPORT_REVENUE_READ,
+          REPORT_EXPORT);
 
   private Permissions() {}
 }

@@ -1,6 +1,7 @@
 import {
   IconBuildingHospital,
   IconCash,
+  IconChartBar,
   IconChecklist,
   IconCashRegister,
   IconCreditCard,
@@ -55,6 +56,12 @@ export const NAV_ITEMS: NavItem[] = [
   },
   { label: 'Tariffs', to: '/billing/tariffs', icon: IconCash, permission: Permission.BILLING_READ },
   { label: 'Price approvals', to: '/billing/approvals', icon: IconChecklist, permission: Permission.PRICE_APPROVE },
+  {
+    label: 'Reports',
+    to: '/reports',
+    icon: IconChartBar,
+    permission: [Permission.REPORT_OPERATIONS_READ, Permission.REPORT_REVENUE_READ],
+  },
   { label: 'Facilities', to: '/facilities', icon: IconBuildingHospital, permission: Permission.FACILITY_READ },
   { label: 'Order catalog', to: '/admin/order-catalog', icon: IconListDetails, permission: Permission.ORDER_CATALOG_MANAGE },
   {

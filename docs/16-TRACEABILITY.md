@@ -33,8 +33,8 @@ Detailed task numbers use the draft's own numbering (its Phase 0–1 both map to
 | FR-021 | Inpatient and bed management | Later | Later modules | Phase 7 | — | | |
 | FR-022 | Maternity and newborn record | Later | Later modules | Phase 7 | — | | |
 | FR-023 | Notifications | Pilot (partial): in-app task/alert area only; SMS gated | 1.4, 5.1 | 5.1; SMS Phase 8 | No sensitive content in alerts | | |
-| FR-024 | Operational dashboards | Pilot | 5.1 | 5.1 | Scope-limited data, refresh status | | |
-| FR-025 | Reports and export | Pilot | 5.1 | 5.2 | Report metadata, permissioned + logged exports | | |
+| FR-024 | Operational dashboards | Pilot | 5.1 | 5.1 | Scope-limited data, refresh status | **Partial**: `ReportTests` (dashboard tiles by permission, facility scope); frontend `reports.test.tsx`. Appointments, studies, beds and stock measures not built (no data yet; docs/20) | Local `mvnw verify` 2026-11-23: passed (169 tests); local `vitest run`: passed (85 tests) |
+| FR-025 | Reports and export | Pilot | 5.1 | 5.2 | Report metadata, permissioned + logged exports | **Partial**: `ReportTests` (facility-local days, no patient data, permission + scope + period checks, CSV metadata and formula-safe cells, export audited with filters, per-currency revenue); frontend `reports.test.tsx`. Scheduled/statutory reports and de-identified exports NOT built (docs/20) | Local `mvnw verify` 2026-11-23: passed (169 tests); local `vitest run`: passed (85 tests) |
 | FR-026 | Audit and patient access history | Pilot | 1.2 | 1.6 | Audit on every mutation and sensitive read; redaction | `AuditTrailTests`, `MetadataRedactorTests`, `AccessControlTests` (sign-in/out, refused sign-in, session end, access denied) | Local `mvnw verify` 2026-11-23: passed (66 tests) |
 | FR-027 | Downtime and recovery workflow | Pilot | 5.3 | 5.4 | Interrupted/repeated submission, no silent duplicates | | |
 | FR-028 | Data import | Workstream | [10-DATA-MIGRATION.md](10-DATA-MIGRATION.md) | — | Reconciliation counts, rollback | | |
