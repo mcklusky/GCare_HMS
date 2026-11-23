@@ -28,7 +28,7 @@ import {
 } from '../../api/radiologyReports'
 import { useCurrentMe } from '../../auth/MeContext'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { ErrorState, PageTitle, QueryState } from '../../components/states'
+import { ErrorState, PageHeader, QueryState } from '../../components/states'
 import { ReportText } from './ImagingResultsSection'
 import { zoneNote, zonedLocalToIso } from '../../components/time'
 
@@ -51,11 +51,14 @@ export function ReportEditorPage() {
   return (
     <Stack>
       <Anchor component={Link} to="/radiology/reporting" size="sm">
-        â† Reporting
+        ← Reporting
       </Anchor>
-      <PageTitle>Radiology report</PageTitle>
+      <PageHeader
+        title="Radiology report"
+        description="Drafts are visible to radiologists only. A signed report never changes; corrections are amendments with a reason."
+      />
       {start.isError && <ErrorState error={start.error} />}
-      <QueryState query={reports} loadingLabel="Loading reportsâ€¦">
+      <QueryState query={reports} loadingLabel="Loading reports…">
         {(list) => {
           const draft = list.find((r) => r.status === 'DRAFT')
           const signed = list.filter((r) => r.status === 'SIGNED')
@@ -66,7 +69,7 @@ export function ReportEditorPage() {
                   <ReportText report={r} />
                   {r.critical && (
                     <Text size="sm" c="red" mt="xs">
-                      Critical result Â· told {r.critical_result?.communicated_to}
+                      Critical result · told {r.critical_result?.communicated_to}
                     </Text>
                   )}
                 </Card>
