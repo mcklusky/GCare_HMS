@@ -13,6 +13,7 @@ Implementation baseline: React + TypeScript frontend; Java + Spring Boot modular
 - [08 — First Sprint Checklist](08-FIRST-SPRINT.md)
 - [Development Guide](DEVELOPMENT.md) (local setup, checks, data and secrets policy)
 - [16 — Requirements Traceability](16-TRACEABILITY.md)
+- [17 — Patient Identity Policy](17-PATIENT-IDENTITY-POLICY.md) (**provisional** defaults for OD-05–07; needs registration-leadership sign-off)
 - [Consistency Review and Decision Register](REVIEW.md)
 
 ## Delivery, safety and operations documents
