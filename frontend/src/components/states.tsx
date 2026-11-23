@@ -3,6 +3,7 @@ import { IconAlertTriangle, IconInbox, IconLock, IconRefresh } from '@tabler/ico
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { ApiRequestError } from '../api/client'
+import { usePageTrail } from '../shell/pageTrail'
 
 /**
  * Standard list/page states (02-UI-UX: every list has loading, empty, error, permission-denied
@@ -113,31 +114,41 @@ export function PageHeader({
   title,
   description,
   actions,
+  eyebrow,
 }: {
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
+  /** Small label above the title; defaults to the page's navigation section. */
+  eyebrow?: ReactNode
 }) {
+  const trail = usePageTrail()
+  const label = eyebrow ?? (trail && (trail.section === 'Overview' ? 'GCare HMS' : trail.section))
   return (
-    <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm" mb="xs">
-      <Stack gap={4}>
+    <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm" mb={4}>
+      <Stack gap={2}>
+        {label && (
+          <Text className="gcare-eyebrow" size="xs" fw={700}>
+            {label}
+          </Text>
+        )}
         <Title order={1} id="page-title" tabIndex={-1}>
           {title}
         </Title>
         {description && (
-          <Text size="sm" c="dimmed" maw={720}>
+          <Text size="sm" c="dimmed" maw={760}>
             {description}
           </Text>
         )}
       </Stack>
-      {actions && <Group gap="sm">{actions}</Group>}
+      {actions && <Group gap="xs">{actions}</Group>}
     </Group>
   )
 }
 
 /**
- * A headline number with its label, e.g. on the home page: label, big number and a dark icon tile,
- * with an optional tinted note strip underneath. `tone` colours the icon only (never the only signal).
+ * A compact headline number: tinted icon tile, small label, number; optional note underneath.
+ * `tone` colours the icon only (never the only signal).
  */
 export function StatCard({
   label,
@@ -153,27 +164,27 @@ export function StatCard({
   hint?: ReactNode
 }) {
   return (
-    <Card withBorder padding={0}>
-      <Group justify="space-between" align="flex-start" wrap="nowrap" p="lg">
-        <Stack gap={6}>
-          <Text size="sm" c="dimmed" fw={500}>
-            {label}
-          </Text>
-          <Text className="gcare-stat-value" fz={30} fw={700}>
-            {value}
-          </Text>
-        </Stack>
+    <Card withBorder padding="sm">
+      <Group wrap="nowrap" gap="sm" align="center">
         {icon && (
-          <ThemeIcon size={40} radius="md" variant="filled" color={`${tone}.8`} aria-hidden>
+          <ThemeIcon size={40} radius="md" variant="light" color={tone} aria-hidden>
             {icon}
           </ThemeIcon>
         )}
+        <Stack gap={0} miw={0}>
+          <Text size="xs" c="dimmed" fw={500} truncate>
+            {label}
+          </Text>
+          <Text className="gcare-stat-value" fz={22} fw={700}>
+            {value}
+          </Text>
+          {hint && (
+            <Text size="xs" c="dimmed" truncate>
+              {hint}
+            </Text>
+          )}
+        </Stack>
       </Group>
-      {hint && (
-        <Text className="gcare-stat-note" size="xs" fw={500} px="lg" py={10}>
-          {hint}
-        </Text>
-      )}
     </Card>
   )
 }

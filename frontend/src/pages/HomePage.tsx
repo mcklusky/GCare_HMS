@@ -44,25 +44,25 @@ export function HomePage({ me }: { me: Me }) {
   const work = visibleNavSections(me.permissions).filter((g) => g.section !== 'Overview')
 
   return (
-    <Stack gap="lg">
+    <Stack gap="md">
       <PageHeader
         title={`Welcome, ${me.display_name}`}
         description={`${current ? current.name : 'No facility assigned'} · ${formatDate(today)}`}
       />
 
-      <Grid gap="lg">
+      <Grid gap="md">
         <Grid.Col span={{ base: 12, lg: 8, xl: 9 }}>
-          <Stack gap="lg">
+          <Stack gap="md">
             {mayReport && dashboard.data && dashboard.data.tiles.length > 0 && (
               <section aria-label="Today at this facility">
-                <SimpleGrid cols={{ base: 1, xs: 2, xl: 4 }}>
+                <SimpleGrid cols={{ base: 1, xs: 2, xl: 4 }} spacing="sm">
                   {dashboard.data.tiles.map((t) => (
                     <StatCard
                       key={t.key}
                       label={t.label}
                       value={t.value === null ? '—' : `${t.value}${t.currency ? ` ${t.currency}` : ''}`}
                       icon={<IconChartBar size={20} />}
-                      hint={`Today · ${current?.name ?? ''}`}
+                      hint="Today"
                     />
                   ))}
                 </SimpleGrid>
@@ -70,11 +70,18 @@ export function HomePage({ me }: { me: Me }) {
             )}
 
             {work.map(({ section, items }) => (
-              <Card withBorder key={section} component="section" aria-labelledby={`home-${slug(section)}`}>
-                <Title order={2} size="h4" mb="md" id={`home-${slug(section)}`}>
-                  {section}
-                </Title>
-                <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="sm">
+              <Card withBorder key={section} component="section" aria-labelledby={`home-${slug(section)}`} p={0}>
+                <Group justify="space-between" px="md" py="sm" className="gcare-card-head">
+                  <div>
+                    <Title order={2} size="h5" id={`home-${slug(section)}`}>
+                      {section}
+                    </Title>
+                    <Text size="xs" c="dimmed">
+                      {items.length === 1 ? '1 tool' : `${items.length} tools`} for your role
+                    </Text>
+                  </div>
+                </Group>
+                <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="xs" p="sm">
                   {items.map((item) => (
                     <UnstyledButton
                       key={item.to}
@@ -85,8 +92,8 @@ export function HomePage({ me }: { me: Me }) {
                     >
                       <Group wrap="nowrap" gap="sm" justify="space-between">
                         <Group wrap="nowrap" gap="sm">
-                          <ThemeIcon size={38} radius="md" variant="light" aria-hidden>
-                            <item.icon size={20} stroke={1.7} />
+                          <ThemeIcon size={32} radius="md" variant="light" aria-hidden>
+                            <item.icon size={18} stroke={1.7} />
                           </ThemeIcon>
                           <Text fw={600} size="sm">
                             {item.label}
@@ -103,19 +110,19 @@ export function HomePage({ me }: { me: Me }) {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, lg: 4, xl: 3 }}>
-          <Stack gap="lg">
+          <Stack gap="md">
             <Card withBorder component="section" aria-labelledby="home-calendar">
               <MonthCalendar now={today} />
             </Card>
             <Card withBorder component="section" aria-labelledby="home-context">
-              <Title order={2} size="h4" mb="xs" id="home-context">
+              <Title order={2} size="h5" mb="xs" id="home-context">
                 Working context
               </Title>
               <Text size="sm">Organization: {me.organization.name}</Text>
               <Text size="sm">Facility: {current ? current.name : 'No facility assigned'}</Text>
             </Card>
             <Card withBorder component="section" aria-labelledby="home-access">
-              <Title order={2} size="h4" mb="xs" id="home-access">
+              <Title order={2} size="h5" mb="xs" id="home-access">
                 Your access
               </Title>
               {me.permissions.length === 0 ? (
@@ -166,7 +173,7 @@ function MonthCalendar({ now }: { now: number }) {
 
   return (
     <>
-      <Title order={2} size="h4" mb="sm" id="home-calendar">
+      <Title order={2} size="h5" mb="xs" id="home-calendar">
         {title}
       </Title>
       <table className="gcare-calendar" aria-labelledby="home-calendar">

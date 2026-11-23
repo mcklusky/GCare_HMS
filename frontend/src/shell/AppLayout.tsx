@@ -5,7 +5,9 @@ import {
   Avatar,
   Badge,
   Box,
+  Breadcrumbs,
   Burger,
+  Container,
   Group,
   Image,
   Menu,
@@ -23,7 +25,7 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useQuery } from '@tanstack/react-query'
-import { IconChevronDown, IconHeartbeat, IconLogout, IconMoon, IconSearch, IconSun } from '@tabler/icons-react'
+import { IconHeartbeat, IconLogout, IconMoon, IconSearch, IconSelector, IconSun } from '@tabler/icons-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { getBranding, logoUrl } from '../api/settings'
@@ -31,15 +33,17 @@ import { Permission, type Me } from '../api/types'
 import { useFacilityContext } from '../auth/facilityContextValue'
 import { useSignOut } from '../auth/session'
 import { ErrorState } from '../components/states'
-import { visibleNavSections } from './navigation'
+import { navTrail, visibleNavSections } from './navigation'
+import { PageTrailContext } from './pageTrail'
 import { setQuickSearch } from './quickSearch'
 
 const environmentLabel: string | undefined =
   import.meta.env.VITE_ENVIRONMENT_LABEL || (import.meta.env.DEV ? 'Development · synthetic data only' : undefined)
 
 /**
- * Persistent application shell (02-UI-UX): product + facility identity, role-scoped navigation in
- * sections, quick patient search, facility context, light/dark switch, account and sign-out.
+ * Persistent application shell (02-UI-UX), compact console layout: dark teal sidebar with the product
+ * mark, role-scoped sections and the account at the bottom; a light header with the breadcrumb, quick
+ * patient search, facility context and light/dark switch; page content in a centred column.
  */
 export function AppLayout({ me }: { me: Me }) {
   const [navOpened, nav] = useDisclosure(false)
@@ -60,28 +64,22 @@ export function AppLayout({ me }: { me: Me }) {
   }, [location.pathname, closeNav])
 
   const sections = visibleNavSections(me.permissions)
-  const initials = me.display_name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+  const trail = navTrail(location.pathname)
 
   return (
     <AppShell
       layout="alt"
-      header={{ height: 72 }}
-      navbar={{ width: 260, breakpoint: 'sm', collapsed: { mobile: !navOpened } }}
-      padding="lg"
+      header={{ height: 56 }}
+      navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !navOpened } }}
+      padding="md"
     >
       <Anchor href="#main" className="skip-link">
         Skip to main content
       </Anchor>
 
       <AppShell.Header className="gcare-header">
-        <Group h="100%" px="md" justify="space-between" wrap="nowrap" gap="md">
-          <Group gap="sm" wrap="nowrap">
+        <Group h="100%" px="md" justify="space-between" wrap="nowrap" gap="sm">
+          <Group gap="sm" wrap="nowrap" miw={0}>
             <Burger
               opened={navOpened}
               onClick={nav.toggle}
@@ -89,18 +87,24 @@ export function AppLayout({ me }: { me: Me }) {
               size="sm"
               aria-label={navOpened ? 'Close navigation' : 'Open navigation'}
             />
-            <Box hiddenFrom="sm">
-              <ProductMark />
-            </Box>
-            <FacilityBrand fallback={me.organization.name} />
+            {trail && (
+              <Breadcrumbs separatorMargin={6} visibleFrom="xs">
+                <Text size="sm" c="dimmed">
+                  {trail.section === 'Overview' ? 'GCare HMS' : trail.section}
+                </Text>
+                <Text size="sm" fw={600}>
+                  {trail.label}
+                </Text>
+              </Breadcrumbs>
+            )}
             {environmentLabel && (
-              <Badge color="yellow" variant="filled" visibleFrom="lg">
+              <Badge color="yellow" variant="filled" size="sm" visibleFrom="lg">
                 {environmentLabel}
               </Badge>
             )}
           </Group>
 
-          <Group gap="sm" wrap="nowrap">
+          <Group gap="xs" wrap="nowrap">
             {me.permissions.includes(Permission.PATIENT_READ) && <QuickPatientSearch />}
             {facilities.length > 1 ? (
               <Select
@@ -109,61 +113,28 @@ export function AppLayout({ me }: { me: Me }) {
                 value={current?.id ?? null}
                 onChange={(id) => id && select(id)}
                 allowDeselect={false}
-                w={220}
+                size="sm"
+                w={210}
                 visibleFrom="sm"
               />
             ) : (
-              current && (
-                <Text size="sm" c="dimmed" visibleFrom="md" aria-label="Working facility">
-                  {current.name}
-                </Text>
-              )
+              <FacilityBrand fallback={current?.name ?? me.organization.name} />
             )}
             <ColorSchemeToggle />
-            <Menu position="bottom-end" withinPortal>
-              <Menu.Target>
-                <UnstyledButton aria-label={`Account: ${me.display_name}`}>
-                  <Group gap={10} wrap="nowrap">
-                    <Avatar size={38} radius="xl" color="clinical" variant="filled" aria-hidden>
-                      {initials}
-                    </Avatar>
-                    <Stack gap={0} visibleFrom="sm">
-                      <Text size="sm" fw={600} lh={1.2}>
-                        {me.display_name}
-                      </Text>
-                      <Text size="xs" c="dimmed" lh={1.3}>
-                        {me.username}
-                      </Text>
-                    </Stack>
-                    <IconChevronDown size={14} aria-hidden />
-                  </Group>
-                </UnstyledButton>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>{me.username}</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconLogout size={16} aria-hidden />}
-                  onClick={() => signOut.mutate()}
-                  disabled={signOut.isPending}
-                >
-                  Sign out
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
           </Group>
         </Group>
       </AppShell.Header>
 
       <AppShell.Navbar className="gcare-navbar" aria-label="Main navigation" component="nav">
-        <Box px="lg" pt="lg" pb="sm" visibleFrom="sm">
-          <ProductMark />
+        <Box px="md" pt="md" pb="xs">
+          <ProductMark organization={me.organization.name} />
         </Box>
-        <ScrollArea type="auto" px="md" py="sm">
-          <Stack gap="md">
+        <ScrollArea type="auto" px="xs" py="xs" style={{ flex: 1 }}>
+          <Stack gap="sm">
             {sections.map(({ section, items }) => (
               <div key={section}>
                 {section !== 'Overview' && (
-                  <Text className="gcare-nav-section" size="xs" fw={700} c="dimmed" px="sm" mb={4}>
+                  <Text className="gcare-nav-section gcare-navbar-muted" size="xs" fw={700} px="sm" mb={4}>
                     {section}
                   </Text>
                 )}
@@ -175,7 +146,7 @@ export function AppLayout({ me }: { me: Me }) {
                       to={item.to}
                       end={item.to === '/'}
                       label={item.label}
-                      leftSection={<item.icon size={19} stroke={1.7} aria-hidden />}
+                      leftSection={<item.icon size={17} stroke={1.8} aria-hidden />}
                       className="gcare-nav-link"
                     />
                   ))}
@@ -184,15 +155,60 @@ export function AppLayout({ me }: { me: Me }) {
             ))}
           </Stack>
         </ScrollArea>
+        <Box className="gcare-navbar-account" px="sm" py="sm">
+          <Menu position="top-start" withinPortal>
+            <Menu.Target>
+              <UnstyledButton aria-label={`Account: ${me.display_name}`} className="gcare-account" w="100%">
+                <Group gap={10} wrap="nowrap">
+                  <Avatar size={32} radius="xl" className="gcare-account-avatar" aria-hidden>
+                    {initials(me.display_name)}
+                  </Avatar>
+                  <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+                    <Text size="sm" fw={600} lh={1.25} truncate>
+                      {me.display_name}
+                    </Text>
+                    <Text size="xs" lh={1.3} truncate className="gcare-navbar-muted">
+                      {me.username}
+                    </Text>
+                  </Stack>
+                  <IconSelector size={16} aria-hidden />
+                </Group>
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>{me.organization.name}</Menu.Label>
+              <Menu.Item
+                leftSection={<IconLogout size={16} aria-hidden />}
+                onClick={() => signOut.mutate()}
+                disabled={signOut.isPending}
+              >
+                Sign out
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Box>
       </AppShell.Navbar>
 
       <AppShell.Main id="main" className="gcare-main">
-        {signOut.isError && <ErrorState error={signOut.error} onRetry={() => signOut.mutate()} />}
-        <Outlet />
+        <Container size={1280} px={{ base: 0, sm: 'md' }} py="sm">
+          {signOut.isError && <ErrorState error={signOut.error} onRetry={() => signOut.mutate()} />}
+          <PageTrailContext value={trail}>
+            <Outlet />
+          </PageTrailContext>
+        </Container>
       </AppShell.Main>
     </AppShell>
   )
 }
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 
 /**
  * Patient number search from anywhere. The number goes to the search page in memory only, never
@@ -213,13 +229,13 @@ function QuickPatientSearch() {
     <form onSubmit={onSubmit} role="search" aria-label="Quick patient search">
       <TextInput
         aria-label="Quick search by patient number"
-        placeholder="Search patient number"
-        rightSection={<IconSearch size={16} aria-hidden />}
-        radius="xl"
+        placeholder="Patient number"
+        leftSection={<IconSearch size={15} aria-hidden />}
+        size="sm"
         className="gcare-search"
         value={value}
         onChange={(e) => setValue(e.currentTarget.value)}
-        w={260}
+        w={220}
         visibleFrom="md"
       />
     </form>
@@ -234,9 +250,9 @@ function ColorSchemeToggle() {
   return (
     <Tooltip label={next === 'dark' ? 'Dark mode' : 'Light mode'}>
       <ActionIcon
-        size={38}
-        radius="xl"
-        variant="default"
+        size={34}
+        variant="subtle"
+        color="gray"
         onClick={() => setColorScheme(next)}
         aria-label={next === 'dark' ? 'Switch to dark mode' : 'Switch to light mode'}
       >
@@ -246,21 +262,26 @@ function ColorSchemeToggle() {
   )
 }
 
-/** Product name and mark: top of the sidebar on wide screens, in the header on phones. */
-function ProductMark() {
+/** Product mark at the top of the sidebar, with the organization underneath. */
+function ProductMark({ organization }: { organization: string }) {
   return (
     <Group gap={10} wrap="nowrap">
-      <ThemeIcon size={36} radius="md" variant="filled" aria-hidden>
-        <IconHeartbeat size={21} />
+      <ThemeIcon size={34} radius="md" className="gcare-mark" aria-hidden>
+        <IconHeartbeat size={20} />
       </ThemeIcon>
-      <Text fw={700} fz={20} lh={1} className="gcare-product">
-        GCare HMS
-      </Text>
+      <Stack gap={3} miw={0}>
+        <Text fw={700} fz={17} lh={1}>
+          GCare HMS
+        </Text>
+        <Text className="gcare-navbar-muted gcare-nav-section" fz={10} fw={700} lh={1.2} truncate>
+          {organization}
+        </Text>
+      </Stack>
     </Group>
   )
 }
 
-/** Approved facility branding (task 5.2): name and logo of the working facility; else the organization name. */
+/** Approved facility branding (task 5.2): name and logo of the working facility; else the fallback name. */
 function FacilityBrand({ fallback }: { fallback: string }) {
   const { current } = useFacilityContext()
   const branding = useQuery({
@@ -273,8 +294,8 @@ function FacilityBrand({ fallback }: { fallback: string }) {
   const b = branding.data?.configured ? branding.data : null
   return (
     <Group gap="xs" wrap="nowrap" visibleFrom="md">
-      {b?.logo_id && <Image src={logoUrl(b.logo_id)} alt="" h={28} w="auto" fit="contain" />}
-      <Text c="dimmed" size="sm" truncate>
+      {b?.logo_id && <Image src={logoUrl(b.logo_id)} alt="" h={24} w="auto" fit="contain" />}
+      <Text c="dimmed" size="sm" truncate maw={220} aria-label="Working facility">
         {b ? b.display_name : fallback}
       </Text>
     </Group>

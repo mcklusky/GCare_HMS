@@ -221,3 +221,13 @@ export function visibleNavSections(permissions: readonly string[]): { section: N
     (g) => g.items.length > 0,
   )
 }
+
+/** Where a path sits in the navigation (for the breadcrumb and page eyebrow); null when it is not a nav page. */
+export function navTrail(pathname: string): { section: NavSection; label: string } | null {
+  let best: NavItem | null = null
+  for (const item of NAV_ITEMS) {
+    const match = item.to === '/' ? pathname === '/' : pathname === item.to || pathname.startsWith(item.to + '/')
+    if (match && (!best || item.to.length > best.to.length)) best = item
+  }
+  return best && { section: best.section, label: best.label }
+}

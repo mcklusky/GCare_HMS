@@ -97,7 +97,8 @@ describe('application shell', () => {
     expect(within(nav).getByRole('link', { name: 'Facilities' })).toBeInTheDocument()
     expect(screen.getByText('Facility: Test Hospital A (synthetic)')).toBeInTheDocument()
     expect(screen.getByRole('list', { name: 'Your permissions' })).toHaveTextContent('FACILITY_READ')
-    // The month calendar marks exactly one day as today.
+    // Page eyebrow names the section; the month calendar marks exactly one day as today.
+    expect(screen.getAllByText('GCare HMS').length).toBeGreaterThan(0)
     const calendar = screen.getByRole('table')
     expect(calendar.querySelectorAll('[aria-current="date"]')).toHaveLength(1)
     expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main')

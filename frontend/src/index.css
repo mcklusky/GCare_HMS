@@ -1,10 +1,12 @@
 /* Global additions to the Mantine theme (src/theme.ts). Keep contrast at WCAG 2.2 AA in light and dark. */
 
 :root {
-  /* Soft mint-grey page behind white cards (light); deep slate in dark mode. */
-  --gcare-page: light-dark(#eef3f3, var(--mantine-color-dark-8));
+  /* Near-white page behind white cards (light); deep slate in dark mode. */
+  --gcare-page: light-dark(#f5f7f7, var(--mantine-color-dark-8));
   --gcare-surface: light-dark(#ffffff, var(--mantine-color-dark-7));
-  --gcare-sidebar: light-dark(#ffffff, var(--mantine-color-dark-7));
+  /* Warm accent: sidebar edge (decorative) and eyebrow text (#b5531f on white 5.0:1). */
+  --gcare-accent: #e07b39;
+  --gcare-accent-text: light-dark(#b5531f, #f0a06a);
   --gcare-border: light-dark(#e1eaea, var(--mantine-color-dark-4));
   /* Tinted strip under stat numbers and the "today" marker. */
   --gcare-tint: light-dark(#e3f1f1, rgba(63, 148, 151, 0.16));
@@ -42,40 +44,83 @@ body {
   outline: none;
 }
 
-/* Shell surfaces. */
+/* Shell surfaces: light header, dark teal sidebar with a warm accent edge (compact console look). */
 .gcare-main {
   background: var(--gcare-page);
 }
 
 .gcare-header {
-  /* The header sits on the page colour, beside the sidebar (AppShell layout "alt"). */
-  background: var(--gcare-page);
-  border: 0;
-}
-
-.gcare-product {
-  color: light-dark(var(--mantine-color-clinical-8), var(--mantine-color-clinical-2));
+  background: var(--gcare-surface);
+  border-color: var(--gcare-border);
 }
 
 .gcare-navbar {
-  background: var(--gcare-sidebar);
-  border-color: var(--gcare-border);
+  /* White text on clinical-8 is 8.4:1; muted text (clinical-2) is 5.7:1. */
+  background: light-dark(var(--mantine-color-clinical-8), var(--mantine-color-clinical-9));
+  color: #ffffff;
+  border-right: 3px solid var(--gcare-accent) !important;
 }
 
-/* Sidebar items are pills; the current page is a filled teal pill. */
+.gcare-navbar-muted {
+  color: var(--mantine-color-clinical-2);
+}
+
+.gcare-mark {
+  background: #ffffff;
+  color: var(--mantine-color-clinical-8);
+}
+
+/* Sidebar items: white text; the current page is a white pill with teal text. */
 .gcare-nav-link {
-  border-radius: var(--mantine-radius-xl);
-  padding-block: 10px;
+  border-radius: var(--mantine-radius-md);
+  padding-block: 7px;
+  color: #ffffff;
+  font-weight: 600;
 }
 
-.gcare-nav-link:not([data-active]) {
-  color: light-dark(#3b4a4b, var(--mantine-color-dark-0));
+.gcare-nav-link .mantine-NavLink-label {
+  font-size: var(--mantine-font-size-sm);
 }
 
-/* Search in the header is a rounded pill. */
+.gcare-nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.gcare-nav-link[data-active],
+.gcare-nav-link[data-active]:hover {
+  background: #ffffff;
+  color: var(--mantine-color-clinical-8);
+}
+
+.gcare-navbar-account {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.gcare-account {
+  color: #ffffff;
+  padding: 6px;
+  border-radius: var(--mantine-radius-md);
+}
+
+.gcare-account:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.gcare-account-avatar .mantine-Avatar-placeholder {
+  background: #ffffff;
+  color: var(--mantine-color-clinical-8);
+}
+
 .gcare-search input {
-  background: var(--gcare-surface);
+  background: var(--gcare-page);
   border-color: var(--gcare-border);
+}
+
+/* Small uppercase label above page titles (the page's section). */
+.gcare-eyebrow {
+  color: var(--gcare-accent-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .gcare-nav-section {
@@ -101,15 +146,10 @@ body {
   color: light-dark(#475569, var(--mantine-color-dark-1));
 }
 
-/* Stat cards: label, big number, dark icon tile; an optional tinted note strip at the bottom. */
+/* Stat cards: tabular numbers. */
 .gcare-stat-value {
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
-}
-
-.gcare-stat-note {
-  background: var(--gcare-tint);
-  color: light-dark(#1d5557, var(--mantine-color-dark-0));
 }
 
 /* Month calendar on the home page. */
@@ -136,8 +176,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
 }
 
@@ -186,10 +226,15 @@ body {
   }
 }
 
+/* Section card header with a hairline under it. */
+.gcare-card-head {
+  border-bottom: 1px solid var(--gcare-border);
+}
+
 /* Home shortcuts: tinted tiles that lift slightly on hover. */
 .gcare-shortcut {
   display: block;
-  padding: 12px 14px;
+  padding: 8px 10px;
   border: 1px solid var(--gcare-border);
   border-radius: var(--mantine-radius-lg);
   background: var(--gcare-surface);
