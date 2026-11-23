@@ -7,6 +7,7 @@ import {
   Divider,
   FileButton,
   Grid,
+  SegmentedControl,
   Group,
   Image,
   NumberInput,
@@ -28,12 +29,14 @@ import {
   IconClock,
   IconPhoto,
   IconReceipt2,
+  IconSettings,
+  IconShieldCheck,
   IconStethoscope,
   IconTrash,
   IconUpload,
 } from '@tabler/icons-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   MEASURES,
   STATUS_LABEL,
@@ -69,68 +72,77 @@ const SETTING_ICON: Record<string, typeof IconAdjustments> = {
 export function SettingsPage() {
   const [selected, setSelected] = useState<SettingInfo | null>(null)
   const settings = useQuery({ queryKey: ['settings'], queryFn: ({ signal }) => listSettings(signal) })
+  const pending = useQuery({ queryKey: ['settings-pending'], queryFn: ({ signal }) => listPendingSettings(signal) })
+  const pendingCount = pending.data?.length ?? 0
 
   return (
     <Stack gap="lg">
       <PageHeader
         title="Settings"
+        icon={<IconSettings size={22} />}
         description="A change takes effect only after a different person approves it. Every version is kept; to roll back, propose an earlier version again."
+        meta={[
+          <>
+            <strong>{settings.data?.length ?? '–'}</strong> settings
+          </>,
+          <>
+            <strong>{pendingCount}</strong> waiting for approval
+          </>,
+          <>
+            <IconShieldCheck size={13} aria-hidden /> Two-person approval
+          </>,
+        ]}
       />
       <PendingApprovals />
-      <Grid gap="lg" align="flex-start">
-        <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
-          <Card withBorder padding={0} component="nav" aria-label="Settings list">
-            <Text className="gcare-nav-section" px="md" pt="sm" pb={6}>
-              Settings
-            </Text>
-            <QueryState query={settings} loadingLabel="Loading settings…">
-              {(rows) => (
-                <Box pb={6}>
-                  {rows.map((s) => {
-                    const Icon = SETTING_ICON[s.key] ?? IconAdjustments
-                    const active = selected?.key === s.key
-                    return (
-                      <UnstyledButton
-                        key={s.key}
-                        className="gcare-row gcare-setting-item"
-                        data-active={active || undefined}
-                        aria-current={active ? 'true' : undefined}
-                        aria-label={`Open ${s.title}`}
-                        onClick={() => setSelected(s)}
-                        w="100%"
-                      >
-                        <ThemeIcon size={30} radius="sm" variant={active ? 'filled' : 'light'} aria-hidden>
-                          <Icon size={16} stroke={1.7} />
-                        </ThemeIcon>
-                        <Box miw={0} style={{ flex: 1 }}>
-                          <Text size="sm" fw={600} lh={1.3}>
-                            {s.title}
-                          </Text>
-                          <Text size="xs" c="dimmed" lineClamp={2}>
-                            {s.description}
-                          </Text>
-                        </Box>
+      <nav aria-label="Settings list">
+        <QueryState query={settings} loadingLabel="Loading settings…">
+          {(rows) => (
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="sm">
+              {rows.map((s) => {
+                const Icon = SETTING_ICON[s.key] ?? IconAdjustments
+                const active = selected?.key === s.key
+                return (
+                  <UnstyledButton
+                    key={s.key}
+                    className="gcare-setting-card"
+                    data-active={active || undefined}
+                    aria-current={active ? 'true' : undefined}
+                    aria-label={`Open ${s.title}`}
+                    onClick={() => setSelected(s)}
+                  >
+                    <ThemeIcon size={34} radius="md" variant={active ? 'filled' : 'light'} aria-hidden>
+                      <Icon size={18} stroke={1.7} />
+                    </ThemeIcon>
+                    <Box miw={0} style={{ flex: 1 }}>
+                      <Group gap={6} justify="space-between" wrap="nowrap">
+                        <Text size="sm" fw={650} lh={1.3}>
+                          {s.title}
+                        </Text>
                         <IconChevronRight size={15} aria-hidden className="gcare-row-arrow" />
-                      </UnstyledButton>
-                    )
-                  })}
-                </Box>
-              )}
-            </QueryState>
-          </Card>
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
-          {selected ? (
-            <SettingPanel key={selected.key} setting={selected} />
-          ) : (
-            <Card withBorder>
-              <EmptyState title="Choose a setting">
-                Pick a setting on the left to see what is in use, propose a change or review its history.
-              </EmptyState>
-            </Card>
+                      </Group>
+                      <Text size="xs" c="dimmed" lineClamp={2} mt={2}>
+                        {s.description}
+                      </Text>
+                      <span className="gcare-chip" style={{ marginTop: 8 }}>
+                        {s.scope === 'FACILITY' ? 'Per facility' : 'Organization-wide'}
+                      </span>
+                    </Box>
+                  </UnstyledButton>
+                )
+              })}
+            </SimpleGrid>
           )}
-        </Grid.Col>
-      </Grid>
+        </QueryState>
+      </nav>
+      {selected ? (
+        <SettingPanel key={selected.key} setting={selected} />
+      ) : (
+        <Card withBorder>
+          <EmptyState title="Choose a setting">
+            Pick a setting above to see what is in use, propose a change or review its history.
+          </EmptyState>
+        </Card>
+      )}
     </Stack>
   )
 }
@@ -560,97 +572,103 @@ function BrandingEditor({
   return (
     <Grid gap="lg">
       <Grid.Col span={{ base: 12, xl: 7 }}>
-        <Stack gap="sm">
-          <Group gap="sm" wrap="nowrap" align="center" className="gcare-logo-field">
-            <Box className="gcare-logo-box">
-              {logoId ? (
-                <Image src={logoUrl(logoId)} alt="Logo preview" h={44} w={44} fit="contain" />
-              ) : (
-                <IconPhoto size={20} aria-hidden />
-              )}
-            </Box>
-            <Box style={{ flex: 1 }} miw={0}>
-              <Text size="sm" fw={500}>
-                Logo
-              </Text>
-              <Text size="xs" c="dimmed">
-                PNG or JPEG, at most 256 KB. Shown on receipts and in the header.
-              </Text>
-            </Box>
-            <FileButton onChange={(f) => void upload(f)} accept="image/png,image/jpeg">
-              {(props) => (
-                <Button
-                  {...props}
-                  size="xs"
+        <div className="gcare-form-sections">
+          <FormSection title="Identity" help="How the facility is named on screens, receipts and printed forms.">
+            <Group gap="sm" wrap="nowrap" align="center" className="gcare-logo-field">
+              <Box className="gcare-logo-box">
+                {logoId ? (
+                  <Image src={logoUrl(logoId)} alt="Logo preview" h={44} w={44} fit="contain" />
+                ) : (
+                  <IconPhoto size={20} aria-hidden />
+                )}
+              </Box>
+              <Box style={{ flex: 1 }} miw={0}>
+                <Text size="sm" fw={550}>
+                  Logo
+                </Text>
+                <Text size="xs" c="dimmed">
+                  PNG or JPEG, at most 256 KB.
+                </Text>
+              </Box>
+              <FileButton onChange={(f) => void upload(f)} accept="image/png,image/jpeg">
+                {(props) => (
+                  <Button
+                    {...props}
+                    size="xs"
+                    variant="default"
+                    loading={uploading}
+                    leftSection={<IconUpload size={14} aria-hidden />}
+                  >
+                    {logoId ? 'Replace' : 'Upload'}
+                  </Button>
+                )}
+              </FileButton>
+              {logoId && (
+                <ActionIcon
                   variant="default"
-                  loading={uploading}
-                  leftSection={<IconUpload size={14} aria-hidden />}
+                  size={30}
+                  aria-label="Remove logo"
+                  onClick={() => onChange({ ...value, logo_id: undefined })}
                 >
-                  {logoId ? 'Replace' : 'Upload'}
-                </Button>
+                  <IconTrash size={14} aria-hidden />
+                </ActionIcon>
               )}
-            </FileButton>
-            {logoId && (
-              <ActionIcon
-                variant="default"
-                size={30}
-                aria-label="Remove logo"
-                onClick={() => onChange({ ...value, logo_id: undefined })}
-              >
-                <IconTrash size={14} aria-hidden />
-              </ActionIcon>
-            )}
-          </Group>
-          {uploadError !== null && <ErrorState error={uploadError} />}
-          <TextInput
-            label="Display name"
-            required
-            maxLength={120}
-            value={text('display_name')}
-            onChange={(e) => set('display_name', e.currentTarget.value)}
-          />
-          <Textarea
-            label="Address"
-            description="One line each, at most 4."
-            autosize
-            minRows={2}
-            maxRows={4}
-            value={lines.join('\n')}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                address_lines: e.currentTarget.value
-                  .split('\n')
-                  .map((l) => l.trim())
-                  .filter(Boolean),
-              })
-            }
-          />
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+            </Group>
+            {uploadError !== null && <ErrorState error={uploadError} />}
             <TextInput
-              label="Phone"
-              maxLength={40}
-              value={text('phone')}
-              onChange={(e) => set('phone', e.currentTarget.value)}
+              label="Display name"
+              required
+              maxLength={120}
+              value={text('display_name')}
+              onChange={(e) => set('display_name', e.currentTarget.value)}
             />
-            <TextInput
-              label="Registration or tax number"
-              maxLength={60}
-              value={text('registration_number')}
-              onChange={(e) => set('registration_number', e.currentTarget.value)}
+          </FormSection>
+          <FormSection title="Contact" help="Printed under the name. Keep it short; receipts are narrow.">
+            <Textarea
+              label="Address"
+              description="One line each, at most 4."
+              autosize
+              minRows={2}
+              maxRows={4}
+              value={lines.join('\n')}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  address_lines: e.currentTarget.value
+                    .split('\n')
+                    .map((l) => l.trim())
+                    .filter(Boolean),
+                })
+              }
             />
-          </SimpleGrid>
-          <Textarea
-            label="Receipt footer"
-            description={`${text('receipt_footer').length}/300 characters`}
-            maxLength={300}
-            autosize
-            minRows={2}
-            maxRows={5}
-            value={text('receipt_footer')}
-            onChange={(e) => set('receipt_footer', e.currentTarget.value)}
-          />
-        </Stack>
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+              <TextInput
+                label="Phone"
+                maxLength={40}
+                value={text('phone')}
+                onChange={(e) => set('phone', e.currentTarget.value)}
+              />
+              <TextInput
+                label="Registration or tax number"
+                maxLength={60}
+                value={text('registration_number')}
+                onChange={(e) => set('registration_number', e.currentTarget.value)}
+              />
+            </SimpleGrid>
+          </FormSection>
+          <FormSection title="Receipt" help="A closing line at the bottom of every receipt.">
+            <Textarea
+              label="Receipt footer"
+              description={`${text('receipt_footer').length}/300 characters`}
+              maxLength={300}
+              autosize
+              minRows={2}
+              maxRows={5}
+              value={text('receipt_footer')}
+              onChange={(e) => set('receipt_footer', e.currentTarget.value)}
+            />
+          </FormSection>
+        </div>
       </Grid.Col>
       <Grid.Col span={{ base: 12, xl: 5 }}>
         <BrandingPreview value={value} />
@@ -659,11 +677,30 @@ function BrandingEditor({
   )
 }
 
-/** Live preview of how the branding appears at the top and bottom of a receipt (not to scale). */
+/** One labelled block of a settings form: title and help on the left, fields on the right. */
+function FormSection({ title, help, children }: { title: string; help: string; children: ReactNode }) {
+  return (
+    <section className="gcare-form-section" aria-label={title}>
+      <div>
+        <Text size="sm" fw={650}>
+          {title}
+        </Text>
+        <Text size="xs" c="dimmed" mt={2}>
+          {help}
+        </Text>
+      </div>
+      <Stack gap="sm">{children}</Stack>
+    </section>
+  )
+}
+
+/** Live preview of the branding on a receipt or in the app header (not to scale). */
 function BrandingPreview({ value }: { value: Json }) {
+  const [view, setView] = useState<'receipt' | 'header'>('receipt')
   const str = (k: string) => (typeof value[k] === 'string' ? (value[k] as string).trim() : '')
   const lines = Array.isArray(value.address_lines) ? (value.address_lines as string[]) : []
   const logoId = typeof value.logo_id === 'string' ? value.logo_id : null
+  const name = str('display_name') || 'Facility name'
   const meta = [
     str('phone') && `Tel. ${str('phone')}`,
     str('registration_number') && `Reg. ${str('registration_number')}`,
@@ -672,47 +709,89 @@ function BrandingPreview({ value }: { value: Json }) {
     .join(' · ')
   return (
     <Box component="section" aria-labelledby="branding-preview" className="gcare-preview">
-      <Group justify="space-between" mb={6}>
-        <Text id="branding-preview" className="gcare-nav-section">
-          Receipt preview
-        </Text>
-        <Text size="xs" c="dimmed">
-          Updates as you type
-        </Text>
+      <Group justify="space-between" mb="sm" wrap="nowrap">
+        <Box>
+          <Text id="branding-preview" size="sm" fw={650}>
+            Live preview
+          </Text>
+          <Text size="xs" c="dimmed">
+            Updates as you type
+          </Text>
+        </Box>
+        <SegmentedControl
+          size="xs"
+          value={view}
+          onChange={(v) => setView(v as 'receipt' | 'header')}
+          data={[
+            { value: 'receipt', label: 'Receipt' },
+            { value: 'header', label: 'App header' },
+          ]}
+          aria-label="Preview"
+        />
       </Group>
-      <div className="gcare-receipt">
-        <Group gap="sm" wrap="nowrap" align="flex-start">
-          {logoId && <Image src={logoUrl(logoId)} alt="" h={40} w={40} fit="contain" />}
-          <Box miw={0}>
+      {view === 'receipt' ? (
+        <div className="gcare-receipt">
+          <Stack gap={4} align="center" ta="center">
+            {logoId && <Image src={logoUrl(logoId)} alt="" h={40} w={40} fit="contain" />}
             <Text fw={700} size="md" lh={1.25}>
-              {str('display_name') || 'Facility name'}
+              {name}
             </Text>
             {lines.map((l, i) => (
-              <Text key={i} size="xs" lh={1.4}>
+              <Text key={i} size="xs" lh={1.35}>
                 {l}
               </Text>
             ))}
             {meta && (
-              <Text size="xs" lh={1.4}>
+              <Text size="xs" lh={1.35}>
                 {meta}
               </Text>
             )}
-          </Box>
-        </Group>
-        <div className="gcare-receipt-rule" />
-        <Text size="xs" fw={600}>
-          RECEIPT
-        </Text>
-        <div className="gcare-receipt-lines" aria-hidden>
-          <span />
-          <span />
-          <span />
+          </Stack>
+          <div className="gcare-receipt-rule" />
+          <Group justify="space-between">
+            <Text size="xs" fw={700} lts="0.08em">
+              RECEIPT
+            </Text>
+            <Text size="xs" c="#5b6769" ff="monospace">
+              No. ••••••
+            </Text>
+          </Group>
+          <div className="gcare-receipt-lines" aria-hidden>
+            {[78, 64, 70].map((w, i) => (
+              <div key={i}>
+                <span style={{ width: `${w}%` }} />
+                <span />
+              </div>
+            ))}
+          </div>
+          <div className="gcare-receipt-rule" />
+          <Text
+            size="xs"
+            ta="center"
+            c={str('receipt_footer') ? undefined : '#5b6769'}
+            fs={str('receipt_footer') ? undefined : 'italic'}
+          >
+            {str('receipt_footer') || 'Receipt footer'}
+          </Text>
         </div>
-        <div className="gcare-receipt-rule" />
-        <Text size="xs" ta="center" c={str('receipt_footer') ? undefined : 'dimmed'}>
-          {str('receipt_footer') || 'Receipt footer'}
-        </Text>
-      </div>
+      ) : (
+        <div className="gcare-header-mock">
+          <div className="gcare-header-mock-bar">
+            <span className="gcare-header-mock-crumbs" aria-hidden />
+            <Group gap={8} wrap="nowrap" ml="auto" miw={0}>
+              {logoId && <Image src={logoUrl(logoId)} alt="" h={18} w={18} fit="contain" radius={3} />}
+              <Text size="xs" c="dimmed" truncate>
+                {name}
+              </Text>
+            </Group>
+          </div>
+          <div className="gcare-header-mock-body" aria-hidden>
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+      )}
     </Box>
   )
 }

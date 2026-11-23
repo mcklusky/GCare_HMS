@@ -114,30 +114,63 @@ export function PageHeader({
   description,
   actions,
   eyebrow,
+  icon,
+  meta,
 }: {
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
   /** Optional small label above the title (the breadcrumb in the header already names the section). */
   eyebrow?: ReactNode
+  /** With an icon the header becomes a "hero" band: icon tile, soft accent glow and summary chips. */
+  icon?: ReactNode
+  /** Short facts shown as chips under the description (hero form only). */
+  meta?: ReactNode[]
 }) {
+  const text = (
+    <Stack gap={2} miw={0}>
+      {eyebrow && (
+        <Text size="xs" fw={600} c="dimmed">
+          {eyebrow}
+        </Text>
+      )}
+      <Title order={1} id="page-title" tabIndex={-1}>
+        {title}
+      </Title>
+      {description && (
+        <Text size="sm" c="dimmed" maw={820}>
+          {description}
+        </Text>
+      )}
+      {icon && meta && meta.length > 0 && (
+        <Group gap={6} mt={8}>
+          {meta.map((m, i) => (
+            <span key={i} className="gcare-chip">
+              {m}
+            </span>
+          ))}
+        </Group>
+      )}
+    </Stack>
+  )
+  if (icon) {
+    return (
+      <div className="gcare-hero">
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="md" pos="relative">
+          <Group align="flex-start" gap="md" wrap="nowrap" miw={0}>
+            <ThemeIcon size={44} radius="md" className="gcare-hero-icon" aria-hidden>
+              {icon}
+            </ThemeIcon>
+            {text}
+          </Group>
+          {actions && <Group gap="xs">{actions}</Group>}
+        </Group>
+      </div>
+    )
+  }
   return (
     <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm" mb={2}>
-      <Stack gap={2}>
-        {eyebrow && (
-          <Text size="xs" fw={600} c="dimmed">
-            {eyebrow}
-          </Text>
-        )}
-        <Title order={1} id="page-title" tabIndex={-1}>
-          {title}
-        </Title>
-        {description && (
-          <Text size="sm" c="dimmed" maw={820}>
-            {description}
-          </Text>
-        )}
-      </Stack>
+      {text}
       {actions && <Group gap="xs">{actions}</Group>}
     </Group>
   )
