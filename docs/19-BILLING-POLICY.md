@@ -2,7 +2,7 @@
 
 > **Status:** the decisions below were made by the product owner on 2026-11-23. Everything marked *provisional* is an engineering default that the **finance owner** must confirm before real use (Phase 4 exit: "finance owner approves permissions and receipt format"). No tariff, price, tax rate or exchange rate is defined by engineering.
 
-Requirements: FR-017 (billing and tariff catalog), FR-042 (configuration, partial). Code: `backend/.../billing/`, migration `V9__billing_catalog_and_tariffs.sql`, screens `/billing/tariffs`, `/billing/approvals`.
+Requirements: FR-017 (billing and tariff catalog), FR-042 (configuration, partial). Code: `backend/.../billing/`, migrations `V9__billing_catalog_and_tariffs.sql`, `V10__invoices.sql`, screens `/billing/tariffs`, `/billing/approvals`, `/billing/invoices`.
 
 ## 1. Decisions (product owner, 2026-11-23)
 
@@ -12,6 +12,10 @@ Requirements: FR-017 (billing and tariff catalog), FR-042 (configuration, partia
 | Currency | **Any ISO 4217 currency.** Each price states its currency; a service may have prices in several currencies. Amounts are **never converted**; there is no exchange rate in the system. |
 | Tax (OD-11) | A **configurable tax rate**, empty by default. Finance adds rates once the legal position is confirmed. |
 | Approval | **Two people**: one proposes a price or tax rate, a different person approves or rejects it. |
+| Invoice charges (task 4.2) | **Orders + cashier**: each order whose orderable item is linked to a billable service is charged automatically; a cashier adds or removes other charges with a reason. |
+| Invoice currency | **Cashier picks one currency per invoice.** Each charge needs an approved price in that currency; nothing is converted. |
+| Tax on invoices | **Per line, rounded half-up** to the currency's decimals; totals are the sums of the rounded lines. |
+| Corrections | **Void + reissue**: an issued invoice never changes; it is voided with a reason and a new invoice is made. Credit notes and refunds are task 4.4. |
 
 ## 2. Services, prices and tax rates (task 4.1)
 
@@ -25,23 +29,39 @@ Requirements: FR-017 (billing and tariff catalog), FR-042 (configuration, partia
 - **Scope:** billing is organization-wide; the permission is checked, not the facility. *Provisional*: per-facility tariffs are not supported yet.
 - Audit records ids, codes and currencies; never amounts or reasons.
 
-## 3. Provisional roles
+## 3. Invoices (task 4.2)
+
+- **One live invoice per visit** (draft or issued). A cancelled visit cannot be billed.
+- **Starting an invoice:** the cashier chooses the currency; the charges of the visit's orders are added at once. Orders placed later are added with "Add new order charges". Orders with no approved price (or tax rate) in that currency are listed as not charged.
+- **Each line copies** the service code and name, the approved price, and the tax rate code and percentage in effect on the UTC date the line is added. Later price changes never alter it.
+- **Arithmetic:** net = unit price × quantity (whole number 1–999); tax = net × rate ÷ 100 rounded half-up to the currency's decimals; line total = net + tax; invoice totals are sums of active lines. The database checks net = price × quantity and total = subtotal + tax.
+- **Removing a charge** (draft only) needs a reason; the line stays visible as removed and its order is not charged again on that invoice.
+- **Issuing** fixes the totals and assigns the next number for the organization, `INV-000001` and so on, with no gaps. Refused while the invoice is empty, while a charge is for a cancelled order, or while orders that could be charged are not on it.
+- **Void:** a cashier may discard a draft (it never gets a number); voiding an issued invoice needs `INVOICE_VOID`, with a reason. The next invoice for the visit records which voided invoice it replaces. Issued invoices never change (database trigger).
+- *Provisional:* invoice number format; the 7-day window of "visits without an invoice"; one currency per visit at a time.
+- Audit records ids, codes, currencies and invoice numbers; never amounts or reasons.
+
+## 4. Provisional roles
 
 | Role | Permissions |
 |---|---|
-| Finance officer | `BILLING_READ`, `BILLING_CATALOG_MANAGE`, `PRICE_PROPOSE` |
-| Finance manager | `BILLING_READ`, `PRICE_PROPOSE`, `PRICE_APPROVE` |
+| Finance officer | `BILLING_READ`, `BILLING_CATALOG_MANAGE`, `PRICE_PROPOSE`, `INVOICE_READ` |
+| Finance manager | `BILLING_READ`, `PRICE_PROPOSE`, `PRICE_APPROVE`, `INVOICE_READ`, `INVOICE_VOID` |
+| Cashier | `BILLING_READ`, `INVOICE_READ`, `INVOICE_MANAGE` |
 
-Local demo: `demo.finance`, `demo.financemgr`; services `DEMO-CONSULT`, `DEMO-LAB-A` with **fictional** prices of 1.00 (not a tariff).
+Local demo: `demo.finance`, `demo.financemgr`, `demo.cashier`; services `DEMO-CONSULT`, `DEMO-LAB-A` with **fictional** prices of 1.00 (not a tariff).
 
 ## Open questions for the finance owner
 
 1. Which services and prices make up the pilot tariff, in which currencies?
 2. Is any tax due on hospital services? If so, which rate, from when, and which services?
 3. Should different facilities or patient categories (payer, insurance, staff) have different prices?
-4. When a service has prices in two currencies, who chooses the invoice currency?
+4. ~~Who chooses the invoice currency?~~ Decided 2026-11-23: the cashier, per invoice.
+5. Is the invoice number format (`INV-000001`, per organization) acceptable, or is a legal format required?
+6. Must a voided invoice be approved by a second person?
 
 ## Change log
 | Date | Change | By |
 |---|---|---|
 | 2026-11-23 | Decisions recorded; service catalog, dated prices and tax rates with two-person approval | Engineering (Claude Code), task 4.1 |
+| 2026-11-23 | Invoice decisions recorded; visit invoices with per-line tax, issue and void | Engineering (Claude Code), task 4.2 |

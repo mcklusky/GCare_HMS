@@ -11,6 +11,9 @@ import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_READ;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_REOPEN;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
+import static com.gcare.hms.shared.security.Permissions.INVOICE_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.INVOICE_READ;
+import static com.gcare.hms.shared.security.Permissions.INVOICE_VOID;
 import static com.gcare.hms.shared.security.Permissions.OBSERVATION_READ;
 import static com.gcare.hms.shared.security.Permissions.OBSERVATION_RECORD;
 import static com.gcare.hms.shared.security.Permissions.ORDER_CATALOG_MANAGE;
@@ -134,13 +137,22 @@ public enum SystemRole {
   FINANCE_OFFICER(
       "Finance officer",
       "Maintains billable services and proposes prices and tax rates. No clinical access.",
-      Set.of(BILLING_READ, BILLING_CATALOG_MANAGE, PRICE_PROPOSE)),
+      Set.of(BILLING_READ, BILLING_CATALOG_MANAGE, PRICE_PROPOSE, INVOICE_READ)),
 
   /** Second person for money: approves or rejects prices and tax rates proposed by others. */
   FINANCE_MANAGER(
       "Finance manager",
-      "Approves or rejects prices and tax rates proposed by others. No clinical access.",
-      Set.of(BILLING_READ, PRICE_PROPOSE, PRICE_APPROVE));
+      "Approves or rejects prices and tax rates proposed by others. Voids issued invoices. No clinical access.",
+      Set.of(BILLING_READ, PRICE_PROPOSE, PRICE_APPROVE, INVOICE_READ, INVOICE_VOID)),
+
+  /**
+   * PROVISIONAL (task 4.2; docs/19): starts visit invoices, adds or removes charges with a reason
+   * and issues them. Cannot void an issued invoice or change prices.
+   */
+  CASHIER(
+      "Cashier",
+      "Starts and issues visit invoices. Cannot void issued invoices or change prices.",
+      Set.of(BILLING_READ, INVOICE_READ, INVOICE_MANAGE));
 
   private final String displayName;
   private final String description;

@@ -36,6 +36,9 @@ public final class Permissions {
   public static final String BILLING_CATALOG_MANAGE = "BILLING_CATALOG_MANAGE";
   public static final String PRICE_PROPOSE = "PRICE_PROPOSE";
   public static final String PRICE_APPROVE = "PRICE_APPROVE";
+  public static final String INVOICE_READ = "INVOICE_READ";
+  public static final String INVOICE_MANAGE = "INVOICE_MANAGE";
+  public static final String INVOICE_VOID = "INVOICE_VOID";
 
   public static final Set<String> ALL =
       Set.of(
@@ -65,7 +68,10 @@ public final class Permissions {
           BILLING_READ,
           BILLING_CATALOG_MANAGE,
           PRICE_PROPOSE,
-          PRICE_APPROVE);
+          PRICE_APPROVE,
+          INVOICE_READ,
+          INVOICE_MANAGE,
+          INVOICE_VOID);
 
   private Permissions() {}
 }

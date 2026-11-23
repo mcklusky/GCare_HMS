@@ -306,7 +306,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
 VALUES
     ('00000000-0000-4000-8000-000000000309', '00000000-0000-4000-8000-000000000001', 'FINANCE_OFFICER', 'Finance officer', 'Maintains billable services and proposes prices and tax rates. No clinical access.', true, 'ACTIVE'),
-    ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000001', 'FINANCE_MANAGER', 'Finance manager', 'Approves or rejects prices and tax rates proposed by others. No clinical access.', true, 'ACTIVE')
+    ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000001', 'FINANCE_MANAGER', 'Finance manager', 'Approves or rejects prices and tax rates proposed by others. Voids issued invoices. No clinical access.', true, 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO role_permissions (organization_id, role_id, permission_code)
@@ -349,4 +349,38 @@ VALUES
     ('00000000-0000-4000-8000-000000000951', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000901', 'USD', 1.00, NULL, DATE '2026-01-01', 'APPROVED', 'Demo value (fictional)', '00000000-0000-4000-8000-000000000410', '00000000-0000-4000-8000-000000000411', now(), 'Demo value (fictional)'),
     ('00000000-0000-4000-8000-000000000952', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000901', 'LRD', 1.00, NULL, DATE '2026-01-01', 'APPROVED', 'Demo value (fictional)', '00000000-0000-4000-8000-000000000410', '00000000-0000-4000-8000-000000000411', now(), 'Demo value (fictional)'),
     ('00000000-0000-4000-8000-000000000953', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000902', 'USD', 1.00, NULL, DATE '2026-01-01', 'APPROVED', 'Demo value (fictional)', '00000000-0000-4000-8000-000000000410', '00000000-0000-4000-8000-000000000411', now(), 'Demo value (fictional)')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Invoices (task 4.2). demo.cashier starts and issues invoices; demo.financemgr voids issued ones.
+-- No invoices are seeded.
+-- ---------------------------------------------------------------------------
+INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
+VALUES
+    ('00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000001', 'CASHIER', 'Cashier', 'Starts and issues visit invoices. Cannot void issued invoices or change prices.', true, 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000309', 'INVOICE_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000310', 'INVOICE_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000310', 'INVOICE_VOID'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000311', 'BILLING_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000311', 'INVOICE_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000311', 'INVOICE_MANAGE')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (id, organization_id, username, display_name, email, status)
+VALUES
+    ('00000000-0000-4000-8000-000000000412', '00000000-0000-4000-8000-000000000001', 'demo.cashier', 'Demo Cashier', 'demo.cashier@example.invalid', 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_identities (id, organization_id, user_id, issuer, subject)
+VALUES
+    ('00000000-0000-4000-8000-000000000512', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000412', 'http://localhost:8180/realms/gcare', '00000000-0000-4000-8000-000000001013')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
+VALUES
+    ('00000000-0000-4000-8000-000000000611', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000412', '00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000101')
 ON CONFLICT (id) DO NOTHING;

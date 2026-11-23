@@ -5,6 +5,8 @@ import { WorkspacePage } from './pages/encounters/WorkspacePage'
 import { QueuePage } from './pages/encounters/QueuePage'
 import { FacilitiesPage, FacilityDepartmentsPage } from './pages/FacilitiesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { InvoicePage } from './pages/billing/InvoicePage'
+import { InvoicesPage } from './pages/billing/InvoicesPage'
 import { PriceApprovalsPage } from './pages/billing/PriceApprovalsPage'
 import { TariffsPage } from './pages/billing/TariffsPage'
 import { OrderCatalogPage } from './pages/orders/OrderCatalogPage'
@@ -123,6 +125,22 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.PRICE_APPROVE}>
             <PriceApprovalsPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/invoices',
+        element: (
+          <RequirePermission permission={Permission.INVOICE_READ}>
+            <InvoicesPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/invoices/:invoiceId',
+        element: (
+          <RequirePermission permission={Permission.INVOICE_READ}>
+            <InvoicePage />
           </RequirePermission>
         ),
       },

@@ -21,7 +21,8 @@ It exists so developers can sign in locally. **It is not a production configurat
 | `demo.clinician` | `…1009` | DEMO-ORG, CLINICIAN at DEMO-GH | Calls in, transfers, closes and reopens visits; records observations |
 | `demo.lab` | `…1010` | DEMO-ORG, SERVICE_DEPARTMENT_STAFF at DEMO-GH | Works the order worklist (start, complete, cancel) |
 | `demo.finance` | `…1011` | DEMO-ORG, FINANCE_OFFICER at DEMO-GH | Billable services; proposes prices and tax rates |
-| `demo.financemgr` | `…1012` | DEMO-ORG, FINANCE_MANAGER at DEMO-GH | Approves or rejects prices and tax rates (second person) |
+| `demo.financemgr` | `…1012` | DEMO-ORG, FINANCE_MANAGER at DEMO-GH | Approves or rejects prices and tax rates (second person); voids issued invoices |
+| `demo.cashier` | `…1013` | DEMO-ORG, CASHIER at DEMO-GH | Starts, edits and issues visit invoices |
 | `demo.unlinked` | `…1004` | not linked | Sign-in refused (`login_error=account_not_enabled`), audited |
 
 Values such as brute-force limits, password policy and session lifetimes are **local defaults only**.

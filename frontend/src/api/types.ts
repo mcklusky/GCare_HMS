@@ -66,6 +66,9 @@ export const Permission = {
   BILLING_CATALOG_MANAGE: 'BILLING_CATALOG_MANAGE',
   PRICE_PROPOSE: 'PRICE_PROPOSE',
   PRICE_APPROVE: 'PRICE_APPROVE',
+  INVOICE_READ: 'INVOICE_READ',
+  INVOICE_MANAGE: 'INVOICE_MANAGE',
+  INVOICE_VOID: 'INVOICE_VOID',
 } as const
 
 export type PermissionCode = (typeof Permission)[keyof typeof Permission]
