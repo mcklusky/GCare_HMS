@@ -15,6 +15,8 @@
 	<description>GCare HMS backend</description>
 	<properties>
 		<java.version>21</java.version>
+		<springdoc.version>3.2.1</springdoc.version>
+		<testcontainers-keycloak.version>4.4.1</testcontainers-keycloak.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -32,6 +34,17 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<!-- OIDC sign-in through Keycloak (OD-03, ADR-012). Tokens stay server-side. -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
+		</dependency>
+		<dependency>
+			<!-- OpenAPI document for /api/v1 (served only when springdoc.api-docs.enabled=true, and only to signed-in users). -->
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+			<version>${springdoc.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -96,9 +109,34 @@
 			<artifactId>testcontainers-postgresql</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-oauth2-client-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<!-- Real Keycloak for the end-to-end sign-in test. -->
+			<groupId>com.github.dasniko</groupId>
+			<artifactId>testcontainers-keycloak</artifactId>
+			<version>${testcontainers-keycloak.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
+		<testResources>
+			<testResource>
+				<directory>src/test/resources</directory>
+			</testResource>
+			<testResource>
+				<!-- The local Keycloak realm, used by KeycloakSignInTests (same file as docker-compose.yml). -->
+				<directory>../infra/keycloak</directory>
+				<targetPath>keycloak</targetPath>
+				<includes>
+					<include>*.json</include>
+				</includes>
+			</testResource>
+		</testResources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -115,6 +153,7 @@
 				<artifactId>spotless-maven-plugin</artifactId>
 				<version>3.12.0</version>
 				<configuration>
+					<lineEndings>UNIX</lineEndings>
 					<java>
 						<googleJavaFormat/>
 						<removeUnusedImports/>

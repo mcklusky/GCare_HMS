@@ -17,9 +17,35 @@ spring:
     locations: classpath:db/migration
   jackson:
     time-zone: UTC
+  security:
+    oauth2:
+      client:
+        # Sign-in through Keycloak (OD-03, ADR-012). The backend is a confidential OIDC client.
+        # AUTH_ISSUER_URI and AUTH_CLIENT_SECRET have no defaults outside the local profile, so a
+        # misconfigured deployment fails at start-up instead of running without sign-in.
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: ${AUTH_CLIENT_ID:gcare-hms-backend}
+            client-secret: ${AUTH_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: ${AUTH_ISSUER_URI}
+            user-name-attribute: sub
 
 server:
   port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      # Idle timeout. Placeholder until the security owner approves session policy (OD-03 follow-up).
+      timeout: ${SESSION_IDLE_TIMEOUT:30m}
+      cookie:
+        name: GCARE_SESSION
+        http-only: true
+        secure: ${SESSION_COOKIE_SECURE:true} # HTTPS only; the local profile turns this off
+        same-site: lax
   error:
     include-message: never
     include-stacktrace: never
@@ -35,6 +61,19 @@ management:
       show-details: never
       probes:
         enabled: true
+
+springdoc:
+  api-docs:
+    enabled: ${OPENAPI_ENABLED:false} # when on, still only for signed-in users
+  paths-to-match: /api/v1/**
+
+gcare:
+  identity:
+    registration-id: keycloak
+    post-login-redirect: ${AUTH_POST_LOGIN_REDIRECT:/}
+    post-logout-redirect: ${AUTH_POST_LOGOUT_REDIRECT:}
+    # Absolute session lifetime. Placeholder until the security owner approves session policy.
+    session-max-lifetime: ${SESSION_MAX_LIFETIME:12h}
 
 logging:
   pattern:

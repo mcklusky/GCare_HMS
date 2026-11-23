@@ -14,7 +14,7 @@ Pinned versions (OD-04): Spring Boot 4.2.0, Java 21, PostgreSQL 18, React 19, Vi
 ## First run from a fresh checkout
 ```sh
 cp .env.example .env                 # local-only values; never commit .env
-docker compose up -d postgres        # PostgreSQL 18 on 127.0.0.1:5432
+docker compose up -d postgres keycloak  # PostgreSQL 18 on :5432, Keycloak on :8180 (both localhost-only)
 
 cd backend && ./mvnw spring-boot:run # http://localhost:8080/actuator/health
 cd frontend && npm ci && npm run dev # http://localhost:5173 (proxies /api and /actuator to :8080)
@@ -24,7 +24,18 @@ On Windows use `mvnw.cmd` from PowerShell/cmd, or `./mvnw` from Git Bash.
 **Port already in use?** Run the backend on another port and point the frontend proxy at it:
 `SERVER_PORT=8082 ./mvnw spring-boot:run`, then `GCARE_BACKEND_URL=http://localhost:8082 npm run dev`.
 
-Alternatively, `./mvnw spring-boot:test-run` starts the backend against a throwaway Testcontainers database without Compose.
+Keycloak must be up before the backend starts (the backend reads its OIDC configuration at start-up).
+
+Alternatively, `./mvnw spring-boot:test-run` starts the backend against a throwaway Testcontainers database without Compose (Keycloak from Compose is still needed for sign-in).
+
+## Signing in locally (ADR-012)
+1. Open `http://localhost:8080/oauth2/authorization/keycloak` (or your `SERVER_PORT`). Keycloak shows its login page.
+2. Use a synthetic user from [infra/keycloak/README.md](../infra/keycloak/README.md), e.g. `demo.admin` / `Local-Demo-Only-1!`.
+3. You land on the frontend (`http://localhost:5173/`) signed in; `GET /api/v1/me` shows your permissions. The session cookie is shared across localhost ports, so the Vite proxy works.
+4. Sign out with `POST /api/v1/auth/logout` (send the `XSRF-TOKEN` cookie value as header `X-XSRF-TOKEN`). The response holds `logout_url`, which ends the Keycloak session too.
+
+The OpenAPI document is at `/v3/api-docs` when signed in (local profile only).
+Keycloak's admin console is `http://localhost:8180` (`admin` / `admin`, local only).
 
 ## Checks (same as CI)
 | Area | Command | What it runs |
@@ -38,7 +49,8 @@ Never report a check as passing unless it ran ([07-CLAUDE.md](07-CLAUDE.md)).
 
 ## Architecture map
 - `backend/src/main/java/com/gcare/hms/<module>/`: one package per module (identity, organization, patient, encounter, orders, radiology, billing, reporting, audit, integration). Each `package-info.java` states the module's purpose. Modules talk through application services or events, never each other's repositories.
-- `backend/.../shared/`: cross-cutting infrastructure only (security config, errors, correlation IDs).
+- `backend/.../shared/`: cross-cutting infrastructure only (security config, current user and permissions, organization context, errors, correlation IDs).
+- `infra/keycloak/`: the local Keycloak realm (synthetic users).
 - `backend/src/main/resources/db/migration/`: Flyway migrations, the only owner of the schema.
 - `frontend/src/`: React app. Routing, the component library and the app shell arrive in task 1.4.
 
@@ -57,8 +69,36 @@ Isolation is enforced by PostgreSQL row-level security, so a missed `WHERE` clau
 - The organization comes from `OrganizationContext` and is copied into the session setting `app.current_organization_id`. With no organization set, organization-owned tables look empty.
 - Set the context **before** a transaction starts: `OrganizationContext.callAs(orgId, () -> service.doWork())`. Switching organization inside a context throws.
 - `OrganizationContext.callAsSchemaOwner(...)` bypasses RLS. It is only for migrations and audited platform operations, never request handling.
-- Until task 1.3, nothing sets the context from a logged-in user; tests set it explicitly.
+- For web requests, `identity/CurrentUserFilter` sets it from the signed-in user. Tests and platform code set it explicitly.
 - **Deployment note:** the database login used by the app must be able to `SET ROLE gcare_app`. Migration V1 grants this to the migrating user. Superusers bypass RLS, so the application must never run queries without `SET ROLE` (the DataSource wrapper guarantees this).
+- **Deployment note:** `callAsSchemaOwner` (migrations, admin bootstrap) relies on the login role being a superuser or having `BYPASSRLS`; tables use `FORCE ROW LEVEL SECURITY`, which otherwise applies to the owner too. Local Compose and Testcontainers use a superuser. Record the production role setup in the deployment record.
+
+## Sign-in and authorization (ADR-012)
+- **Keycloak authenticates; GCare authorizes.** A Keycloak account grants nothing until it is linked (issuer + subject, table `user_identities`) to an `ACTIVE` GCare user in an `ACTIVE` organization.
+- **Checked on every request.** `CurrentUserFilter` reloads the user's status and active role assignments from the database, so disabling an account or ending an assignment takes effect on the next request. Sessions also end after `SESSION_MAX_LIFETIME` (absolute) or `SESSION_IDLE_TIMEOUT` (idle); both values are placeholders until the security owner approves them.
+- **In services:** annotate with `@PreAuthorize("hasAuthority('FACILITY_READ')")` (constants in `shared/security/Permissions`), then narrow data with `CurrentUser.require().scopeOf(Permissions.X)`. A facility outside scope answers 404. Never take organization or facility IDs from the client as proof of access.
+- **New permission:** add it to a migration (`permissions` table) and to `Permissions.java`; `IdentitySchemaTests` fails if they differ. Roles are data (per organization); system roles are defined in `identity/SystemRole.java`.
+- **Audited automatically:** `SIGNED_IN`, `SIGN_IN_REFUSED`, `SIGN_IN_FAILED`, `SIGNED_OUT`, `SESSION_ENDED` and `ACCESS_DENIED`.
+- **Tests:** MockMvc tests sign in with `IdentityFixtures.user(...).signedIn()`; `KeycloakSignInTests` runs the real flow against Keycloak in Testcontainers.
+
+## First administrator (admin bootstrap)
+For a new environment, after Keycloak is set up and the administrator's Keycloak account exists:
+1. Copy the account's ID from the Keycloak admin console (Users → the user → ID). That is the `subject`.
+2. Start the backend once with the bootstrap settings (environment variables, where Spring drops dashes: `country-code` → `COUNTRYCODE`; or `--gcare.bootstrap.*` arguments):
+   ```sh
+   export GCARE_BOOTSTRAP_ENABLED=true
+   export GCARE_BOOTSTRAP_ORGANIZATION_CODE=...  GCARE_BOOTSTRAP_ORGANIZATION_NAME=...
+   export GCARE_BOOTSTRAP_ORGANIZATION_COUNTRYCODE=LR
+   export GCARE_BOOTSTRAP_FACILITY_CODE=...  GCARE_BOOTSTRAP_FACILITY_NAME=...
+   export GCARE_BOOTSTRAP_FACILITY_TIMEZONE=Africa/Monrovia
+   export GCARE_BOOTSTRAP_ADMIN_USERNAME=...  GCARE_BOOTSTRAP_ADMIN_DISPLAYNAME=...
+   export GCARE_BOOTSTRAP_ADMIN_ISSUER=https://<keycloak-host>/realms/<realm>
+   export GCARE_BOOTSTRAP_ADMIN_SUBJECT=<keycloak user id>
+   java -jar gcare-hms-backend.jar   # or ./mvnw spring-boot:run in development
+   ```
+3. It creates the organization, facility, system roles and the administrator (organization-wide `ORGANIZATION_ADMIN`), audits each step, and changes nothing if run again. Remove the settings afterwards.
+
+The issuer must match the token's `iss` exactly (scheme, host, port, no trailing slash). The bootstrap never creates Keycloak accounts or passwords.
 
 ## Audit and errors
 - Record security-relevant access and changes with `AuditService.record(...)`. It commits in its own transaction (it survives a rollback), redacts sensitive metadata keys, and `audit_events` rejects UPDATE, DELETE and TRUNCATE for everyone.

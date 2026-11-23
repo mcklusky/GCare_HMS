@@ -12,8 +12,8 @@ import java.util.function.Supplier;
  * where row-level security policies use it. Set it <em>before</em> starting a transaction: a
  * transaction keeps the connection (and therefore the organization) it started with.
  *
- * <p>Task 1.3 sets this from the authenticated user's scope. Until then only tests and platform
- * code set it.
+ * <p>For web requests {@code CurrentUserFilter} (identity module) sets it from the signed-in user.
+ * Platform code and tests set it explicitly.
  */
 public final class OrganizationContext {
 
@@ -24,7 +24,7 @@ public final class OrganizationContext {
   /** Runs {@code action} with queries restricted to {@code organizationId}. */
   public static <T> T callAs(UUID organizationId, Supplier<T> action) {
     Objects.requireNonNull(organizationId, "organizationId");
-    return callWith(new Mode.Organization(organizationId), action);
+    return callWith(new Mode.Organization(organizationId), action::get);
   }
 
   public static void runAs(UUID organizationId, Runnable action) {
@@ -36,12 +36,19 @@ public final class OrganizationContext {
         });
   }
 
+  /** Like {@link #callAs} for work that throws checked exceptions (for example servlet filters). */
+  public static <T, E extends Exception> T callAsChecked(UUID organizationId, Work<T, E> action)
+      throws E {
+    Objects.requireNonNull(organizationId, "organizationId");
+    return callWith(new Mode.Organization(organizationId), action);
+  }
+
   /**
    * Runs {@code action} as the schema owner, bypassing the application role and row-level security.
    * Only for schema migrations and audited platform operations; never for request handling.
    */
   public static <T> T callAsSchemaOwner(Supplier<T> action) {
-    return callWith(Mode.SchemaOwner.INSTANCE, action);
+    return callWith(Mode.SchemaOwner.INSTANCE, action::get);
   }
 
   /** The organization in effect, if any. */
@@ -49,11 +56,12 @@ public final class OrganizationContext {
     return MODE.get() instanceof Mode.Organization org ? Optional.of(org.id()) : Optional.empty();
   }
 
-  static boolean isSchemaOwner() {
+  /** True inside {@link #callAsSchemaOwner}; platform operations use it as a guard. */
+  public static boolean isSchemaOwner() {
     return MODE.get() == Mode.SchemaOwner.INSTANCE;
   }
 
-  private static <T> T callWith(Mode mode, Supplier<T> action) {
+  private static <T, E extends Exception> T callWith(Mode mode, Work<T, E> action) throws E {
     Mode previous = MODE.get();
     if (previous != null && !previous.equals(mode)) {
       throw new IllegalStateException(
@@ -68,6 +76,12 @@ public final class OrganizationContext {
         MODE.remove();
       }
     }
+  }
+
+  /** A unit of work that may throw a checked exception. */
+  @FunctionalInterface
+  public interface Work<T, E extends Exception> {
+    T get() throws E;
   }
 
   private sealed interface Mode {

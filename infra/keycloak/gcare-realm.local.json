@@ -1,0 +1,121 @@
+{
+  "realm": "gcare",
+  "displayName": "GCare HMS (local, synthetic users)",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "editUsernameAllowed": false,
+  "loginWithEmailAllowed": false,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "passwordPolicy": "length(12) and notUsername and passwordHistory(3)",
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 43200,
+  "accessTokenLifespan": 300,
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "clients": [
+    {
+      "clientId": "gcare-hms-backend",
+      "name": "GCare HMS backend",
+      "description": "Confidential OIDC client. The browser never receives tokens.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "local-dev-only-not-a-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": false,
+      "redirectUris": [
+        "http://localhost:8080/login/oauth2/code/keycloak",
+        "http://localhost:8082/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/##http://localhost:8080/##http://localhost:8082/"
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": "00000000-0000-4000-8000-000000001001",
+      "username": "demo.admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Administrator",
+      "email": "demo.admin@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001002",
+      "username": "demo.auditor",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Auditor",
+      "email": "demo.auditor@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001003",
+      "username": "demo.unassigned",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Unassigned",
+      "email": "demo.unassigned@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001004",
+      "username": "demo.unlinked",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Unlinked",
+      "email": "demo.unlinked@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

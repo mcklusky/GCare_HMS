@@ -5,18 +5,18 @@ Goal: establish a runnable, reviewable foundation for the approved Java + React 
 ## Before implementation
 - [ ] Create repository and protect the main branch; require reviewed changes. *(Repo created 2026-11-23; branch protection still to be set in GitHub.)*
 - [x] Confirm Java LTS/Spring Boot and Node/React versions; pin versions and document upgrade policy. *(ADR-011, [DEVELOPMENT.md](DEVELOPMENT.md))*
-- [ ] Record approved deployment topology, identity provider, tenant isolation model, timezone, RPO/RTO and support owner from the approved pilot artifacts. *(Isolation model decided: ADR-010. Identity provider OD-03 and the rest remain open.)*
+- [ ] Record approved deployment topology, identity provider, tenant isolation model, timezone, RPO/RTO and support owner from the approved pilot artifacts. *(Isolation model: ADR-010. Identity provider: Keycloak, ADR-012. Deployment topology, timezone, RPO/RTO and support owner remain open.)*
 - [x] Create synthetic-only development data policy and secret-handling checklist. *([DEVELOPMENT.md](DEVELOPMENT.md#data-and-secrets-policy))*
 
 ## Backend foundation
 - [x] Create Spring Boot application with module/package boundaries and health endpoint.
 - [x] Configure PostgreSQL for local development and Flyway migrations. *(No migrations yet; first one in task 1.2.)*
 - [x] Add tenant, facility and department seed configuration using synthetic values. *(`db/seed-local`, local profile only.)*
-- [ ] Add authentication integration using the approved identity setup; deny access by default. *(Deny-by-default done; authentication blocked on OD-03.)*
-- [ ] Implement authorization context and scoped repository/service pattern before patient APIs. *(Organization scoping done: `OrganizationContext` + PostgreSQL RLS, ADR-010. Facility/department scope and wiring it to the logged-in user come with task 1.3.)*
+- [x] Add authentication integration using the approved identity setup; deny access by default. *(Keycloak OIDC, task 1.3. Verified with a real Keycloak in `KeycloakSignInTests` and locally against Compose.)*
+- [x] Implement authorization context and scoped repository/service pattern before patient APIs. *(Organization: RLS, set per request from the signed-in user. Facility: `CurrentUser.scopeOf(permission)`. Department-level scope is stored on assignments but not yet enforced; it arrives with the first department-scoped feature.)*
 - [x] Add audit event interface and persistence for security-relevant actions; redact sensitive fields. *(Append-only `audit_events`; callers are added per feature.)*
 - [x] Add consistent validation/error response and correlation IDs.
-- [ ] Add OpenAPI generation and `/api/v1` conventions. *(Deferred to the first real endpoint, task 1.3.)*
+- [x] Add OpenAPI generation and `/api/v1` conventions. *(springdoc; `/v3/api-docs` for signed-in users, on in local/test only; the build writes `target/openapi/openapi.json`.)*
 
 ## Frontend foundation
 - [ ] Create React + TypeScript application with approved router and component library.
@@ -27,7 +27,7 @@ Goal: establish a runnable, reviewable foundation for the approved Java + React 
 
 ## Quality and operations
 - [ ] CI runs formatting/static analysis, compile/build, unit tests, migration checks and dependency scan. *(Workflow added; Java dependency scanning is Dependabot only, and CI has not yet run on GitHub.)*
-- [ ] Add automated tests for unauthenticated access, role denial, tenant/facility isolation, audit creation and error shape. *(Done: unauthenticated access, organization isolation, audit, error shape. Role denial needs roles, task 1.3.)*
+- [ ] Add automated tests for unauthenticated access, role denial, tenant/facility isolation, audit creation and error shape. *(Done: unauthenticated access, role denial, organization and facility isolation, audit, error shape.)*
 - [x] Add `.env.example` with placeholders only; verify secrets and real patient data are excluded from Git.
 - [x] Document local setup, test commands, architecture map, migration workflow and backup responsibilities. *([DEVELOPMENT.md](DEVELOPMENT.md))*
 - [ ] Demonstrate a clean setup from a fresh checkout using synthetic data.
