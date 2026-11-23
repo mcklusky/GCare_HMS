@@ -37,14 +37,19 @@ Requirements: FR-010 (imaging worklist), FR-011 (DICOM receive and link, partial
 - Radiology reports, viewer access for referring clinicians, critical results (6.4).
 - Studies whose facility cannot be known (no matching order) are visible to every user with `IMAGING_LINK` in the organization.
 
-## Open questions
+## Provisional defaults for the former open questions (2026-11-23)
 
-1. Should the accession number carry a facility prefix when several facilities share one archive?
-2. Who may approve links: a second radiographer, or only a radiologist once that role exists (6.4)?
-3. What scheduled-check interval and look-back fit the pilot's volume and the archive's load?
-4. Should clinicians see "images available" and the viewer link on the visit before the report (6.4)?
+The product owner asked engineering to choose the best fit for now. These stay **provisional** until radiology leadership confirms them at the Phase 6 exit.
+
+| # | Question | Default chosen | Why | Revisit when |
+|---|---|---|---|---|
+| 1 | Facility prefix on accession numbers? | **No.** Keep `ACC` + 9 digits, unique across the whole organization. | Numbers are already unique for every facility of the organization, so a prefix adds nothing for matching. It would eat into DICOM's 16-character limit and change numbers already issued. | Several **organizations** share one archive (then a per-organization prefix is needed). |
+| 2 | Only a radiologist approves links? | **No.** Any second person with `IMAGING_LINK` (radiographer, and the radiologist role from 6.4) may approve; never the proposer. | Linking is about identity, which radiographers check at the scanner, and a second person already guards it. Limiting approval to radiologists would leave studies waiting when no radiologist is on duty. | Incident review shows wrong links, or radiology leadership wants radiologist sign-off. |
+| 3 | Scheduled-check interval and look-back? | **Every 5 minutes, looking back 2 days** (the current defaults). | Pilot volume is small, so each check is one light query to the archive. Five minutes keeps "images available" timely, and 2 days covers weekends of late sends together with "Check archive now". | Archive load or volume grows; tune `GCARE_IMAGING_SYNC_INTERVAL` / `..._LOOKBACK_DAYS`. |
+| 4 | Clinicians see "images available" before the report? | **Yes, clearly marked "Not yet reported".** The viewer link is shown too (built in 6.4). | Clinicians often need images before the report (emergencies, follow-up decisions). Hiding them delays care, and the label prevents mistaking images for a result. | Radiology leadership prefers report-first release for some modalities. |
 
 ## Change log
 | Date | Change | By |
 |---|---|---|
 | 2026-11-23 | Decisions recorded; accession numbers, radiographer steps, automatic exact-match linking, two-person review queue, scheduled archive check | Engineering (Claude Code), task 6.3 |
+| 2026-11-23 | Provisional defaults chosen for the four open questions at the product owner's request (no prefix; any second linker; 5 min / 2 days; images visible to clinicians marked "Not yet reported") | Engineering (Claude Code) |
