@@ -11,18 +11,25 @@ import {
   type DuplicateFlag,
   type PatientSummary,
 } from '../../api/patients'
+import { Permission } from '../../api/types'
+import { useCurrentMe } from '../../auth/MeContext'
+import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { PendingLinks, RequestLinkDialog } from './PatientLinks'
 
 const ORIGIN_LABEL: Record<DuplicateFlag['origin'], string> = {
   REGISTERED_DESPITE_MATCH: 'Registered despite a likely duplicate',
   STAFF_REPORT: 'Reported by staff',
 }
 
-/** Duplicate review queue for supervisors (policy §3). Linking records comes in task 2.3. */
+/** Duplicate review queue (policy §3) and, for approvers, link requests (§5). */
 export function DuplicateReviewPage() {
   const queryClient = useQueryClient()
+  const me = useCurrentMe()
+  const canRequestLink = hasPermission(me, Permission.PATIENT_LINK_REQUEST)
   const [deciding, setDeciding] = useState<DuplicateFlag | null>(null)
+  const [linking, setLinking] = useState<DuplicateFlag | null>(null)
   const flags = useQuery({ queryKey: ['duplicate-flags'], queryFn: ({ signal }) => listDuplicateFlags(signal) })
   const decide = useMutation({
     mutationFn: ({ flag, note }: { flag: DuplicateFlag; note: string }) => markNotDuplicate(flag, note),
@@ -67,9 +74,11 @@ export function DuplicateReviewPage() {
                     <Button variant="default" onClick={() => setDeciding(flag)}>
                       Different people
                     </Button>
-                    <Text size="sm" c="dimmed">
-                      Linking records that are the same person comes in the next release.
-                    </Text>
+                    {canRequestLink && (
+                      <Button variant="default" onClick={() => setLinking(flag)}>
+                        Same person: request link
+                      </Button>
+                    )}
                   </Group>
                 </Stack>
               </Card>
@@ -88,6 +97,8 @@ export function DuplicateReviewPage() {
       >
         The two records stay separate and will not be suggested as duplicates again. Say how you checked.
       </ConfirmDialog>
+      {linking && <RequestLinkDialog flag={linking} onClose={() => setLinking(null)} />}
+      {hasPermission(me, Permission.PATIENT_LINK_APPROVE) && <PendingLinks />}
     </Stack>
   )
 }

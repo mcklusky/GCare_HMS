@@ -9,7 +9,7 @@
 **Paths**
 - Backend `backend/src/main/java/com/gcare/hms/`: `audit`, `identity`, `organization`, `patient`, plus `shared/{security,tenancy,web}`
   - Placeholder modules (package-info only): `billing`, `encounter`, `integration`, `orders`, `radiology`, `reporting`
-- Migrations: `backend/src/main/resources/db/migration/V<n>__*.sql` (V1–V4 so far; never edit an applied one)
+- Migrations: `backend/src/main/resources/db/migration/V<n>__*.sql` (V1–V5 so far; never edit an applied one)
 - Frontend: `frontend/src/{api,auth,shell,components,pages/<feature>,test}`
 - Local infra: `docker-compose.yml` (Postgres, Keycloak on 127.0.0.1:8180); realm in `infra/keycloak/gcare-realm.local.json`
 - Docs in `docs/`: README (index), 01-PRD (FR-001–046), 06-PLAN (tasks), 16-TRACEABILITY, 17-PATIENT-IDENTITY-POLICY, REVIEW (ADRs), DEVELOPMENT (commands)
@@ -50,4 +50,4 @@
 - Project-record templates stay empty; never fill them with invented values
 - No force-push or deploy without explicit approval
 **State (2026-11-23)**
-- Done 1.1–1.4, 2.1–2.2 (PRs stacked 1.2→1.3→1.4→2.1→2.2). Next: 2.3 controlled duplicate linking (link only, never merge).
+- Done 1.1–1.4, 2.1–2.3 (PRs stacked 1.2→1.3→1.4→2.1→2.2→2.3). Phase 2 gate needs registration leadership sign-off; next is 3.1 encounters.

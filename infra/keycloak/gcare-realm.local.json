@@ -149,6 +149,22 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001007",
+      "username": "demo.records",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Records",
+      "email": "demo.records@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
     }
   ]
 }

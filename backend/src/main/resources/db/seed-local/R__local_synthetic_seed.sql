@@ -159,3 +159,37 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
 VALUES ('00000000-0000-4000-8000-000000000604', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000405', '00000000-0000-4000-8000-000000000304', '00000000-0000-4000-8000-000000000101')
 ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Linking (task 2.3). demo.supervisor may request links; demo.records (health records manager)
+-- reviews, requests and approves. Two people are needed for every link (docs/17 §5).
+-- ---------------------------------------------------------------------------
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000304', 'PATIENT_LINK_REQUEST')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
+VALUES ('00000000-0000-4000-8000-000000000305', '00000000-0000-4000-8000-000000000001', 'HEALTH_RECORDS_MANAGER', 'Health records manager',
+        'Reviews possible duplicates and approves, rejects or reverses patient record links. No clinical access.', true, 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000305', 'PATIENT_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000305', 'PATIENT_DUPLICATE_REVIEW'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000305', 'PATIENT_LINK_REQUEST'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000305', 'PATIENT_LINK_APPROVE')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (id, organization_id, username, display_name, email, status)
+VALUES ('00000000-0000-4000-8000-000000000406', '00000000-0000-4000-8000-000000000001', 'demo.records', 'Demo Health Records Manager', 'demo.records@example.invalid', 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_identities (id, organization_id, user_id, issuer, subject)
+VALUES ('00000000-0000-4000-8000-000000000506', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000406', 'http://localhost:8180/realms/gcare',
+        '00000000-0000-4000-8000-000000001007')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
+VALUES ('00000000-0000-4000-8000-000000000605', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000406', '00000000-0000-4000-8000-000000000305', '00000000-0000-4000-8000-000000000101')
+ON CONFLICT (id) DO NOTHING;

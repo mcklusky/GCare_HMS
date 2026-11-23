@@ -91,7 +91,11 @@ public final class PatientApi {
       @JsonProperty("registration_source") RegistrationSource registrationSource,
       List<IdentifierView> identifiers,
       @JsonProperty("created_at") Instant createdAt,
-      long version) {}
+      long version,
+      @JsonProperty("linked_to") LinkedPatient linkedTo) {}
+
+  /** The record a retired (LINKED) record points to. */
+  public record LinkedPatient(UUID id, @JsonProperty("patient_number") String patientNumber) {}
 
   /** Search/candidate row: enough to recognise the person, no contact or identifier values. */
   public record PatientSummary(
@@ -160,5 +164,46 @@ public final class PatientApi {
       @JsonProperty("resolved_by") UUID resolvedBy,
       @JsonProperty("resolved_at") Instant resolvedAt,
       @JsonProperty("resolution_note") String resolutionNote,
+      long version) {}
+
+  // --- links (docs/17 §5) ------------------------------------------------------------------------
+
+  /**
+   * Request to link a duplicate ("retired") record to the record that stays in use ("surviving").
+   * When it comes from the review queue, {@code flag_id} and {@code flag_version} close that item.
+   */
+  public record LinkRequest(
+      @NotNull @JsonProperty("retired_patient_id") UUID retiredPatientId,
+      @NotNull @JsonProperty("surviving_patient_id") UUID survivingPatientId,
+      @NotBlank @Size(max = 500) String reason,
+      @JsonProperty("flag_id") UUID flagId,
+      @JsonProperty("flag_version") Long flagVersion) {}
+
+  /** Approve or reject. {@code override_reason} is needed only when verified identifiers differ. */
+  public record LinkDecisionRequest(
+      long version,
+      @NotBlank @Size(max = 500) String note,
+      @Size(max = 500) @JsonProperty("override_reason") String overrideReason) {}
+
+  public record UnlinkRequest(long version, @NotBlank @Size(max = 500) String reason) {}
+
+  public record PatientLinkView(
+      UUID id,
+      String status,
+      PatientSummary retired,
+      PatientSummary surviving,
+      @JsonProperty("flag_id") UUID flagId,
+      @JsonProperty("request_reason") String requestReason,
+      @JsonProperty("requested_by") UUID requestedBy,
+      @JsonProperty("requested_at") Instant requestedAt,
+      @JsonProperty("decided_by") UUID decidedBy,
+      @JsonProperty("decided_at") Instant decidedAt,
+      @JsonProperty("decision_note") String decisionNote,
+      @JsonProperty("override_reason") String overrideReason,
+      @JsonProperty("unlinked_by") UUID unlinkedBy,
+      @JsonProperty("unlinked_at") Instant unlinkedAt,
+      @JsonProperty("unlink_reason") String unlinkReason,
+      /** Identifier types where both records hold verified but different values (pending only). */
+      @JsonProperty("identifier_conflicts") List<IdentifierType> identifierConflicts,
       long version) {}
 }

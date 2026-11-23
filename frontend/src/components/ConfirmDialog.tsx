@@ -17,6 +17,7 @@ export function ConfirmDialog({
   danger = false,
   requireReason = false,
   busy = false,
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }: {
@@ -27,12 +28,14 @@ export function ConfirmDialog({
   danger?: boolean
   requireReason?: boolean
   busy?: boolean
+  /** Extra condition, e.g. a choice inside the dialog not made yet. */
+  confirmDisabled?: boolean
   onConfirm: (reason: string | null) => void
   onCancel: () => void
 }) {
   const [reason, setReason] = useState('')
   const trimmed = reason.trim()
-  const canConfirm = !busy && (!requireReason || trimmed.length > 0)
+  const canConfirm = !busy && !confirmDisabled && (!requireReason || trimmed.length > 0)
 
   const close = () => {
     setReason('')

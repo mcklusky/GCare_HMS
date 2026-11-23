@@ -4,6 +4,8 @@ import static com.gcare.hms.shared.security.Permissions.AUDIT_READ;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_DUPLICATE_REVIEW;
+import static com.gcare.hms.shared.security.Permissions.PATIENT_LINK_APPROVE;
+import static com.gcare.hms.shared.security.Permissions.PATIENT_LINK_REQUEST;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_READ;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_REGISTER;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_UPDATE;
@@ -37,11 +39,30 @@ public enum SystemRole {
       "Searches, registers and corrects patients at assigned facilities. No clinical access.",
       Set.of(PATIENT_READ, PATIENT_REGISTER, PATIENT_UPDATE)),
 
-  /** Registration clerk plus the duplicate review queue. PROVISIONAL, like the clerk role. */
+  /**
+   * Registration clerk plus the duplicate review queue and link requests. PROVISIONAL, like the
+   * clerk role.
+   */
   REGISTRATION_SUPERVISOR(
       "Registration supervisor",
-      "Registration clerk duties plus reviewing possible duplicate patients. No clinical access.",
-      Set.of(PATIENT_READ, PATIENT_REGISTER, PATIENT_UPDATE, PATIENT_DUPLICATE_REVIEW));
+      "Registration clerk duties plus reviewing possible duplicates and requesting links. No"
+          + " clinical access.",
+      Set.of(
+          PATIENT_READ,
+          PATIENT_REGISTER,
+          PATIENT_UPDATE,
+          PATIENT_DUPLICATE_REVIEW,
+          PATIENT_LINK_REQUEST)),
+
+  /**
+   * Second person for patient identity decisions: reviews duplicates, requests and approves links
+   * (never their own request; docs/17 §5). PROVISIONAL until the permission matrix is signed off.
+   */
+  HEALTH_RECORDS_MANAGER(
+      "Health records manager",
+      "Reviews possible duplicates and approves, rejects or reverses patient record links. No"
+          + " clinical access.",
+      Set.of(PATIENT_READ, PATIENT_DUPLICATE_REVIEW, PATIENT_LINK_REQUEST, PATIENT_LINK_APPROVE));
 
   private final String displayName;
   private final String description;

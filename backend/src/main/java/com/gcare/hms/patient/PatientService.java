@@ -1,8 +1,5 @@
 package com.gcare.hms.patient;
 
-import com.gcare.hms.audit.AuditEvent;
-import com.gcare.hms.audit.AuditOutcome;
-import com.gcare.hms.audit.AuditService;
 import com.gcare.hms.organization.FacilityQueryService;
 import com.gcare.hms.organization.FacilitySummary;
 import com.gcare.hms.patient.DuplicateScorer.Band;
@@ -28,7 +25,6 @@ import com.gcare.hms.patient.PatientStore.SearchFilter;
 import com.gcare.hms.shared.security.CurrentUser;
 import com.gcare.hms.shared.security.Permissions;
 import com.gcare.hms.shared.web.ApiException;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
@@ -46,8 +42,6 @@ import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
@@ -67,7 +61,7 @@ public class PatientService {
   private final DuplicateScorer scorer;
   private final MatchingProperties matching;
   private final FacilityQueryService facilities;
-  private final AuditService audit;
+  private final PatientAudit audit;
   private final JsonMapper json;
 
   PatientService(
@@ -75,7 +69,7 @@ public class PatientService {
       DuplicateScorer scorer,
       MatchingProperties matching,
       FacilityQueryService facilities,
-      AuditService audit,
+      PatientAudit audit,
       JsonMapper json) {
     this.store = store;
     this.scorer = scorer;
@@ -167,7 +161,8 @@ public class PatientService {
             request.registrationSource(),
             null,
             user.userId(),
-            0));
+            0,
+            null));
     for (IdentifierInput in : request.identifiers()) {
       store.insertIdentifier(
           user.organizationId(),
@@ -410,7 +405,8 @@ public class PatientService {
             current.registrationSource(),
             current.createdAt(),
             current.createdBy(),
-            current.version());
+            current.version(),
+            current.linkedToId());
     if (store.update(updated, request.version()) == 0) {
       throw new ApiException.Conflict(
           "Someone else changed this patient since you opened it. Reload and try again.");
@@ -684,6 +680,13 @@ public class PatientService {
                     i.source(),
                     i.createdAt()))
             .toList();
+    PatientApi.LinkedPatient linkedTo =
+        p.linkedToId() == null
+            ? null
+            : store
+                .find(p.linkedToId())
+                .map(s -> new PatientApi.LinkedPatient(s.id(), s.patientNumber()))
+                .orElse(null);
     return new PatientDetail(
         p.id(),
         p.patientNumber(),
@@ -699,10 +702,11 @@ public class PatientService {
         p.registrationSource(),
         ids,
         p.createdAt(),
-        p.version());
+        p.version(),
+        linkedTo);
   }
 
-  private static PatientSummary summary(PatientRow p) {
+  static PatientSummary summary(PatientRow p) {
     return new PatientSummary(
         p.id(),
         p.patientNumber(),
@@ -715,40 +719,13 @@ public class PatientService {
         p.detailsIncomplete());
   }
 
-  /**
-   * Records the audit event only once the transaction has committed, so a rolled-back registration
-   * is never audited as done. Metadata never contains names or other patient values.
-   */
   private void auditAfterCommit(
       CurrentUser user,
       UUID facilityId,
       String action,
       UUID patientId,
       Map<String, String> metadata) {
-    AuditEvent event =
-        new AuditEvent(
-            user.organizationId(),
-            facilityId,
-            user.userId(),
-            action,
-            "Patient",
-            patientId != null ? patientId.toString() : null,
-            AuditOutcome.SUCCESS,
-            null,
-            Instant.now(),
-            null,
-            metadata);
-    if (TransactionSynchronizationManager.isSynchronizationActive()) {
-      TransactionSynchronizationManager.registerSynchronization(
-          new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-              audit.record(event);
-            }
-          });
-    } else {
-      audit.record(event);
-    }
+    audit.afterCommit(user, facilityId, action, patientId, metadata);
   }
 
   private static String trimToNull(String value) {

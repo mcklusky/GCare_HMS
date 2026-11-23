@@ -49,6 +49,8 @@ export interface PatientDetail extends PatientSummary {
   identifiers: Identifier[]
   created_at: string
   version: number
+  /** Set when this record is LINKED: the record in use. */
+  linked_to: { id: string; patient_number: string } | null
 }
 
 export interface DuplicateCandidate {
@@ -159,6 +161,67 @@ export const markNotDuplicate = (flag: DuplicateFlag, note: string) =>
     method: 'POST',
     body: { version: flag.version, note },
   })
+
+// --- links (docs/17 §5): link, never merge; a different person approves ------------------------
+
+export type LinkStatus = 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'UNLINKED'
+
+export interface PatientLink {
+  id: string
+  status: LinkStatus
+  retired: PatientSummary
+  surviving: PatientSummary
+  flag_id: string | null
+  request_reason: string
+  requested_by: string
+  requested_at: string
+  decided_by: string | null
+  decided_at: string | null
+  decision_note: string | null
+  override_reason: string | null
+  unlinked_by: string | null
+  unlinked_at: string | null
+  unlink_reason: string | null
+  /** Identifier types where both records hold verified but different values (pending only). */
+  identifier_conflicts: IdentifierType[]
+  version: number
+}
+
+export interface LinkRequestBody {
+  retired_patient_id: string
+  surviving_patient_id: string
+  reason: string
+  flag_id?: string
+  flag_version?: number
+}
+
+export const requestLink = (body: LinkRequestBody) =>
+  apiFetch<PatientLink>('/api/v1/patient-links', { method: 'POST', body })
+
+export const listPendingLinks = (signal?: AbortSignal) =>
+  apiFetch<Page<PatientLink>>('/api/v1/patient-links?status=REQUESTED&size=50', { signal })
+
+export const getPatientLinks = (id: string, signal?: AbortSignal) =>
+  apiFetch<PatientLink[]>(`/api/v1/patients/${encodeURIComponent(id)}/links`, { signal })
+
+export const decideLink = (link: PatientLink, decision: 'approve' | 'reject', note: string, overrideReason?: string) =>
+  apiFetch<PatientLink>(`/api/v1/patient-links/${encodeURIComponent(link.id)}/${decision}`, {
+    method: 'POST',
+    body: { version: link.version, note, override_reason: overrideReason || undefined },
+  })
+
+export const unlinkPatients = (link: PatientLink, reason: string) =>
+  apiFetch<PatientLink>(`/api/v1/patient-links/${encodeURIComponent(link.id)}/unlink`, {
+    method: 'POST',
+    body: { version: link.version, reason },
+  })
+
+export const LINK_STATUS_LABEL: Record<LinkStatus, string> = {
+  REQUESTED: 'Waiting for approval',
+  APPROVED: 'Linked',
+  REJECTED: 'Rejected',
+  UNLINKED: 'Link reversed',
+}
 
 /** Candidates from a 409 DUPLICATE_CANDIDATES response, or null for any other error. */
 export function duplicateCandidatesOf(error: unknown): DuplicateCandidate[] | null {

@@ -90,3 +90,4 @@ Changing a name, birth date, sex or identifier creates a new version with the pr
 | 2026-11-23 | Provisional defaults written at product owner's request | Engineering (Claude Code) |
 | 2026-11-23 | Reviewer cannot decide an item they raised; decisions need a note. Provisional roles: clerk (search, register, correct), supervisor (+ duplicate review) | Engineering (Claude Code), task 2.2 |
 | 2026-11-23 | Swapped names score as if in the right fields (scenario 4 was otherwise missed); cap at 79 without identifier or given-name evidence (scenario 6); hyphens become spaces | Engineering (Claude Code), found while encoding §4 as tests |
+| 2026-11-23 | Provisional role: health records manager approves links. Linking also blocked when other records already point to the duplicate (no chains). Rejecting a link leaves both records in use; reversing keeps the history | Engineering (Claude Code), task 2.3 |

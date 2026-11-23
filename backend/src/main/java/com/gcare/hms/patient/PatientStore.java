@@ -49,7 +49,8 @@ class PatientStore {
       RegistrationSource registrationSource,
       Instant createdAt,
       UUID createdBy,
-      long version) {}
+      long version,
+      UUID linkedToId) {}
 
   record IdentifierRow(
       UUID id,
@@ -532,7 +533,7 @@ class PatientStore {
     return s.isEmpty() ? null : s;
   }
 
-  private static PatientRow patientRow(ResultSet rs, int i) throws SQLException {
+  static PatientRow patientRow(ResultSet rs, int i) throws SQLException {
     return new PatientRow(
         rs.getObject("id", UUID.class),
         rs.getObject("organization_id", UUID.class),
@@ -552,7 +553,8 @@ class PatientStore {
         RegistrationSource.valueOf(rs.getString("registration_source")),
         rs.getObject("created_at", OffsetDateTime.class).toInstant(),
         rs.getObject("created_by", UUID.class),
-        rs.getLong("version"));
+        rs.getLong("version"),
+        rs.getObject("linked_to_patient_id", UUID.class));
   }
 
   private static IdentifierRow identifierRow(ResultSet rs, int i) throws SQLException {

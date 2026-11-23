@@ -48,6 +48,8 @@ export const Permission = {
   PATIENT_REGISTER: 'PATIENT_REGISTER',
   PATIENT_UPDATE: 'PATIENT_UPDATE',
   PATIENT_DUPLICATE_REVIEW: 'PATIENT_DUPLICATE_REVIEW',
+  PATIENT_LINK_REQUEST: 'PATIENT_LINK_REQUEST',
+  PATIENT_LINK_APPROVE: 'PATIENT_LINK_APPROVE',
 } as const
 
 export type PermissionCode = (typeof Permission)[keyof typeof Permission]

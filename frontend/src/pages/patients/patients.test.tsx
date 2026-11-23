@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axe from 'axe-core'
 import { describe, expect, it } from 'vitest'
-import type { DuplicateCandidate, DuplicateFlag, PatientDetail, PatientSummary } from '../../api/patients'
+import type { DuplicateCandidate, DuplicateFlag, PatientDetail, PatientLink, PatientSummary } from '../../api/patients'
 import { FACILITY_A, fakeBackend, me, renderApp } from '../../test/render'
 
 const CLERK = me({
@@ -31,6 +31,7 @@ const DETAIL: PatientDetail = {
   identifiers: [],
   created_at: '2026-11-23T08:00:00Z',
   version: 0,
+  linked_to: null,
 }
 
 const LIKELY: DuplicateCandidate = { patient: SUMMARY, score: 95, band: 'LIKELY', evidence: ['PHONE', 'BIRTH_DATE'] }
@@ -41,6 +42,7 @@ function patientPageFakes(extra = {}) {
     [`GET /api/v1/patients/${SUMMARY.id}`]: { body: DETAIL },
     [`GET /api/v1/patients/${SUMMARY.id}/history`]: { body: [] },
     [`GET /api/v1/patients/${SUMMARY.id}/possible-duplicates`]: { body: [] },
+    [`GET /api/v1/patients/${SUMMARY.id}/links`]: { body: [] },
     ...extra,
   }
 }
@@ -254,6 +256,165 @@ describe('duplicate review', () => {
     const nav = await screen.findByRole('navigation', { name: 'Main navigation' })
     expect(within(nav).getByRole('link', { name: 'Patients' })).toBeInTheDocument()
     expect(within(nav).queryByRole('link', { name: 'Duplicate review' })).not.toBeInTheDocument()
+  })
+})
+
+describe('linking duplicates', () => {
+  const OTHER: PatientSummary = { ...SUMMARY, id: 'other', patient_number: 'P1000002-4', given_names: 'Bravo' }
+  const FLAG: DuplicateFlag = {
+    id: 'f1',
+    status: 'OPEN',
+    origin: 'STAFF_REPORT',
+    score: 70,
+    reason: 'Same mother',
+    patient: SUMMARY,
+    candidate: OTHER,
+    created_by: 'u1',
+    created_at: '2026-11-23T09:00:00Z',
+    version: 3,
+  }
+  const LINK: PatientLink = {
+    id: 'l1',
+    status: 'REQUESTED',
+    retired: OTHER,
+    surviving: SUMMARY,
+    flag_id: 'f1',
+    request_reason: 'Same phone and birth date',
+    requested_by: 'u2',
+    requested_at: '2026-11-23T10:00:00Z',
+    decided_by: null,
+    decided_at: null,
+    decision_note: null,
+    override_reason: null,
+    unlinked_by: null,
+    unlinked_at: null,
+    unlink_reason: null,
+    identifier_conflicts: [],
+    version: 0,
+  }
+  const NO_FLAGS = { body: { items: [], page: 0, size: 50, total: 0 } }
+  const APPROVER = me({ permissions: ['PATIENT_READ', 'PATIENT_DUPLICATE_REVIEW', 'PATIENT_LINK_APPROVE'] })
+
+  it('requests a link from the review queue, choosing the record to keep', async () => {
+    let sent: unknown = null
+    fakeBackend({
+      'GET /api/v1/me': { body: me({ permissions: ['PATIENT_READ', 'PATIENT_DUPLICATE_REVIEW', 'PATIENT_LINK_REQUEST'] }) },
+      'GET /api/v1/patient-duplicate-flags?status=OPEN&size=50': { body: { items: [FLAG], page: 0, size: 50, total: 1 } },
+      'POST /api/v1/patient-links': (init) => {
+        sent = JSON.parse(String(init.body))
+        return { status: 201, body: LINK }
+      },
+    })
+
+    renderApp('/patients/duplicates')
+    const item = await screen.findByRole('article', { name: 'Review item P1000001-6' })
+    await userEvent.click(within(item).getByRole('button', { name: 'Same person: request link' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Request a link?' })
+    await userEvent.type(within(dialog).getByRole('textbox', { name: /Reason/ }), 'Same phone and birth date')
+    // No record chosen yet: cannot confirm.
+    expect(within(dialog).getByRole('button', { name: 'Request link' })).toBeDisabled()
+    await userEvent.click(within(dialog).getByRole('radio', { name: /P1000001-6/ }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Request link' }))
+
+    await waitFor(() =>
+      expect(sent).toEqual({
+        retired_patient_id: 'other',
+        surviving_patient_id: SUMMARY.id,
+        reason: 'Same phone and birth date',
+        flag_id: 'f1',
+        flag_version: 3,
+      }),
+    )
+    // Approving is a different permission.
+    expect(screen.queryByRole('heading', { name: 'Links waiting for approval' })).not.toBeInTheDocument()
+  })
+
+  it('approver needs an override reason when checked ID documents differ', async () => {
+    let sent: unknown = null
+    fakeBackend({
+      'GET /api/v1/me': { body: APPROVER },
+      'GET /api/v1/patient-duplicate-flags?status=OPEN&size=50': NO_FLAGS,
+      'GET /api/v1/patient-links?status=REQUESTED&size=50': {
+        body: { items: [{ ...LINK, identifier_conflicts: ['NATIONAL_ID'] }], page: 0, size: 50, total: 1 },
+      },
+      'POST /api/v1/patient-links/l1/approve': (init) => {
+        sent = JSON.parse(String(init.body))
+        return { body: { ...LINK, status: 'APPROVED', version: 1 } }
+      },
+    })
+
+    renderApp('/patients/duplicates')
+    const card = await screen.findByRole('article', { name: 'Link request P1000002-4' })
+    expect(card).toHaveTextContent('Duplicate (will be retired)')
+    expect(card).toHaveTextContent('Both records have a checked National ID')
+    await userEvent.click(within(card).getByRole('button', { name: 'Approve link' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Approve this link?' })
+    await userEvent.type(within(dialog).getByRole('textbox', { name: /^Reason/ }), 'Registry checked')
+    expect(within(dialog).getByRole('button', { name: 'Approve link' })).toBeDisabled()
+    await userEvent.type(within(dialog).getByRole('textbox', { name: /Override reason/ }), 'Old card replaced')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Approve link' }))
+
+    await waitFor(() =>
+      expect(sent).toEqual({ version: 0, note: 'Registry checked', override_reason: 'Old card replaced' }),
+    )
+  })
+
+  it('does not let the requester decide their own link', async () => {
+    fakeBackend({
+      'GET /api/v1/me': { body: APPROVER },
+      'GET /api/v1/patient-duplicate-flags?status=OPEN&size=50': NO_FLAGS,
+      'GET /api/v1/patient-links?status=REQUESTED&size=50': {
+        body: { items: [{ ...LINK, requested_by: APPROVER.id }], page: 0, size: 50, total: 1 },
+      },
+    })
+
+    renderApp('/patients/duplicates')
+    const card = await screen.findByRole('article', { name: 'Link request P1000002-4' })
+    expect(within(card).getByRole('button', { name: 'Approve link' })).toBeDisabled()
+    expect(card).toHaveTextContent('another person must decide it')
+  })
+
+  it('a retired record points to the record in use; approvers can reverse the link', async () => {
+    let sent: unknown = null
+    const approved: PatientLink = { ...LINK, status: 'APPROVED', decided_by: 'u3', decision_note: 'Checked', version: 1 }
+    fakeBackend(
+      patientPageFakes({
+        'GET /api/v1/me': { body: me({ permissions: ['PATIENT_READ', 'PATIENT_LINK_APPROVE'] }) },
+        [`GET /api/v1/patients/${SUMMARY.id}`]: {
+          body: { ...DETAIL, status: 'LINKED', linked_to: { id: 'other', patient_number: 'P1000002-4' } },
+        },
+        [`GET /api/v1/patients/${SUMMARY.id}/links`]: { body: [approved] },
+        'POST /api/v1/patient-links/l1/unlink': (init: RequestInit) => {
+          sent = JSON.parse(String(init.body))
+          return { body: { ...approved, status: 'UNLINKED', version: 2 } }
+        },
+      }),
+    )
+
+    renderApp(`/patients/${SUMMARY.id}`)
+    const notice = (await screen.findByText('This record is no longer in use')).closest('[role="status"]') as HTMLElement
+    expect(within(notice).getByRole('link', { name: 'P1000002-4' })).toHaveAttribute('href', '/patients/other')
+    await userEvent.click(await screen.findByRole('button', { name: 'Reverse link' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Reverse this link?' })
+    await userEvent.type(within(dialog).getByRole('textbox', { name: /Reason/ }), 'Twins')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Reverse link' }))
+
+    await waitFor(() => expect(sent).toEqual({ version: 1, reason: 'Twins' }))
+  })
+
+  it('review page with link requests has no automated violations', async () => {
+    fakeBackend({
+      'GET /api/v1/me': {
+        body: me({ permissions: ['PATIENT_READ', 'PATIENT_DUPLICATE_REVIEW', 'PATIENT_LINK_REQUEST', 'PATIENT_LINK_APPROVE'] }),
+      },
+      'GET /api/v1/patient-duplicate-flags?status=OPEN&size=50': { body: { items: [FLAG], page: 0, size: 50, total: 1 } },
+      'GET /api/v1/patient-links?status=REQUESTED&size=50': { body: { items: [LINK], page: 0, size: 50, total: 1 } },
+    })
+
+    const view = renderApp('/patients/duplicates')
+    await screen.findByRole('article', { name: 'Link request P1000002-4' })
+    const results = await axe.run(view.container, { rules: { 'color-contrast': { enabled: false } } })
+    expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
   })
 })
 

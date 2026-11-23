@@ -43,6 +43,7 @@ import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { BandBadge, PatientBanner } from '../../components/PatientBadges'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { LinkHistory, LinkedNotice } from './PatientLinks'
 
 /** One patient's record (FR-003, FR-004). Viewing is audited by the backend. */
 export function PatientPage() {
@@ -72,6 +73,7 @@ export function PatientPage() {
               </Alert>
             )}
             <PatientBanner patient={p} />
+            <LinkedNotice patient={p} />
             <Group>
               {hasPermission(me, Permission.PATIENT_UPDATE) && p.status === 'ACTIVE' && (
                 <Button variant="default" leftSection={<IconEdit size={16} aria-hidden />} onClick={() => setCorrecting(true)}>
@@ -80,8 +82,9 @@ export function PatientPage() {
               )}
             </Group>
             <Details patient={p} />
+            <LinkHistory patientId={p.id} />
             <History patientId={p.id} />
-            <PossibleDuplicates patientId={p.id} />
+            {p.status === 'ACTIVE' && <PossibleDuplicates patientId={p.id} />}
             {correcting && <CorrectionDialog patient={p} onClose={() => setCorrecting(false)} />}
           </Stack>
         )}

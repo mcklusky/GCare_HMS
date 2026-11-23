@@ -18,6 +18,8 @@ public final class Permissions {
   public static final String PATIENT_REGISTER = "PATIENT_REGISTER";
   public static final String PATIENT_UPDATE = "PATIENT_UPDATE";
   public static final String PATIENT_DUPLICATE_REVIEW = "PATIENT_DUPLICATE_REVIEW";
+  public static final String PATIENT_LINK_REQUEST = "PATIENT_LINK_REQUEST";
+  public static final String PATIENT_LINK_APPROVE = "PATIENT_LINK_APPROVE";
 
   public static final Set<String> ALL =
       Set.of(
@@ -29,7 +31,9 @@ public final class Permissions {
           PATIENT_READ,
           PATIENT_REGISTER,
           PATIENT_UPDATE,
-          PATIENT_DUPLICATE_REVIEW);
+          PATIENT_DUPLICATE_REVIEW,
+          PATIENT_LINK_REQUEST,
+          PATIENT_LINK_APPROVE);
 
   private Permissions() {}
 }
