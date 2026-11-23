@@ -37,3 +37,13 @@ Production realm settings (MFA requirement, password policy, lockout, session le
 by the security owner and recorded in `docs/project-record/deployment-record.md` before pilot.
 
 Never add real staff accounts or real names to this file.
+
+## Sign-in look
+
+The realm uses the `gcare` login theme (`themes/gcare/login`, mounted by `docker-compose.yml`). It extends
+Keycloak's own `keycloak.v2` theme with CSS only (no template overrides, so upgrades keep working): teal
+brand panel with an orange edge on the left, white sign-in card on the right; stacked on phones. Colours
+match the app (docs/02-UI-UX) and are contrast-checked. The realm display name sits in `displayNameHtml`.
+Keycloak only imports the realm file into a fresh container: after changing it, run
+`docker compose up -d --force-recreate keycloak` (local accounts come back from this file).
+

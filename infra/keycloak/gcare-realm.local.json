@@ -1,6 +1,8 @@
 {
   "realm": "gcare",
   "displayName": "GCare HMS (local, synthetic users)",
+  "displayNameHtml": "<strong>GCare HMS</strong><span>Hospital management system</span><small>Local environment · synthetic users only</small>",
+  "loginTheme": "gcare",
   "enabled": true,
   "sslRequired": "external",
   "registrationAllowed": false,

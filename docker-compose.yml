@@ -30,6 +30,7 @@ services:
       - "127.0.0.1:${KEYCLOAK_PORT:-8180}:8080" # bound to localhost only
     volumes:
       - ./infra/keycloak/gcare-realm.local.json:/opt/keycloak/data/import/gcare-realm.json:ro
+      - ./infra/keycloak/themes/gcare:/opt/keycloak/themes/gcare:ro # GCare sign-in look
 
   # Imaging archive for EVALUATION only (task 6.1, docs/24): Orthanc is a candidate, not a selected
   # product (OD-14). Synthetic studies only. Start with: docker compose --profile imaging up -d orthanc

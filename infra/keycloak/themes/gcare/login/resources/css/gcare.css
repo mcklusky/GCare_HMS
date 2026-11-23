@@ -1,0 +1,203 @@
+/*
+ * GCare sign-in page. Same tokens as the app (frontend/src/theme.ts, index.css): deep teal clinical-8
+ * #1d5557, primary #256a6c, warm accent edge #e07b39, near-white page. Contrast (WCAG 2.2 AA):
+ * white on #1d5557 8.4:1, #b4dcdd on #1d5557 5.7:1, white on #256a6c 6.2:1.
+ */
+:root {
+  --gcare-teal: #1d5557;
+  --gcare-primary: #256a6c;
+  --gcare-primary-hover: #1d5557;
+  --gcare-muted-on-teal: #b4dcdd;
+  --gcare-accent: #e07b39;
+  --gcare-page: #f5f7f7;
+  --gcare-border: #e1eaea;
+  --pf-v5-global--FontFamily--text: Inter, 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --pf-v5-global--FontFamily--heading: var(--pf-v5-global--FontFamily--text);
+  --pf-v5-global--primary-color--100: var(--gcare-primary);
+  --pf-v5-global--primary-color--200: var(--gcare-primary-hover);
+  --pf-v5-global--link--Color: var(--gcare-primary);
+  --pf-v5-global--link--Color--hover: var(--gcare-primary-hover);
+  --pf-v5-global--BorderRadius--sm: 8px;
+  /* PatternFly uses "active" blue for focus underlines and the card's top bar. */
+  --pf-v5-global--active-color--100: var(--gcare-primary);
+  --pf-v5-global--active-color--200: var(--gcare-primary);
+  --keycloak-card-top-color: var(--gcare-primary);
+}
+
+body#keycloak-bg {
+  background: var(--gcare-page);
+  font-family: var(--pf-v5-global--FontFamily--text);
+}
+
+/* Two columns on wide screens: brand panel left, sign-in card right. */
+.pf-v5-c-login {
+  min-height: 100vh;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(340px, 42%) 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: none;
+  align-items: stretch;
+}
+
+.pf-v5-c-login__container {
+  display: contents;
+}
+
+.pf-v5-c-login__header {
+  grid-area: auto;
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  background: var(--gcare-teal);
+  border-right: 4px solid var(--gcare-accent);
+  color: #ffffff;
+}
+
+#kc-header-wrapper {
+  display: block;
+  margin: 0;
+  max-width: 26rem;
+  color: #ffffff;
+  font-size: 1rem;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+}
+
+#kc-header-wrapper::before {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 1.5rem;
+  background: url('../img/gcare-mark.svg') no-repeat center / contain;
+}
+
+#kc-header-wrapper strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+#kc-header-wrapper span {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 1.05rem;
+  color: var(--gcare-muted-on-teal);
+}
+
+#kc-header-wrapper small {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: #f5c542;
+  color: #1a1a1a;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.pf-v5-c-login__main {
+  grid-area: auto;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: min(420px, calc(100% - 2rem));
+  min-width: 0;
+  margin: 2rem 0;
+  background: #ffffff;
+  border: 1px solid var(--gcare-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.pf-v5-c-login__main-header {
+  padding-top: 2rem;
+}
+
+#kc-page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #17262a;
+}
+
+.pf-v5-c-form-control {
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: var(--gcare-primary);
+  --pf-v5-c-form-control--focus--after--BorderBottomColor: var(--gcare-primary);
+  border-radius: 8px;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background: var(--gcare-primary);
+  border-radius: 8px;
+  font-weight: 600;
+  padding-block: 0.625rem;
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:focus {
+  background: var(--gcare-primary-hover);
+}
+
+:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 2px;
+}
+
+/* Phones and narrow windows: brand band on top, card below. */
+@media (max-width: 900px) {
+  .pf-v5-c-login {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-content: start;
+  }
+
+  .pf-v5-c-login__header {
+    grid-column: 1;
+    padding: 1.5rem;
+    border-right: 0;
+    border-bottom: 4px solid var(--gcare-accent);
+  }
+
+  #kc-header-wrapper::before {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 0.75rem;
+  }
+
+  #kc-header-wrapper strong {
+    font-size: 1.5rem;
+  }
+
+  #kc-header-wrapper small {
+    margin-top: 0.75rem;
+  }
+
+  .pf-v5-c-login__main {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: center;
+    width: calc(100% - 2rem);
+    max-width: 420px;
+    margin: 1.5rem 0;
+  }
+
+  .pf-v5-c-login__main-header,
+  .pf-v5-c-login__main-body {
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
