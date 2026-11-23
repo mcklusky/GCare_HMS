@@ -1,4 +1,4 @@
-﻿# GCare HMS — Document Set
+# GCare HMS — Document Set
 
 Implementation baseline: React + TypeScript frontend; Java + Spring Boot modular monolith; PostgreSQL; DICOM archive/PACS and diagnostic viewer integrated over approved interfaces.
 
@@ -11,6 +11,7 @@ Implementation baseline: React + TypeScript frontend; Java + Spring Boot modular
 - [06 — Development Plan](06-PLAN.md)
 - [07 — AI Coding Instructions](07-CLAUDE.md)
 - [08 — First Sprint Checklist](08-FIRST-SPRINT.md)
+- [Development Guide](DEVELOPMENT.md) (local setup, checks, data and secrets policy)
 - [16 — Requirements Traceability](16-TRACEABILITY.md)
 - [Consistency Review and Decision Register](REVIEW.md)
 
@@ -43,7 +44,7 @@ Known differences between the detailed drafts and the baseline. Baseline wins un
 
 | # | Detail draft says | Baseline says | Handling |
 |---|---|---|---|
-| 1 | `organizations` / `organization_id` | `Tenant` / `tenant_id` | Open decision OD-01 in [project-record/open-decisions.md](project-record/open-decisions.md); pick one name before the first migration |
+| 1 | `organizations` / `organization_id` | `Tenant` / `tenant_id` | Decided: `organization` / `organization_id` (ADR-009) |
 | 2 | Phase 0 = repository setup, Phase 1 = core security | Phase 0 = discovery, Phase 1 = foundation | Detail Phases 0–1 → baseline Phase 1 (see [06-PLAN.md](06-PLAN.md)) |
 | 3 | Laboratory, pharmacy, inventory, inpatient/maternity tables and endpoints; lab in Diagnostics phase | Laboratory and those modules are "Later" (ADR-005) | Do not build in the pilot; keep as future reference |
 | 4 | `PUT` for updates; `POST /patients/duplicate-check`; `/patients/merge-requests` | `PATCH /patients/{id}`; `GET /patients/{id}/possible-duplicates`; `/patients/{id}/links` | Baseline paths win; finalize per endpoint in OpenAPI at Phase 2 |

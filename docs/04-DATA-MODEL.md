@@ -1,8 +1,8 @@
-﻿# 04 — Data Model and ERD
+# 04 — Data Model and ERD
 
 Logical baseline; detailed field dictionary, retention and terminology are implementation gates. All tenant-owned rows carry tenant_id and appropriate facility scope; database constraints and server authorization enforce boundaries.
 
-> Column-level table definitions (~45 tables incl. `service_points`, `user_facility_assignments`, `next_of_kin`, `patient_merge_history`, `triage_records`, `order_items`, `payment_reversals`, file metadata), constraints, indexes and ERD deliverables: [detail/04-DATA-MODEL-DETAIL.md](detail/04-DATA-MODEL-DETAIL.md). The detail uses `organizations`/`organization_id` where this baseline uses `Tenant`/`tenant_id` — an open decision ([project-record/open-decisions.md](project-record/open-decisions.md)). Laboratory, pharmacy, inventory and inpatient tables in the detail are out of pilot scope.
+> Column-level table definitions (~45 tables incl. `service_points`, `user_facility_assignments`, `next_of_kin`, `patient_merge_history`, `triage_records`, `order_items`, `payment_reversals`, file metadata), constraints, indexes and ERD deliverables: [detail/04-DATA-MODEL-DETAIL.md](detail/04-DATA-MODEL-DETAIL.md). The detail uses `organizations`/`organization_id` where this baseline uses `Tenant`/`tenant_id`; ADR-009 settles on `organization`/`organization_id`, so read "Tenant" here as "organization". Isolation: ADR-010. Laboratory, pharmacy, inventory and inpatient tables in the detail are out of pilot scope.
 
 ## Entities
 - Tenant(id, code, name, status, country_code, timezone)

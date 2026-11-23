@@ -1,0 +1,22 @@
+/* Minimal baseline until the design system is chosen (task 1.4). Keep contrast at WCAG 2.2 AA. */
+:root {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #ffffff;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+:focus-visible {
+  outline: 3px solid #0b5fff;
+  outline-offset: 2px;
+}
