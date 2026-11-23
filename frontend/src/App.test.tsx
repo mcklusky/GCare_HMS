@@ -95,12 +95,16 @@ describe('application shell', () => {
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
     expect(within(nav).getByRole('link', { name: 'Home' })).toBeInTheDocument()
     expect(within(nav).getByRole('link', { name: 'Facilities' })).toBeInTheDocument()
-    expect(screen.getByText('Facility: Test Hospital A (synthetic)')).toBeInTheDocument()
+    const context = screen.getByRole('region', { name: 'Working context' })
+    expect(within(context).getByText('Test Hospital A (synthetic)')).toBeInTheDocument()
     expect(screen.getByRole('list', { name: 'Your permissions' })).toHaveTextContent('FACILITY_READ')
-    // Page eyebrow names the section; the month calendar marks exactly one day as today.
-    expect(screen.getAllByText('GCare HMS').length).toBeGreaterThan(0)
-    const calendar = screen.getByRole('table')
-    expect(calendar.querySelectorAll('[aria-current="date"]')).toHaveLength(1)
+    // Ctrl+K opens the jump-to palette; typing filters pages the role allows.
+    await userEvent.keyboard('{Control>}k{/Control}')
+    const jump = await screen.findByRole('combobox', { name: 'Jump to a page or patient number' })
+    await userEvent.type(jump, 'facil')
+    expect(screen.getByRole('option', { name: /Facilities/ })).toHaveAttribute('aria-selected', 'true')
+    await userEvent.keyboard('{Enter}')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Facilities' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main')
   })
 
@@ -132,7 +136,9 @@ describe('application shell', () => {
     renderApp()
 
     expect(await screen.findByText(/No roles are assigned to your account yet/)).toBeInTheDocument()
-    expect(screen.getByText('Facility: No facility assigned')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('region', { name: 'Working context' })).getByText('No facility assigned'),
+    ).toBeInTheDocument()
   })
 
   it('switches the working facility', async () => {
@@ -145,7 +151,9 @@ describe('application shell', () => {
     if (!picker) throw new Error('facility picker input not found')
     await userEvent.click(picker)
     await userEvent.click(await screen.findByRole('option', { name: 'Test Clinic B (synthetic)' }))
-    expect(screen.getByText('Facility: Test Clinic B (synthetic)')).toBeInTheDocument()
+    expect(
+      await within(screen.getByRole('region', { name: 'Working context' })).findByText('Test Clinic B (synthetic)'),
+    ).toBeInTheDocument()
   })
 
   it('shows a not-found page for unknown paths', async () => {

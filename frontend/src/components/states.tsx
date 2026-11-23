@@ -3,7 +3,6 @@ import { IconAlertTriangle, IconInbox, IconLock, IconRefresh } from '@tabler/ico
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { ApiRequestError } from '../api/client'
-import { usePageTrail } from '../shell/pageTrail'
 
 /**
  * Standard list/page states (02-UI-UX: every list has loading, empty, error, permission-denied
@@ -119,24 +118,22 @@ export function PageHeader({
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
-  /** Small label above the title; defaults to the page's navigation section. */
+  /** Optional small label above the title (the breadcrumb in the header already names the section). */
   eyebrow?: ReactNode
 }) {
-  const trail = usePageTrail()
-  const label = eyebrow ?? (trail && (trail.section === 'Overview' ? 'GCare HMS' : trail.section))
   return (
-    <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm" mb={4}>
+    <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm" mb={2}>
       <Stack gap={2}>
-        {label && (
-          <Text className="gcare-eyebrow" size="xs" fw={700}>
-            {label}
+        {eyebrow && (
+          <Text size="xs" fw={600} c="dimmed">
+            {eyebrow}
           </Text>
         )}
         <Title order={1} id="page-title" tabIndex={-1}>
           {title}
         </Title>
         {description && (
-          <Text size="sm" c="dimmed" maw={760}>
+          <Text size="sm" c="dimmed" maw={820}>
             {description}
           </Text>
         )}
@@ -167,7 +164,7 @@ export function StatCard({
     <Card withBorder padding="sm">
       <Group wrap="nowrap" gap="sm" align="center">
         {icon && (
-          <ThemeIcon size={40} radius="md" variant="light" color={tone} aria-hidden>
+          <ThemeIcon size={32} radius="md" variant="light" color={tone} aria-hidden>
             {icon}
           </ThemeIcon>
         )}
@@ -175,7 +172,7 @@ export function StatCard({
           <Text size="xs" c="dimmed" fw={500} truncate>
             {label}
           </Text>
-          <Text className="gcare-stat-value" fz={22} fw={700}>
+          <Text className="gcare-stat-value" fz={20} fw={650}>
             {value}
           </Text>
           {hint && (
