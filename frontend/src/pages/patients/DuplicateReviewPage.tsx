@@ -17,6 +17,7 @@ import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
 import { PendingLinks, RequestLinkDialog } from './PatientLinks'
+import { formatDateTime } from '../../components/time'
 
 const ORIGIN_LABEL: Record<DuplicateFlag['origin'], string> = {
   REGISTERED_DESPITE_MATCH: 'Registered despite a likely duplicate',
@@ -56,13 +57,18 @@ export function DuplicateReviewPage() {
         {(page) => (
           <Stack>
             {page.items.map((flag) => (
-              <Card key={flag.id} withBorder component="article" aria-label={`Review item ${flag.patient.patient_number}`}>
+              <Card
+                key={flag.id}
+                withBorder
+                component="article"
+                aria-label={`Review item ${flag.patient.patient_number}`}
+              >
                 <Stack gap="sm">
                   <Group gap="xs">
                     <Badge variant="light">{ORIGIN_LABEL[flag.origin]}</Badge>
                     <Text size="sm">Match score {flag.score}</Text>
                     <Text size="sm" c="dimmed">
-                      Raised {new Date(flag.created_at).toLocaleString()}
+                      Raised {formatDateTime(flag.created_at)}
                     </Text>
                   </Group>
                   <Text size="sm">Reason given: {flag.reason}</Text>

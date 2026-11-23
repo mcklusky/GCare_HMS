@@ -237,11 +237,15 @@ public class RadiologyReportService {
     if (!StringUtils.hasText(r.impression())) {
       throw new ApiException.Invalid("impression", "is required to sign");
     }
-    if (r.critical()) {
+    boolean amendsCritical = amendsCriticalResult(r);
+    if (r.critical() || amendsCritical) {
       if (request.communication() == null) {
         throw new ApiException.Invalid(
             "communication",
-            "A critical result needs the documented direct contact: who was told, how and when");
+            r.critical()
+                ? "A critical result needs the documented direct contact: who was told, how and when"
+                : "This amends a report with a critical result: document whom you told about the"
+                    + " change, how and when");
       }
       if (request
           .communication()
@@ -257,26 +261,40 @@ public class RadiologyReportService {
             "communication.communicated_at", "is not a plausible date; check the year");
       }
     } else if (request.communication() != null) {
-      throw new ApiException.Invalid("communication", "only applies to a report marked critical");
+      throw new ApiException.Invalid(
+          "communication",
+          "only applies to a report marked critical or amending a critical result");
     }
     if (store.sign(reportId, request.version()) == 0) {
       throw new ApiException.Conflict("This draft was changed. Reload it.");
     }
-    if (r.critical()) {
+    if (r.critical() || amendsCritical) {
+      String kind = r.critical() ? "CRITICAL" : "CHANGED";
       store.insertCritical(
           reportId,
           user.organizationId(),
           r.facilityId(),
           r.orderId(),
           user.userId(),
-          request.communication());
+          request.communication(),
+          kind);
       audit(
           user,
           r.facilityId(),
           "CRITICAL_RESULT_FLAGGED",
           "RadiologyReport",
           reportId,
-          Map.of("method", request.communication().method().name()));
+          Map.of("method", request.communication().method().name(), "kind", kind));
+    }
+    if (r.amendsReportId() != null && store.supersede(r.amendsReportId(), reportId) == 1) {
+      // The open result of the amended report is replaced: clinicians acknowledge the latest one.
+      audit(
+          user,
+          r.facilityId(),
+          "CRITICAL_RESULT_SUPERSEDED",
+          "RadiologyReport",
+          r.amendsReportId(),
+          Map.of("by_report", reportId.toString()));
     }
     audit(
         user,
@@ -364,6 +382,10 @@ public class RadiologyReportService {
       throw new ApiException.InvalidTransition(
           "Already acknowledged by " + c.acknowledgedBy().displayName());
     }
+    if (c.supersededAt() != null) {
+      throw new ApiException.InvalidTransition(
+          "The report was amended; acknowledge the amended report's result instead");
+    }
     String note = StringUtils.hasText(request.note()) ? request.note().trim() : null;
     if (store.acknowledge(reportId, request.version(), user.userId(), note) == 0) {
       throw new ApiException.Conflict("This critical result was changed. Reload it.");
@@ -435,8 +457,7 @@ public class RadiologyReportService {
   }
 
   private ReportView view(ReportRow r, OrderRow o) {
-    CriticalView c =
-        r.critical() ? store.critical(r.id()).map(this::criticalView).orElse(null) : null;
+    CriticalView c = store.critical(r.id()).map(this::criticalView).orElse(null);
     return new ReportView(
         r.id(),
         r.orderId(),
@@ -453,7 +474,13 @@ public class RadiologyReportService {
         r.amendsReportId(),
         r.amendmentReason(),
         c,
+        r.status() == ReportStatus.DRAFT && (r.critical() || amendsCriticalResult(r)),
         r.version());
+  }
+
+  /** True when this report amends one that carried a critical (or changed) result. */
+  private boolean amendsCriticalResult(ReportRow r) {
+    return r.amendsReportId() != null && store.critical(r.amendsReportId()).isPresent();
   }
 
   private CriticalView criticalView(CriticalRow c) {
@@ -475,6 +502,9 @@ public class RadiologyReportService {
         c.acknowledgedBy(),
         c.acknowledgedAt(),
         c.acknowledgementNote(),
+        c.kind(),
+        c.supersededBy(),
+        c.supersededAt(),
         c.version());
   }
 

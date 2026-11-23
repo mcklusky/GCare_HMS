@@ -39,6 +39,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /**
  * Linking duplicate records (docs/17 §5, PROVISIONAL). Links, never merges: the duplicate keeps
@@ -157,7 +158,7 @@ export function PendingLinks() {
                         {LINK_STATUS_LABEL[link.status]}
                       </Badge>
                       <Text size="sm" c="dimmed">
-                        Requested {new Date(link.requested_at).toLocaleString()}
+                        Requested {formatDateTime(link.requested_at)}
                       </Text>
                     </Group>
                     <Text size="sm">Reason given: {link.request_reason}</Text>

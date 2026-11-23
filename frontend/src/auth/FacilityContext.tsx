@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Facility } from '../api/types'
+import { setDisplayZone } from '../components/time'
 import { FacilityCtx, type FacilityContextValue } from './facilityContextValue'
 
 /**
@@ -22,6 +23,8 @@ export function FacilityProvider({ facilities, children }: { facilities: Facilit
       },
     }
   }, [facilities, selectedId])
+  // Times on every screen are shown and entered in this facility's zone (components/time.ts).
+  setDisplayZone(value.current?.timezone)
 
   return <FacilityCtx.Provider value={value}>{children}</FacilityCtx.Provider>
 }

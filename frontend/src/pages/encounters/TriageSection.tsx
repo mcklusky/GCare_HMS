@@ -31,6 +31,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /**
  * Triage observations (FR-007). Units are fixed. No clinical thresholds live in the UI: urgency
@@ -206,7 +207,7 @@ function ObservationTable({
             return (
               <Table.Tr key={o.id}>
                 <Table.Td>
-                  {new Date(o.recorded_at).toLocaleString()}
+                  {formatDateTime(o.recorded_at)}
                   <Text size="xs">{o.recorded_by.display_name}</Text>
                 </Table.Td>
                 <Table.Td td={error ? 'line-through' : undefined}>

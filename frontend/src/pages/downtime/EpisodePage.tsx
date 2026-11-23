@@ -48,6 +48,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime, zoneNote } from '../../components/time'
 
 const TRIAGE_FIELDS: [string, string][] = [
   ['temperature_c', 'Temperature (°C)'],
@@ -88,8 +89,8 @@ export function EpisodePage() {
                 {EPISODE_STATUS_LABEL[e.status]}
               </Badge>
               <Text size="sm">
-                {new Date(e.started_at).toLocaleString()} –{' '}
-                {e.ended_at ? new Date(e.ended_at).toLocaleString() : 'ongoing'} · {e.affected_areas} · {e.reason}
+                {formatDateTime(e.started_at)} – {e.ended_at ? formatDateTime(e.ended_at) : 'ongoing'} ·{' '}
+                {e.affected_areas} · {e.reason}
               </Text>
             </Group>
             {e.closing_note && <Text size="sm">Closed: {e.closing_note}</Text>}
@@ -128,7 +129,7 @@ export function EpisodePage() {
                       </Table.Td>
                       <Table.Td>{formTypeLabel(x.form_type)}</Table.Td>
                       <Table.Td>{x.registration_form_label ?? '—'}</Table.Td>
-                      <Table.Td>{new Date(x.occurred_at).toLocaleString()}</Table.Td>
+                      <Table.Td>{formatDateTime(x.occurred_at)}</Table.Td>
                       <Table.Td>{ENTRY_STATUS_LABEL[x.status]}</Table.Td>
                       <Table.Td>{x.entered_by.display_name}</Table.Td>
                     </Table.Tr>
@@ -169,6 +170,7 @@ function EpisodeActions({ episode }: { episode: Episode }) {
         <Group align="end">
           <TextInput
             type="datetime-local"
+            description={zoneNote()}
             label="System back at"
             value={end}
             onChange={(e) => setEnd(e.currentTarget.value)}
@@ -338,6 +340,7 @@ function KeyForm({ episode }: { episode: Episode }) {
           )}
           <TextInput
             type="datetime-local"
+            description={zoneNote()}
             label="Time on the paper"
             required
             value={at}
@@ -527,7 +530,7 @@ function EntryPanel({ id, entries }: { id: string; entries: Entry[] }) {
               {x.form_label} · {formTypeLabel(x.form_type)} · {ENTRY_STATUS_LABEL[x.status]}
             </Title>
             <Text size="sm">
-              Paper time {new Date(x.occurred_at).toLocaleString()}
+              Paper time {formatDateTime(x.occurred_at)}
               {x.registration_form_label && ` · patient's registration form ${x.registration_form_label}`}
             </Text>
             {x.data === null && (
@@ -596,7 +599,7 @@ function EntryPanel({ id, entries }: { id: string; entries: Entry[] }) {
               <Table.Tbody>
                 {(x.events ?? []).map((ev, i) => (
                   <Table.Tr key={i}>
-                    <Table.Td>{new Date(ev.occurred_at).toLocaleString()}</Table.Td>
+                    <Table.Td>{formatDateTime(ev.occurred_at)}</Table.Td>
                     <Table.Td>{ev.event_type.replaceAll('_', ' ').toLowerCase()}</Table.Td>
                     <Table.Td>{ev.by.display_name}</Table.Td>
                     <Table.Td>{ev.note ?? ''}</Table.Td>
@@ -761,7 +764,7 @@ function ProposeForm({ entry, entries, onDone }: { entry: Entry; entries: Entry[
           data={[
             ...(openVisits.data?.items ?? []).map((v) => ({
               value: v.id,
-              label: `Use open visit: ${v.department.name}, arrived ${new Date(v.arrived_at).toLocaleString()}`,
+              label: `Use open visit: ${v.department.name}, arrived ${formatDateTime(v.arrived_at)}`,
             })),
           ]}
           placeholder="Open a new visit"

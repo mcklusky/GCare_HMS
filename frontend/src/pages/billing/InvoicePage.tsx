@@ -39,6 +39,7 @@ import { PatientBanner } from '../../components/PatientBadges'
 import { ErrorState, PageTitle, QueryState } from '../../components/states'
 import { AdjustmentsSection } from './AdjustmentsSection'
 import { PaymentsSection } from './PaymentsSection'
+import { formatDateTime } from '../../components/time'
 
 type Pending = { kind: 'issue' } | { kind: 'discard' } | { kind: 'void' } | { kind: 'remove'; line: InvoiceLine }
 
@@ -107,10 +108,10 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
       </Group>
       <PatientBanner patient={invoice.patient} />
       <Text size="sm">
-        Visit: {invoice.encounter.department_name}, arrived {new Date(invoice.encounter.arrived_at).toLocaleString()}.
-        Currency: <strong>{invoice.currency}</strong>.
+        Visit: {invoice.encounter.department_name}, arrived {formatDateTime(invoice.encounter.arrived_at)}. Currency:{' '}
+        <strong>{invoice.currency}</strong>.
         {invoice.issued_at &&
-          ` Issued ${new Date(invoice.issued_at).toLocaleString()} by ${invoice.issued_by?.display_name ?? ''}.`}
+          ` Issued ${formatDateTime(invoice.issued_at)} by ${invoice.issued_by?.display_name ?? ''}.`}
       </Text>
       {invoice.replaces_invoice_id && (
         <Text size="sm">

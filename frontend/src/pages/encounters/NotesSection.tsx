@@ -16,6 +16,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /**
  * Clinical notes of a visit (FR-008). Drafts are private to their author. Signing is final: a
@@ -107,7 +108,7 @@ function SignedNote({ note, original, onAmend }: { note: Note; original?: Note; 
     <Card withBorder padding="sm" component="article" aria-label={`Note by ${note.author.display_name}`}>
       <Group justify="space-between">
         <Text size="sm" fw={600}>
-          {note.author.display_name}, signed {new Date(note.signed_at!).toLocaleString()}
+          {note.author.display_name}, signed {formatDateTime(note.signed_at!)}
         </Text>
         <Group gap="xs">
           {note.amended_by.length > 0 && (
@@ -125,10 +126,8 @@ function SignedNote({ note, original, onAmend }: { note: Note; original?: Note; 
       {note.amends_note_id && (
         <Alert color="orange" variant="light" mt="xs" p="xs">
           Amendment of the note
-          {original
-            ? ` by ${original.author.display_name}, signed ${new Date(original.signed_at!).toLocaleString()}`
-            : ''}
-          . Reason: {note.amendment_reason}
+          {original ? ` by ${original.author.display_name}, signed ${formatDateTime(original.signed_at!)}` : ''}.
+          Reason: {note.amendment_reason}
         </Alert>
       )}
       <Stack gap={4} mt="xs">

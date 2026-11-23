@@ -36,6 +36,11 @@ Requirements: FR-012 (image viewing), FR-013 (radiology reporting). Code: `backe
 - Reading a visit's or patient's imaging results is audited against that visit or patient.
 - A contact time with an implausible year is refused (400), and a draft on an order cancelled after the examination cannot be signed.
 
+### Amending a critical report (decided 2026-11-23, PROVISIONAL)
+Following closed-loop critical-result practice (an amended result that may change care is communicated directly again and acknowledged, and the earlier alert is not left open by itself):
+- Signing an amendment of a report that carried a critical result **always needs a documented direct contact**, even if the amendment is no longer critical. It is then tracked as a **changed critical result** to be acknowledged like a critical one.
+- When the amendment is signed, the earlier result, if not yet acknowledged, is **replaced**: it leaves the open list and cannot be acknowledged; clinicians acknowledge the latest. Replacement and acknowledgement are each recorded once (database trigger, V20).
+
 ## Not built yet
 
 - Time limits, escalation and paging for unacknowledged critical results (clinical governance first).
@@ -48,7 +53,7 @@ Requirements: FR-012 (image viewing), FR-013 (radiology reporting). Code: `backe
 2. Which findings count as critical (a facility list), and must the receiving clinician read back?
 3. Is a printable/signed PDF report needed for patients or referrers?
 4. Should a second radiologist review (double-read) any modalities?
-5. **Amending a critical report:** today an amendment that stays critical needs a new documented contact and creates a second critical result to acknowledge; an amendment that removes "critical" leaves the original's open result open until acknowledged. Is that the wanted behaviour, or should an amendment supersede the open result? (Found in the 2026-11-23 review; not changed without a clinical decision.)
+5. ~~Amending a critical report~~: decided 2026-11-23 (provisional, below); radiology leadership to confirm at the Phase 6 exit.
 
 ## Change log
 | Date | Change | By |

@@ -9,6 +9,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 const STEP_COLOR = { ORDERED: 'gray', ARRIVED: 'blue', EXAMINED: 'orange', IMAGES_AVAILABLE: 'green', CANCELLED: 'red' }
 
@@ -92,7 +93,7 @@ export function ImagingWorklistPage() {
                         )}
                         {i.indication && <Text size="xs">{i.indication}</Text>}
                       </Table.Td>
-                      <Table.Td>{new Date(i.requested_at).toLocaleString()}</Table.Td>
+                      <Table.Td>{formatDateTime(i.requested_at)}</Table.Td>
                       <Table.Td>
                         <Badge variant="light" color={STEP_COLOR[i.step]}>
                           {STEP_LABEL[i.step]}

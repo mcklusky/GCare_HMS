@@ -30,6 +30,7 @@ import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 const FILTERS: Record<string, InvoiceStatus[]> = { open: ['DRAFT', 'ISSUED'], void: ['VOID'] }
 
@@ -91,7 +92,7 @@ export function InvoicesPage() {
                         <Text size="xs">{v.patient.patient_number}</Text>
                       </Table.Td>
                       <Table.Td>{v.department_name}</Table.Td>
-                      <Table.Td>{new Date(v.arrived_at).toLocaleString()}</Table.Td>
+                      <Table.Td>{formatDateTime(v.arrived_at)}</Table.Td>
                       <Table.Td>
                         <Button
                           size="xs"
@@ -160,7 +161,7 @@ export function InvoicesPage() {
                       </Badge>
                     </Table.Td>
                     <Table.Td>{formatMoney(i.total, i.currency)}</Table.Td>
-                    <Table.Td>{new Date(i.created_at).toLocaleString()}</Table.Td>
+                    <Table.Td>{formatDateTime(i.created_at)}</Table.Td>
                   </Table.Tr>
                 ))}
               </Table.Tbody>

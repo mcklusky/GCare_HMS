@@ -46,6 +46,7 @@ import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/
 import { StartVisitDialog } from '../encounters/StartVisitDialog'
 import { PatientChart } from './PatientChart'
 import { LinkHistory, LinkedNotice } from './PatientLinks'
+import { formatDateTime } from '../../components/time'
 
 /** One patient's record (FR-003, FR-004). Viewing is audited by the backend. */
 export function PatientPage() {
@@ -71,7 +72,13 @@ export function PatientPage() {
           <Stack>
             <PageTitle>{displayName(p)}</PageTitle>
             {registeredNumber && (
-              <Alert color="teal" variant="light" icon={<IconCircleCheck aria-hidden />} role="status" title="Registered">
+              <Alert
+                color="teal"
+                variant="light"
+                icon={<IconCircleCheck aria-hidden />}
+                role="status"
+                title="Registered"
+              >
                 Patient number <strong>{registeredNumber}</strong>. Write it on the patient’s card.
               </Alert>
             )}
@@ -79,7 +86,11 @@ export function PatientPage() {
             <LinkedNotice patient={p} />
             <Group>
               {hasPermission(me, Permission.PATIENT_UPDATE) && p.status === 'ACTIVE' && (
-                <Button variant="default" leftSection={<IconEdit size={16} aria-hidden />} onClick={() => setCorrecting(true)}>
+                <Button
+                  variant="default"
+                  leftSection={<IconEdit size={16} aria-hidden />}
+                  onClick={() => setCorrecting(true)}
+                >
                   Correct details
                 </Button>
               )}
@@ -112,7 +123,7 @@ function Details({ patient: p }: { patient: PatientDetail }) {
         </Title>
         <Text>Phone: {p.phone ?? 'Not recorded'}</Text>
         <Text>How the patient arrived: {SOURCE_LABEL[p.registration_source]}</Text>
-        <Text>Registered: {new Date(p.created_at).toLocaleString()}</Text>
+        <Text>Registered: {formatDateTime(p.created_at)}</Text>
       </Card>
       <Card withBorder>
         <Title order={2} size="h4" mb="xs">
@@ -172,7 +183,7 @@ function History({ patientId }: { patientId: string }) {
             {list.map((c) => (
               <Stack key={c.id} gap={2}>
                 <Text size="sm" fw={600}>
-                  {new Date(c.changed_at).toLocaleString()}. Reason: {c.reason}
+                  {formatDateTime(c.changed_at)}. Reason: {c.reason}
                 </Text>
                 {Object.entries(c.changes).map(([field, change]) => (
                   <Text size="sm" key={field}>
@@ -353,7 +364,11 @@ function CorrectionDialog({ patient: p, onClose }: { patient: PatientDetail; onC
           <Button variant="default" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => save.mutate()} disabled={!changed || reason.trim() === '' || stale} loading={save.isPending}>
+          <Button
+            onClick={() => save.mutate()}
+            disabled={!changed || reason.trim() === '' || stale}
+            loading={save.isPending}
+          >
             Save correction
           </Button>
         </Group>

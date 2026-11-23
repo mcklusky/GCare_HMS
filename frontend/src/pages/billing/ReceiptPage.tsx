@@ -8,6 +8,7 @@ import { getRefundReceipt } from '../../api/adjustments'
 import { getReceipt } from '../../api/payments'
 import { logoUrl } from '../../api/settings'
 import { QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /**
  * Printable receipt (task 4.3). The layout is basic and PROVISIONAL until the finance owner
@@ -49,7 +50,7 @@ export function ReceiptPage({ kind = 'payment' }: { kind?: 'payment' | 'refund' 
             {r.branding.registration_number && <Text size="sm">Reg. no. {r.branding.registration_number}</Text>}
             <Table aria-label="Receipt" mt="sm">
               <Table.Tbody>
-                <Row label="Date">{new Date(r.received_at).toLocaleString()}</Row>
+                <Row label="Date">{formatDateTime(r.received_at)}</Row>
                 <Row label="Patient">
                   {displayName(r.patient)} ({r.patient.patient_number})
                 </Row>

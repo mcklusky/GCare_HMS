@@ -74,6 +74,13 @@ public final class RadiologyReportApi {
       @JsonProperty("acknowledged_by") UserRef acknowledgedBy,
       @JsonProperty("acknowledged_at") Instant acknowledgedAt,
       @JsonProperty("acknowledgement_note") String acknowledgementNote,
+      /**
+       * CRITICAL, or CHANGED: an amendment (no longer critical) of a report with a critical result.
+       */
+      String kind,
+      /** The amendment that replaced this open result; the clinician acknowledges that one. */
+      @JsonProperty("superseded_by") UUID supersededBy,
+      @JsonProperty("superseded_at") Instant supersededAt,
       long version) {}
 
   public record ReportView(
@@ -92,6 +99,8 @@ public final class RadiologyReportApi {
       @JsonProperty("amends_report_id") UUID amendsReportId,
       @JsonProperty("amendment_reason") String amendmentReason,
       @JsonProperty("critical_result") CriticalView criticalResult,
+      /** Signing needs a documented direct contact: critical, or amending a critical result. */
+      @JsonProperty("communication_required") boolean communicationRequired,
       long version) {}
 
   /** An imaging order as clinicians see it: step, studies (viewer links) and the signed report. */

@@ -31,6 +31,7 @@ import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime, zoneNote } from '../../components/time'
 
 /** Downtime episodes and numbered paper forms (task 5.3; docs/22). */
 export function DowntimePage() {
@@ -72,8 +73,7 @@ export function DowntimePage() {
                         </Anchor>
                       </Table.Td>
                       <Table.Td>
-                        {new Date(e.started_at).toLocaleString()} –{' '}
-                        {e.ended_at ? new Date(e.ended_at).toLocaleString() : 'ongoing'}
+                        {formatDateTime(e.started_at)} – {e.ended_at ? formatDateTime(e.ended_at) : 'ongoing'}
                       </Table.Td>
                       <Table.Td>{e.affected_areas}</Table.Td>
                       <Table.Td>
@@ -143,12 +143,19 @@ function DeclareForm({ facilityId }: { facilityId: string }) {
         <Group grow>
           <TextInput
             type="datetime-local"
+            description={zoneNote()}
             label="Started"
             required
             value={start}
             onChange={(e) => setStart(e.currentTarget.value)}
           />
-          <TextInput type="datetime-local" label="Ended" value={end} onChange={(e) => setEnd(e.currentTarget.value)} />
+          <TextInput
+            type="datetime-local"
+            description={zoneNote()}
+            label="Ended"
+            value={end}
+            onChange={(e) => setEnd(e.currentTarget.value)}
+          />
         </Group>
         <TextInput
           label="Affected areas"
@@ -239,7 +246,7 @@ function PrintForms({ facilityId }: { facilityId: string }) {
                       {b.first_label} – {b.last_label}
                     </Table.Td>
                     <Table.Td>
-                      {new Date(b.issued_at).toLocaleString()} by {b.issued_by.display_name}
+                      {formatDateTime(b.issued_at)} by {b.issued_by.display_name}
                     </Table.Td>
                     <Table.Td>
                       <Anchor component={Link} to={`/downtime/forms/${b.id}/print`}>

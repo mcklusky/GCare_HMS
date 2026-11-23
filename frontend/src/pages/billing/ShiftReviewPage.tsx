@@ -8,6 +8,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
 import { ShiftTotals } from './ShiftPage'
+import { formatDateTime } from '../../components/time'
 
 /** Second-person sign-off of closed cashier shifts (task 4.3). You cannot sign off your own. */
 export function ShiftReviewPage() {
@@ -49,8 +50,8 @@ export function ShiftReviewPage() {
               <Card withBorder key={s.id}>
                 <Group justify="space-between" mb="xs">
                   <Title order={2} size="h4">
-                    {s.cashier.display_name}: {new Date(s.opened_at).toLocaleString()} to{' '}
-                    {s.closed_at && new Date(s.closed_at).toLocaleString()}
+                    {s.cashier.display_name}: {formatDateTime(s.opened_at)} to{' '}
+                    {s.closed_at && formatDateTime(s.closed_at)}
                   </Title>
                   {s.cashier.id === me.id ? (
                     <Text size="xs">Your shift: another person signs it off.</Text>

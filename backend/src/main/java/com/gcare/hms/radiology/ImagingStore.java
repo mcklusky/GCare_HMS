@@ -392,11 +392,15 @@ class ImagingStore {
         > 0;
   }
 
+  /**
+   * The actual clock time, so events written in one transaction keep their order in the history.
+   */
   void insertEvent(UUID org, UUID study, String type, UUID order, String note, UUID by) {
     jdbc.sql(
             """
-            INSERT INTO imaging_study_events (id, organization_id, study_id, event_type, order_id, note, by_user)
-            VALUES (:id, :org, :s, :t, :o, :note, :by)
+            INSERT INTO imaging_study_events (id, organization_id, study_id, event_type, order_id, note, by_user,
+                occurred_at)
+            VALUES (:id, :org, :s, :t, :o, :note, :by, clock_timestamp())
             """)
         .param("id", UUID.randomUUID())
         .param("org", org)

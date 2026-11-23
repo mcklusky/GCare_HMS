@@ -5,6 +5,7 @@ import {
   acknowledgeCritical,
   getEncounterImaging,
   getPatientImaging,
+  CRITICAL_KIND_LABEL,
   METHOD_LABEL,
   type CriticalResult,
   type ImagingResult,
@@ -16,6 +17,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /**
  * Imaging results on a visit or in the patient chart (task 6.4; docs/26): signed reports, critical
@@ -121,19 +123,20 @@ function Result({
       {crit && (
         <Alert
           color="red"
-          title={crit.acknowledged_at ? 'Critical result acknowledged' : 'Critical result: not yet acknowledged'}
+          title={`${CRITICAL_KIND_LABEL[crit.kind]}: ${crit.acknowledged_at ? 'acknowledged' : crit.superseded_at ? 'replaced by the amendment' : 'not yet acknowledged'}`}
         >
           <Text size="sm">
             Told to {crit.communicated_to} by {METHOD_LABEL[crit.communication_method].toLowerCase()} at{' '}
-            {new Date(crit.communicated_at).toLocaleString()} ({crit.flagged_by.display_name}).
+            {formatDateTime(crit.communicated_at)} ({crit.flagged_by.display_name}).
           </Text>
           {crit.acknowledged_at ? (
             <Text size="sm">
-              Acknowledged by {crit.acknowledged_by?.display_name} at {new Date(crit.acknowledged_at).toLocaleString()}
+              Acknowledged by {crit.acknowledged_by?.display_name} at {formatDateTime(crit.acknowledged_at)}
               {crit.acknowledgement_note ? `: ${crit.acknowledgement_note}` : ''}
             </Text>
           ) : (
-            canAck && (
+            canAck &&
+            !crit.superseded_at && (
               <Button size="xs" mt="xs" color="red" onClick={() => onAck(crit)}>
                 Acknowledge
               </Button>
@@ -163,7 +166,7 @@ export function ReportText({ report }: { report: Report }) {
     <Stack gap={2} pl="sm" style={{ borderLeft: '3px solid var(--mantine-color-gray-4)' }}>
       <Text size="xs" c="dimmed">
         Signed by {report.author.display_name}
-        {report.signed_at && ` at ${new Date(report.signed_at).toLocaleString()}`}
+        {report.signed_at && ` at ${formatDateTime(report.signed_at)}`}
         {report.amendment_reason && ` · amendment: ${report.amendment_reason}`}
       </Text>
       {(

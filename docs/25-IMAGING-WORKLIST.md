@@ -31,7 +31,7 @@ Requirements: FR-010 (imaging worklist), FR-011 (DICOM receive and link, partial
 - Two archive checks at once cannot link two studies to one order automatically (the order is locked).
 - The worklist filters by facility and hides finished orders in the database query, so old work never pushes new orders out of the list. An order the department already started or completed from the orders worklist still moves through arrived and examined here.
 - The scheduled check pages through the archive's answers (it used to read only the first 200 studies) and never holds database locks while the archive answers. Answers over 5 MiB are refused while reading.
-- **Organization binding:** when `gcare.imaging.archive.organization-id` is set, users of other organizations cannot query the archive. **Set it in every deployment** (the scheduled check needs it anyway); without it the HMS logs a warning at start-up. Viewer link templates must be http(s).
+- **Organization binding:** when `gcare.imaging.archive.organization-id` is set, users of other organizations cannot query the archive. It is **required**: since the follow-up decision of 2026-11-23 the HMS refuses to start when an archive URL is set without it (fail closed). Only automated tests opt out with `gcare.imaging.archive.allow-any-organization=true`. Viewer link templates must be http(s).
 - Send back, history and the queue's proposals respect the facility scope.
 
 ## 3. Provisional roles

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { getReportingList } from '../../api/radiologyReports'
 import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /** Examined imaging orders waiting for a report (task 6.4; docs/26). */
 export function ReportingPage() {
@@ -50,7 +51,7 @@ export function ReportingPage() {
                         )}
                         {i.indication && <Text size="xs">{i.indication}</Text>}
                       </Table.Td>
-                      <Table.Td>{new Date(i.examined_at).toLocaleString()}</Table.Td>
+                      <Table.Td>{formatDateTime(i.examined_at)}</Table.Td>
                       <Table.Td>
                         {i.draft_id
                           ? `Draft by ${i.draft_author?.display_name}`

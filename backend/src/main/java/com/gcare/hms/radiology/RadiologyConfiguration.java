@@ -18,18 +18,22 @@ class RadiologyConfiguration {
   ImagingArchive imagingArchive(
       ImagingArchiveProperties props,
       JsonMapper json,
-      @Value("${gcare.imaging.archive.organization-id:}") String organizationId) {
+      @Value("${gcare.imaging.archive.organization-id:}") String organizationId,
+      @Value("${gcare.imaging.archive.allow-any-organization:false}")
+          boolean allowAnyOrganization) {
     if (props.baseUrl() == null) {
       return new DicomWebArchive.NotConfigured();
     }
     if (organizationId.isBlank()) {
-      // Single-organization development only: in a shared deployment every organization could
-      // query this archive. Production binds it (docs/25, docs/27).
+      // Fail closed (docs/25): an archive not bound to an organization could be queried, and its
+      // studies linked, by every organization of a shared HMS. Only automated tests opt out.
+      if (!allowAnyOrganization) {
+        throw new IllegalStateException(
+            "gcare.imaging.archive.base-url is set but gcare.imaging.archive.organization-id is"
+                + " not: bind the archive to the organization that owns it");
+      }
       LoggerFactory.getLogger(RadiologyConfiguration.class)
-          .warn(
-              "The imaging archive is not bound to an organization; set"
-                  + " gcare.imaging.archive.organization-id before more than one organization uses"
-                  + " this HMS");
+          .warn("The imaging archive is not bound to an organization (allow-any-organization)");
     }
     return new DicomWebArchive(props, json);
   }

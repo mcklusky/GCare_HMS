@@ -25,7 +25,7 @@ Requirements: FR-036 (monitoring and alerting), FR-037 (accessibility), FR-027 (
 
 **Review fixes (2026-11-23, docs/27):** a failed backup now deletes its partial files (a truncated encrypted file could look like a backup), and a failed manifest query stops the run. `restore.sh` grants `gcare_app` to `GCARE_APP_LOGIN` (the application's login role); without it, an application on a new server could not run a single query after restore. Set it for every real restore.
 
-**Known limitation (time zones):** screens show and enter times in the workstation's time zone, not the facility's. Until that is changed, pilot workstations must be set to the facility's time zone; otherwise paper times and critical-result contact times are stored shifted.
+**Time zones (decided 2026-11-23, following common EHR practice):** times are stored in UTC and every screen shows and enters them in the time zone of the facility the user works in (the facility's configured zone), not the workstation's. Date-time inputs say "Facility time (<zone>)". A user working at facilities in different zones sees each in the zone of the facility selected in the shell.
 
 ## 3. Security review
 

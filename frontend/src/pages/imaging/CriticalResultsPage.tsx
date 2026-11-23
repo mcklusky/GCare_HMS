@@ -5,6 +5,7 @@ import { Link } from 'react-router'
 import {
   acknowledgeCritical,
   getOpenCriticalResults,
+  CRITICAL_KIND_LABEL,
   METHOD_LABEL,
   type CriticalResult,
 } from '../../api/radiologyReports'
@@ -13,6 +14,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /** Critical radiology results not yet acknowledged (task 6.4; docs/26). */
 export function CriticalResultsPage() {
@@ -57,7 +59,7 @@ export function CriticalResultsPage() {
                   {list.map((c) => (
                     <Table.Tr key={c.report_id}>
                       <Table.Td>
-                        {new Date(c.flagged_at).toLocaleString()}
+                        {formatDateTime(c.flagged_at)}
                         <Text size="xs">{c.flagged_by.display_name}</Text>
                       </Table.Td>
                       <Table.Td>
@@ -65,6 +67,11 @@ export function CriticalResultsPage() {
                         <Text size="xs">{c.patient.patient_number}</Text>
                       </Table.Td>
                       <Table.Td>
+                        {c.kind === 'CHANGED' && (
+                          <Text size="xs" fw={600}>
+                            {CRITICAL_KIND_LABEL.CHANGED}
+                          </Text>
+                        )}
                         {hasPermission(me, Permission.ENCOUNTER_READ) ? (
                           <Anchor component={Link} to={`/encounters/${c.encounter_id}`}>
                             {c.item_name}
@@ -78,7 +85,7 @@ export function CriticalResultsPage() {
                       </Table.Td>
                       <Table.Td>
                         {c.communicated_to} · {METHOD_LABEL[c.communication_method]} ·{' '}
-                        {new Date(c.communicated_at).toLocaleString()}
+                        {formatDateTime(c.communicated_at)}
                       </Table.Td>
                       <Table.Td>
                         {canAck ? (

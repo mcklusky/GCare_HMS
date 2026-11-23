@@ -170,10 +170,12 @@ Four independent reviewers read the code for tasks 5.3 to 6.4: downtime, the ima
 | Errors and audit | A miswritten paper patient number no longer blocks matching. Implausible contact years give 400, not 500. A changed invoice at approval gives 422 ("send it back"). Imaging results reads are audited against the visit or patient. |
 | Operations | A failed backup deletes its partial files. Restore grants the application role to `GCARE_APP_LOGIN`. Isolation tests now cover all five downtime tables. |
 
-**Not changed (need a decision or a larger change):**
-- **Time zones:** screens use the workstation's time zone. Pilot PCs must be set to the facility's zone until display and entry move to the facility zone (docs/23).
-- **Amending a critical report:** this can leave two open critical results or one orphaned open result (docs/26, question 5).
-- **Archive binding:** the HMS only warns when `gcare.imaging.archive.organization-id` is missing. Every deployment must set it (docs/25).
+**Decided afterwards (2026-11-23, following established practice; branch `review/decisions-followup`, V20):**
+- **Time zones:** stored in UTC, shown and entered in the facility's zone (docs/23).
+- **Amending a critical report:** the change is communicated again and acknowledged; the earlier open result is replaced (docs/26, provisional until radiology leadership confirms).
+- **Archive binding:** the HMS refuses to start with an archive URL but no `organization-id` (docs/25).
+
+**Still open (minor):**
 - Minor items: an unknown visit or patient id returns an empty list rather than 404. The foreign key of `downtime_entry_events` is not organization-qualified (RLS still isolates it).
 
 ## Change log

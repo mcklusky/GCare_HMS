@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { getWorkspace } from '../../api/chart'
 import { displayName } from '../../api/patients'
 import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime, formatTime } from '../../components/time'
 
 /** Clinician workspace (task 3.4): patients with me now and my unsigned drafts. */
 export function WorkspacePage() {
@@ -50,9 +51,7 @@ export function WorkspacePage() {
                           <Text size="xs">{e.patient.patient_number}</Text>
                         </Table.Td>
                         <Table.Td>{e.department.name}</Table.Td>
-                        <Table.Td>
-                          {e.consultation_started_at ? new Date(e.consultation_started_at).toLocaleTimeString() : '—'}
-                        </Table.Td>
+                        <Table.Td>{e.consultation_started_at ? formatTime(e.consultation_started_at) : '—'}</Table.Td>
                       </Table.Tr>
                     ))}
                   </Table.Tbody>
@@ -86,7 +85,7 @@ export function WorkspacePage() {
                         <Table.Td>
                           <Badge variant="light">{d.amendment ? 'Amendment draft' : 'Note draft'}</Badge>
                         </Table.Td>
-                        <Table.Td>{new Date(d.updated_at).toLocaleString()}</Table.Td>
+                        <Table.Td>{formatDateTime(d.updated_at)}</Table.Td>
                       </Table.Tr>
                     ))}
                   </Table.Tbody>

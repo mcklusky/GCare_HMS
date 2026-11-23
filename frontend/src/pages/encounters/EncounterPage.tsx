@@ -24,6 +24,7 @@ import { OrdersSection } from './OrdersSection'
 import { TriageSection } from './TriageSection'
 import { DowntimeSourcesNotice } from '../downtime/DowntimeSourcesNotice'
 import { ImagingResultsSection } from '../imaging/ImagingResultsSection'
+import { formatDateTime } from '../../components/time'
 
 const DIALOG: Record<
   Exclude<EncounterAction, 'call'>,
@@ -86,7 +87,7 @@ export function EncounterPage() {
                 {STATUS_LABEL[e.status]}
               </Badge>
               <Text size="sm">
-                Arrived {new Date(e.arrived_at).toLocaleString()}
+                Arrived {formatDateTime(e.arrived_at)}
                 {e.clinician && ` · Clinician: ${e.clinician.display_name}`}
               </Text>
             </Group>
@@ -109,7 +110,7 @@ export function EncounterPage() {
                 <Table.Tbody>
                   {events.map((ev) => (
                     <Table.Tr key={ev.id}>
-                      <Table.Td>{new Date(ev.occurred_at).toLocaleString()}</Table.Td>
+                      <Table.Td>{formatDateTime(ev.occurred_at)}</Table.Td>
                       <Table.Td>{EVENT_LABEL[ev.event_type]}</Table.Td>
                       <Table.Td>{ev.department.name}</Table.Td>
                       <Table.Td>{ev.actor.display_name}</Table.Td>
@@ -131,9 +132,7 @@ export function EncounterPage() {
             {hasPermission(me, Permission.ORDER_READ) && (
               <OrdersSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
             )}
-            {hasPermission(me, Permission.RADIOLOGY_REPORT_READ) && (
-              <ImagingResultsSection encounterId={e.id} />
-            )}
+            {hasPermission(me, Permission.RADIOLOGY_REPORT_READ) && <ImagingResultsSection encounterId={e.id} />}
           </Stack>
         )}
       </QueryState>

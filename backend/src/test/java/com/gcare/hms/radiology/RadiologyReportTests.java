@@ -342,6 +342,82 @@ class RadiologyReportTests {
   }
 
   @Test
+  void amendingACriticalReportIsCommunicatedAgainAndReplacesTheOpenResult() throws Exception {
+    String order = imagingOrder(true)[0];
+    String when = Instant.now().minus(5, ChronoUnit.MINUTES).toString();
+    String contact =
+        "\"communication\": {\"communicated_to\": \"Dr Test (fictional)\", \"method\": \"PHONE\", \"communicated_at\": \"%s\"}"
+            .formatted(when);
+    String first =
+        read(
+            draft(
+                    order,
+                    radiologist,
+                    "{\"sections\": {\"findings\": \"F\", \"impression\": \"Urgent\", \"critical\": true}}")
+                .andExpect(status().isCreated()),
+            "$.id");
+    send(
+            post("/api/v1/radiology-reports/{id}/sign", first),
+            radiologist,
+            "{\"version\": 0, %s}".formatted(contact))
+        .andExpect(status().isOk());
+
+    // The amendment says the finding is not critical after all: the change must be told again.
+    ResultActions amendment =
+        draft(order, radiologist, "{\"amendment_reason\": \"Second look: not critical\"}")
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.communication_required").value(true));
+    String second = read(amendment, "$.id");
+    ResultActions saved =
+        send(
+                put("/api/v1/radiology-reports/{id}", second),
+                radiologist,
+                "{\"version\": 0, \"sections\": {\"findings\": \"F\", \"impression\": \"Not urgent\", \"critical\": false}}")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.communication_required").value(true));
+    long v = version(saved);
+    send(
+            post("/api/v1/radiology-reports/{id}/sign", second),
+            radiologist,
+            "{\"version\": %d}".formatted(v))
+        .andExpect(status().isBadRequest());
+    send(
+            post("/api/v1/radiology-reports/{id}/sign", second),
+            radiologist,
+            "{\"version\": %d, %s}".formatted(v, contact))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.critical_result.kind").value("CHANGED"));
+
+    // One open item for the clinician: the latest; the first was replaced, not acknowledged.
+    ResultActions open =
+        send(get("/api/v1/critical-results"), clinician, "")
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].report_id").value(second))
+            .andExpect(jsonPath("$[0].kind").value("CHANGED"));
+    send(
+            post("/api/v1/critical-results/{id}/acknowledge", first),
+            clinician,
+            "{\"version\": 1, \"note\": \"x\"}")
+        .andExpect(status().isUnprocessableContent());
+    send(
+            post("/api/v1/critical-results/{id}/acknowledge", second),
+            clinician,
+            "{\"version\": %s, \"note\": \"Plan changed back\"}"
+                .formatted(read(open, "$[0].version")))
+        .andExpect(status().isOk());
+    // The database keeps a replaced result closed.
+    assertThatThrownBy(() ->
+            OrganizationContext.callAs(
+                orgId,
+                () ->
+                    jdbc.sql(
+                            "UPDATE critical_results SET superseded_at = NULL, superseded_by = NULL WHERE report_id = ?::uuid")
+                        .params(first)
+                        .update()))
+        .isInstanceOf(DataAccessException.class);
+  }
+
+  @Test
   void reportsStayWithinTheFacilityAndOrganization() throws Exception {
     String[] o = imagingOrder(true);
     UUID other = fixtures.facility(orgId, "GH2");

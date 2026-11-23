@@ -52,7 +52,15 @@ class RadiologyReportStore {
       UserRef acknowledgedBy,
       Instant acknowledgedAt,
       String acknowledgementNote,
-      long version) {}
+      String kind,
+      UUID supersededBy,
+      Instant supersededAt,
+      long version) {
+
+    boolean open() {
+      return acknowledgedAt == null && supersededAt == null;
+    }
+  }
 
   private static final String REPORT =
       "SELECT r.*, u.display_name AS author_name FROM radiology_reports r JOIN users u ON u.id = r.author_id";
@@ -182,13 +190,15 @@ class RadiologyReportStore {
     return spec.query(UUID.class).list();
   }
 
-  void insertCritical(UUID report, UUID org, UUID facility, UUID order, UUID by, Communication c) {
+  void insertCritical(
+      UUID report, UUID org, UUID facility, UUID order, UUID by, Communication c, String kind) {
     jdbc.sql(
             """
             INSERT INTO critical_results (report_id, organization_id, facility_id, order_id, flagged_by, communicated_to,
-                communication_method, communicated_at, communication_note)
-            VALUES (:r, :org, :f, :o, :by, :to, :m, :at, :note)
+                communication_method, communicated_at, communication_note, kind)
+            VALUES (:r, :org, :f, :o, :by, :to, :m, :at, :note, :kind)
             """)
+        .param("kind", kind)
         .param("r", report)
         .param("org", org)
         .param("f", facility)
@@ -213,7 +223,7 @@ class RadiologyReportStore {
     var spec =
         jdbc.sql(
             CRITICAL
-                + " WHERE c.acknowledged_at IS NULL"
+                + " WHERE c.acknowledged_at IS NULL AND c.superseded_at IS NULL"
                 + (scope.allFacilities() ? "" : " AND c.facility_id IN (:fac)")
                 + " ORDER BY c.flagged_at LIMIT 300");
     if (!scope.allFacilities()) {
@@ -227,7 +237,7 @@ class RadiologyReportStore {
             """
             UPDATE critical_results SET acknowledged_by = :by, acknowledged_at = now(), acknowledgement_note = :note,
                 version = version + 1
-            WHERE report_id = :r AND version = :v AND acknowledged_at IS NULL
+            WHERE report_id = :r AND version = :v AND acknowledged_at IS NULL AND superseded_at IS NULL
             """)
         .param("by", by)
         .param("note", note)
@@ -256,6 +266,18 @@ class RadiologyReportStore {
         rs.getLong("version"));
   }
 
+  /** Closes an open result because its report was amended and the amendment signed. */
+  int supersede(UUID report, UUID by) {
+    return jdbc.sql(
+            """
+            UPDATE critical_results SET superseded_by = :by, superseded_at = now(), version = version + 1
+            WHERE report_id = :r AND acknowledged_at IS NULL AND superseded_at IS NULL
+            """)
+        .param("by", by)
+        .param("r", report)
+        .update();
+  }
+
   private CriticalRow mapCritical(ResultSet rs, int i) throws SQLException {
     UUID ack = rs.getObject("acknowledged_by", UUID.class);
     return new CriticalRow(
@@ -271,6 +293,9 @@ class RadiologyReportStore {
         ack == null ? null : new UserRef(ack, rs.getString("acknowledger")),
         instant(rs, "acknowledged_at"),
         rs.getString("acknowledgement_note"),
+        rs.getString("kind"),
+        rs.getObject("superseded_by", UUID.class),
+        instant(rs, "superseded_at"),
         rs.getLong("version"));
   }
 

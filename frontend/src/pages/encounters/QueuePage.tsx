@@ -16,6 +16,7 @@ import { useFacilityContext } from '../../auth/facilityContextValue'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { formatTime } from '../../components/time'
 
 /**
  * Department queue (task 3.1): open visits at the current facility. Ordered by the backend:
@@ -92,9 +93,7 @@ export function QueuePage() {
             <Table.Tbody>
               {page.items.map((e) => (
                 <Table.Tr key={e.id}>
-                  <Table.Td>
-                    {new Date(e.arrived_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Table.Td>
+                  <Table.Td>{formatTime(e.arrived_at, { hour: '2-digit', minute: '2-digit' })}</Table.Td>
                   <Table.Td>
                     <Anchor component={Link} to={`/encounters/${e.id}`}>
                       {displayName(e.patient)}

@@ -5,6 +5,7 @@ import { currencyDecimals, formatMoney, validAmount } from '../../api/billing'
 import { SHIFT_STATUS_LABEL, closeShift, myShifts, openShift, type Shift } from '../../api/payments'
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /** The cashier's shift (task 4.3): open, take payments, close with a cash count per currency. */
 export function ShiftPage() {
@@ -59,8 +60,8 @@ export function ShiftPage() {
                     <Table.Tbody>
                       {past.map((s) => (
                         <Table.Tr key={s.id}>
-                          <Table.Td>{new Date(s.opened_at).toLocaleString()}</Table.Td>
-                          <Table.Td>{s.closed_at && new Date(s.closed_at).toLocaleString()}</Table.Td>
+                          <Table.Td>{formatDateTime(s.opened_at)}</Table.Td>
+                          <Table.Td>{s.closed_at && formatDateTime(s.closed_at)}</Table.Td>
                           <Table.Td>{SHIFT_STATUS_LABEL[s.status]}</Table.Td>
                           <Table.Td>
                             {s.counts.length === 0
@@ -147,7 +148,7 @@ function OpenShift({ shift }: { shift: Shift }) {
           Open shift
         </Title>
         <Badge variant="light" color="green">
-          Open since {new Date(shift.opened_at).toLocaleString()}
+          Open since {formatDateTime(shift.opened_at)}
         </Badge>
       </Group>
       <ShiftTotals shift={shift} />

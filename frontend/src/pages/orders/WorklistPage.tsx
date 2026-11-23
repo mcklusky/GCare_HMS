@@ -16,6 +16,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /** Performing departments' worklist (FR-009): urgent first, then oldest request. */
 export function WorklistPage() {
@@ -114,7 +115,7 @@ export function WorklistPage() {
                       {o.indication && <Text size="xs">Indication: {o.indication}</Text>}
                     </Table.Td>
                     <Table.Td>
-                      {new Date(o.requested_at).toLocaleString()}
+                      {formatDateTime(o.requested_at)}
                       <Text size="xs">{o.requested_by.display_name}</Text>
                     </Table.Td>
                     <Table.Td>{ORDER_STATUS_LABEL[o.status]}</Table.Td>

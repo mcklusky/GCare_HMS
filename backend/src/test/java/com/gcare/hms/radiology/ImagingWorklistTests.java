@@ -54,6 +54,8 @@ class ImagingWorklistTests {
   @DynamicPropertySource
   static void archive(DynamicPropertyRegistry r) {
     r.add("gcare.imaging.archive.base-url", () -> STUB.baseUrl().toString());
+    // Tests create a new organization each time, so the archive cannot be bound to one.
+    r.add("gcare.imaging.archive.allow-any-organization", () -> "true");
     r.add(
         "gcare.imaging.archive.viewer-url-template",
         () -> "https://viewer.test.invalid/?study={StudyInstanceUID}");

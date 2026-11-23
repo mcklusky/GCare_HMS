@@ -11,6 +11,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { EmptyState, QueryState } from '../../components/states'
 import { ImagingResultsSection } from '../imaging/ImagingResultsSection'
+import { formatDate, formatDateTime } from '../../components/time'
 
 /**
  * Patient chart (task 3.4): visits, and, with permission, reported allergies, latest triage,
@@ -34,7 +35,7 @@ export function PatientChart({ patientId }: { patientId: string }) {
               <List size="sm">
                 {c.reported_allergies.map((a) => (
                   <List.Item key={`${a.encounter_id}-${a.recorded_at}`}>
-                    {a.note} ({a.recorded_by.display_name}, {new Date(a.recorded_at).toLocaleDateString()})
+                    {a.note} ({a.recorded_by.display_name}, {formatDate(a.recorded_at)})
                   </List.Item>
                 ))}
               </List>
@@ -58,7 +59,7 @@ export function PatientChart({ patientId }: { patientId: string }) {
                     </Text>
                     <Text size="xs" c="dimmed">
                       {c.latest_observation.recorded_by.display_name},{' '}
-                      {new Date(c.latest_observation.recorded_at).toLocaleString()}
+                      {formatDateTime(c.latest_observation.recorded_at)}
                     </Text>
                   </>
                 ) : (
@@ -82,7 +83,7 @@ export function PatientChart({ patientId }: { patientId: string }) {
                           {CERTAINTY_LABEL[d.certainty]}
                         </Badge>{' '}
                         <Anchor component={Link} to={`/encounters/${d.encounter_id}`} size="xs">
-                          {new Date(d.recorded_at).toLocaleDateString()}
+                          {formatDate(d.recorded_at)}
                         </Anchor>
                       </List.Item>
                     ))}
@@ -112,7 +113,7 @@ export function PatientChart({ patientId }: { patientId: string }) {
                     <Table.Tr key={v.id}>
                       <Table.Td>
                         <Anchor component={Link} to={`/encounters/${v.id}`}>
-                          {new Date(v.arrived_at).toLocaleString()}
+                          {formatDateTime(v.arrived_at)}
                         </Anchor>
                       </Table.Td>
                       <Table.Td>
@@ -165,7 +166,7 @@ function PatientOrders({ patientId }: { patientId: string }) {
                 <Table.Tr key={o.id}>
                   <Table.Td>
                     <Anchor component={Link} to={`/encounters/${o.encounter_id}`}>
-                      {new Date(o.requested_at).toLocaleString()}
+                      {formatDateTime(o.requested_at)}
                     </Anchor>
                   </Table.Td>
                   <Table.Td>

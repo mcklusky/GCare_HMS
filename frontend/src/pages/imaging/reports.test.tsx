@@ -43,6 +43,7 @@ const DRAFT: Report = {
   amends_report_id: null,
   amendment_reason: null,
   critical_result: null,
+  communication_required: true,
   version: 1,
 }
 const CRITICAL: CriticalResult = {
@@ -62,6 +63,9 @@ const CRITICAL: CriticalResult = {
   acknowledged_by: null,
   acknowledged_at: null,
   acknowledgement_note: null,
+  kind: 'CRITICAL',
+  superseded_by: null,
+  superseded_at: null,
   version: 0,
 }
 

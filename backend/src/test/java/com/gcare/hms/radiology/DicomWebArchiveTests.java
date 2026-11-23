@@ -35,6 +35,30 @@ class DicomWebArchiveTests {
   }
 
   @Test
+  void anArchiveNotBoundToAnOrganizationRefusesToStartAndViewerLinksMustBeHttp() {
+    ImagingArchiveProperties props =
+        new ImagingArchiveProperties(
+            stub.baseUrl(), null, null, null, null, Duration.ofSeconds(3), 50);
+    RadiologyConfiguration config = new RadiologyConfiguration();
+    JsonMapper json = JsonMapper.builder().build();
+    assertThatThrownBy(() -> config.imagingArchive(props, json, "", false))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("organization-id");
+    assertThat(config.imagingArchive(props, json, "00000000-0000-4000-8000-000000000001", false))
+        .isInstanceOf(DicomWebArchive.class);
+    assertThatThrownBy(() ->
+            new ImagingArchiveProperties(
+                stub.baseUrl(),
+                null,
+                null,
+                null,
+                "javascript:alert({StudyInstanceUID})",
+                Duration.ofSeconds(3),
+                50))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
   void readsOnlyMatchingMetadataAndSkipsUnusableUids() {
     List<ImagingArchive.Study> studies = archive("u", null, null).studiesByAccession("ACC-T-1");
     assertThat(studies).hasSize(1);

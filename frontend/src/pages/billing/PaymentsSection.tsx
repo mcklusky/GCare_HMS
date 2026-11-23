@@ -9,6 +9,7 @@ import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ErrorState, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /** Payments on an issued invoice (task 4.3): part payments up to the balance, each with a receipt. */
 export function PaymentsSection({ invoice }: { invoice: Invoice }) {
@@ -84,7 +85,7 @@ export function PaymentsSection({ invoice }: { invoice: Invoice }) {
                   <Table.Td>{money(p.amount)}</Table.Td>
                   <Table.Td>{money(p.balance_after)}</Table.Td>
                   <Table.Td>
-                    {new Date(p.received_at).toLocaleString()}
+                    {formatDateTime(p.received_at)}
                     <Text size="xs">{p.received_by.display_name}</Text>
                   </Table.Td>
                 </Table.Tr>

@@ -30,6 +30,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { ErrorState, PageTitle, QueryState } from '../../components/states'
 import { ReportText } from './ImagingResultsSection'
+import { zoneNote, zonedLocalToIso } from '../../components/time'
 
 /** Write, sign and amend the report of one imaging order (task 6.4; docs/26). */
 export function ReportEditorPage() {
@@ -138,8 +139,8 @@ function DraftEditor({ draft, onChanged }: { draft: Report; onChanged: () => voi
     mutationFn: () =>
       signReport(
         draft,
-        draft.critical
-          ? { communicated_to: to.trim(), method, communicated_at: new Date(at).toISOString(), note: note.trim() }
+        draft.communication_required
+          ? { communicated_to: to.trim(), method, communicated_at: zonedLocalToIso(at), note: note.trim() }
           : undefined,
       ),
     onSuccess: () => {
@@ -201,16 +202,18 @@ function DraftEditor({ draft, onChanged }: { draft: Report; onChanged: () => voi
         title="Sign this report?"
         confirmLabel="Sign"
         busy={sign.isPending}
-        confirmDisabled={draft.critical && (!to.trim() || !at)}
+        confirmDisabled={draft.communication_required && (!to.trim() || !at)}
         onConfirm={() => sign.mutate()}
         onCancel={() => setSigning(false)}
       >
         <Stack gap="xs">
           <Text size="sm">A signed report cannot be changed; corrections are amendments.</Text>
-          {draft.critical && (
+          {draft.communication_required && (
             <>
               <Text size="sm" fw={600}>
-                Critical result: record the direct contact.
+                {draft.critical
+                  ? 'Critical result: record the direct contact.'
+                  : 'This amends a report with a critical result: record whom you told about the change.'}
               </Text>
               <TextInput
                 label="Told to (name and role)"
@@ -228,6 +231,7 @@ function DraftEditor({ draft, onChanged }: { draft: Report; onChanged: () => voi
               />
               <TextInput
                 type="datetime-local"
+                description={zoneNote()}
                 label="When"
                 required
                 value={at}

@@ -30,6 +30,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /** Orders and referrals of a visit with their status (FR-009). */
 export function OrdersSection({ encounterId, open }: { encounterId: string; open: boolean }) {
@@ -95,7 +96,7 @@ export function OrdersSection({ encounterId, open }: { encounterId: string; open
                       {o.cancel_reason && <Text size="xs">Reason: {o.cancel_reason}</Text>}
                     </Table.Td>
                     <Table.Td>
-                      {new Date(o.requested_at).toLocaleString()}
+                      {formatDateTime(o.requested_at)}
                       <Text size="xs">{o.requested_by.display_name}</Text>
                     </Table.Td>
                     {canOrder && (

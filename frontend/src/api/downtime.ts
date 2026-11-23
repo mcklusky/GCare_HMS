@@ -2,6 +2,7 @@ import { apiFetch } from './client'
 import type { UserRef } from './encounters'
 import type { InvoiceSummary } from './invoices'
 import type { DuplicateCandidate, PatientSummary, RegistrationSource, Sex } from './patients'
+import { zonedLocalToIso } from '../components/time'
 
 /** Downtime episodes, numbered paper forms and reconciliation (backend DowntimeController; docs/22). */
 
@@ -241,8 +242,8 @@ export const decideEntry = (e: Entry, decision: EntryDecision, note: string) =>
 export const listDowntimeSources = (encounterId: string, signal?: AbortSignal) =>
   apiFetch<DowntimeSource[]>(`/api/v1/encounters/${enc(encounterId)}/downtime-sources`, { signal })
 
-/** A datetime-local input value (local time) as an ISO instant. */
-export const localToIso = (value: string) => new Date(value).toISOString()
+/** A datetime-local input value (facility time) as an ISO instant. */
+export const localToIso = (value: string) => zonedLocalToIso(value)
 
 /** Invoices of a visit (needs INVOICE_READ), to pick the one a paper payment belongs to. */
 export const listVisitInvoices = (encounterId: string, signal?: AbortSignal) =>

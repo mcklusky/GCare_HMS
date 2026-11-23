@@ -1,6 +1,7 @@
 import { Alert, List } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { formTypeLabel, listDowntimeSources } from '../../api/downtime'
+import { formatDateTime } from '../../components/time'
 
 /**
  * Shown on a visit when parts of it were entered after downtime from paper forms. The records keep
@@ -25,7 +26,7 @@ export function DowntimeSourcesNotice({ encounterId }: { encounterId: string }) 
         {sources.data.map((s) => (
           <List.Item key={s.entry_id}>
             {formTypeLabel(s.form_type)} {s.form_label} (episode {s.episode_number}): paper time{' '}
-            {new Date(s.occurred_at).toLocaleString()}, entered {new Date(s.reconciled_at).toLocaleString()}
+            {formatDateTime(s.occurred_at)}, entered {formatDateTime(s.reconciled_at)}
           </List.Item>
         ))}
       </List>

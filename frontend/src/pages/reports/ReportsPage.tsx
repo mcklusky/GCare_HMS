@@ -5,6 +5,7 @@ import { formatMoney, todayUtc } from '../../api/billing'
 import { exportUrl, getDashboard, listReports, runReport, type ReportView } from '../../api/reports'
 import { useFacilityContext } from '../../auth/facilityContextValue'
 import { EmptyState, PageTitle, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /**
  * Dashboard and operational reports (task 5.1). Aggregates for the current facility only; days are
@@ -124,7 +125,7 @@ function ReportTable({ report, exportable }: { report: ReportView; exportable: b
       </Group>
       <Text size="xs" c="dimmed" mb="xs">
         {report.facility_name}, {report.from} to {report.to} (days in {report.timezone}). Generated{' '}
-        {new Date(report.generated_at).toLocaleString()} by {report.generated_by.display_name}.
+        {formatDateTime(report.generated_at)} by {report.generated_by.display_name}.
       </Text>
       {report.rows.length === 0 ? (
         <Text size="sm">No data in this period.</Text>

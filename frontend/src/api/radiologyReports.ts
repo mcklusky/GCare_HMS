@@ -41,8 +41,16 @@ export interface CriticalResult {
   acknowledged_by: UserRef | null
   acknowledged_at: string | null
   acknowledgement_note: string | null
+  /** CRITICAL, or CHANGED: an amendment (no longer critical) of a report that had a critical result. */
+  kind: 'CRITICAL' | 'CHANGED'
+  /** The amendment that replaced this result before it was acknowledged. */
+  superseded_by: string | null
+  superseded_at: string | null
   version: number
 }
+
+/** Banner and list wording for a critical result by kind. */
+export const CRITICAL_KIND_LABEL = { CRITICAL: 'Critical result', CHANGED: 'Changed critical result (amended)' }
 
 export interface Report extends Sections {
   id: string
@@ -55,6 +63,8 @@ export interface Report extends Sections {
   amends_report_id: string | null
   amendment_reason: string | null
   critical_result: CriticalResult | null
+  /** Signing needs the documented direct contact (critical, or amending a critical result). */
+  communication_required: boolean
   version: number
 }
 

@@ -14,6 +14,7 @@ import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { EmptyState, ErrorState, QueryState } from '../../components/states'
+import { formatDateTime } from '../../components/time'
 
 /** Visit diagnoses: free text for now; codes come once a coding system is chosen (OD-09). */
 export function DiagnosesSection({ encounterId, open }: { encounterId: string; open: boolean }) {
@@ -111,7 +112,7 @@ export function DiagnosesSection({ encounterId, open }: { encounterId: string; o
                         </Badge>
                       </Table.Td>
                       <Table.Td>
-                        {new Date(d.recorded_at).toLocaleString()}
+                        {formatDateTime(d.recorded_at)}
                         <Text size="xs">{d.recorded_by.display_name}</Text>
                       </Table.Td>
                       <Table.Td>
