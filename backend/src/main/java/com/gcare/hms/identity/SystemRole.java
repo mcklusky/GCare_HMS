@@ -1,8 +1,14 @@
 package com.gcare.hms.identity;
 
 import static com.gcare.hms.shared.security.Permissions.AUDIT_READ;
+import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_OPEN;
+import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_READ;
+import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_REOPEN;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
+import static com.gcare.hms.shared.security.Permissions.OBSERVATION_READ;
+import static com.gcare.hms.shared.security.Permissions.OBSERVATION_RECORD;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_DUPLICATE_REVIEW;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_LINK_APPROVE;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_LINK_REQUEST;
@@ -36,8 +42,9 @@ public enum SystemRole {
    */
   REGISTRATION_CLERK(
       "Registration clerk",
-      "Searches, registers and corrects patients at assigned facilities. No clinical access.",
-      Set.of(PATIENT_READ, PATIENT_REGISTER, PATIENT_UPDATE)),
+      "Searches, registers and corrects patients and opens visits at assigned facilities. No"
+          + " clinical access.",
+      Set.of(PATIENT_READ, PATIENT_REGISTER, PATIENT_UPDATE, ENCOUNTER_READ, ENCOUNTER_OPEN)),
 
   /**
    * Registration clerk plus the duplicate review queue and link requests. PROVISIONAL, like the
@@ -52,7 +59,9 @@ public enum SystemRole {
           PATIENT_REGISTER,
           PATIENT_UPDATE,
           PATIENT_DUPLICATE_REVIEW,
-          PATIENT_LINK_REQUEST)),
+          PATIENT_LINK_REQUEST,
+          ENCOUNTER_READ,
+          ENCOUNTER_OPEN)),
 
   /**
    * Second person for patient identity decisions: reviews duplicates, requests and approves links
@@ -62,7 +71,31 @@ public enum SystemRole {
       "Health records manager",
       "Reviews possible duplicates and approves, rejects or reverses patient record links. No"
           + " clinical access.",
-      Set.of(PATIENT_READ, PATIENT_DUPLICATE_REVIEW, PATIENT_LINK_REQUEST, PATIENT_LINK_APPROVE));
+      Set.of(PATIENT_READ, PATIENT_DUPLICATE_REVIEW, PATIENT_LINK_REQUEST, PATIENT_LINK_APPROVE)),
+
+  /**
+   * Records triage observations for patients in the queue (docs/18). PROVISIONAL until the
+   * permission matrix is signed off.
+   */
+  TRIAGE_NURSE(
+      "Triage nurse",
+      "Sees department queues and records triage observations.",
+      Set.of(PATIENT_READ, ENCOUNTER_READ, OBSERVATION_READ, OBSERVATION_RECORD)),
+
+  /**
+   * Calls, transfers, closes and reopens visits and records observations (docs/18). PROVISIONAL
+   * until the permission matrix is signed off.
+   */
+  CLINICIAN(
+      "Clinician",
+      "Sees patients from the department queue: calls, transfers, closes and reopens visits.",
+      Set.of(
+          PATIENT_READ,
+          ENCOUNTER_READ,
+          ENCOUNTER_MANAGE,
+          ENCOUNTER_REOPEN,
+          OBSERVATION_READ,
+          OBSERVATION_RECORD));
 
   private final String displayName;
   private final String description;

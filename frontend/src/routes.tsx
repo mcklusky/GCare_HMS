@@ -1,5 +1,7 @@
 import type { RouteObject } from 'react-router'
 import { Permission } from './api/types'
+import { EncounterPage } from './pages/encounters/EncounterPage'
+import { QueuePage } from './pages/encounters/QueuePage'
 import { FacilitiesPage, FacilityDepartmentsPage } from './pages/FacilitiesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { DuplicateReviewPage } from './pages/patients/DuplicateReviewPage'
@@ -60,6 +62,22 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.PATIENT_READ}>
             <PatientPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'queue',
+        element: (
+          <RequirePermission permission={Permission.ENCOUNTER_READ}>
+            <QueuePage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'encounters/:encounterId',
+        element: (
+          <RequirePermission permission={Permission.ENCOUNTER_READ}>
+            <EncounterPage />
           </RequirePermission>
         ),
       },

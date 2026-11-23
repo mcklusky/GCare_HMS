@@ -8,4 +8,5 @@ Schema is owned here; Hibernate only validates it (`ddl-auto: validate`).
 - V3 (task 2.1) adds patients, identifiers (with provenance), per-organization patient-number counters and the duplicate review flags. Uses `pg_trgm` for fuzzy names. Rules: docs/17-PATIENT-IDENTITY-POLICY.md (provisional).
 - V4 (task 2.2) adds `patient_changes` (append-only correction history) and review decisions on `patient_duplicate_flags` (one open item per pair).
 - V5 (task 2.3) adds `patient_links` (request, decision, unlink; requester and decider must differ, enforced by a CHECK) and `patients.linked_to_patient_id` (set exactly when status is LINKED).
+- V6 (task 3.1) adds `encounters` (one open visit per patient and facility; department must belong to the facility), `encounter_events` (append-only) and `triage_observations` (append-only; only the entered-in-error columns can be updated, by column grant).
 - Every schema change ships with tests for its constraints, tenant isolation and audit behaviour.

@@ -14,6 +14,7 @@ Implementation baseline: React + TypeScript frontend; Java + Spring Boot modular
 - [Development Guide](DEVELOPMENT.md) (local setup, checks, data and secrets policy)
 - [16 — Requirements Traceability](16-TRACEABILITY.md)
 - [17 — Patient Identity Policy](17-PATIENT-IDENTITY-POLICY.md) (**provisional** defaults for OD-05–07; needs registration-leadership sign-off)
+- [18 — Encounter Workflow](18-ENCOUNTER-WORKFLOW.md) (**provisional** visit lifecycle and queues; triage scale and alarm limits left for a clinical lead)
 - [Consistency Review and Decision Register](REVIEW.md)
 
 ## Delivery, safety and operations documents

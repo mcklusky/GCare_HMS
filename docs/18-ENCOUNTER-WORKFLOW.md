@@ -1,0 +1,77 @@
+# 18 — Encounter Workflow (PROVISIONAL)
+
+> **Status: provisional engineering defaults, not approved.** Written 2026-11-23 for task 3.1 at the product owner's request, while the Phase 1 security review and the Phase 2 registration sign-off were still outstanding. The outpatient workflow owner and a clinical lead must review this before any real patient use. `project-record/workflows.md` is intentionally still empty: it records *approved* workflows only.
+>
+> **No clinical rules are defined here.** The triage urgency scale and the vital-sign alarm limits are empty configuration (§4) until a clinical lead supplies them.
+
+Requirements: FR-006 (encounter management), FR-007 (triage and observations). Code: `backend/.../encounter/`, migration `V6__encounters_and_triage.sql`, screens `/queue`, `/encounters/{id}`.
+
+## 1. Visit lifecycle
+
+| From | Action | To | Who (permission) | Reason |
+|---|---|---|---|---|
+| (none) | Open visit | WAITING (in the department queue) | `ENCOUNTER_OPEN` | no |
+| WAITING | Call in | IN_CONSULTATION (caller becomes clinician) | `ENCOUNTER_MANAGE` | no |
+| WAITING or IN_CONSULTATION | Transfer to another department of the same facility | WAITING (new queue, no clinician) | `ENCOUNTER_MANAGE` | **yes** |
+| IN_CONSULTATION | Close | CLOSED | `ENCOUNTER_MANAGE` | no |
+| WAITING | Cancel (left before being seen, or opened in error) | CANCELLED | `ENCOUNTER_OPEN` | **yes** |
+| CLOSED | Reopen | IN_CONSULTATION (reopener becomes clinician) | `ENCOUNTER_REOPEN` | **yes** |
+
+- Every change is written to the visit's history (`encounter_events`: who, when, from/to, department, reason) and audited. Any other transition answers 422; a stale `version` answers 409.
+- A patient has **at most one open visit per facility** (database rule). A retired (LINKED) patient record cannot start a visit.
+- Visit types: `NEW_VISIT`, `FOLLOW_UP`. No time limit on reopening is set (not invented); the permission and reason are the control.
+
+## 2. Queue
+
+- The queue lists open visits (WAITING and IN_CONSULTATION) at the user's current facility, optionally by department, and refreshes every 30 seconds.
+- Order: visits with a **configured** urgency first (lower rank first), then by arrival time. With no scale configured (the default), the order is arrival time only.
+- Front-desk users see who is waiting and the status; triage details (triaged, urgency, flags) are shown only to users with `OBSERVATION_READ`.
+
+## 3. Triage observations
+
+- Measures and fixed units: temperature (°C), pulse (/min), respiratory rate (/min), blood pressure systolic/diastolic (mmHg), SpO₂ (%), weight (kg), height (cm), pain score (0–10); plus allergies reported, triage notes, and urgency (only once a scale is configured).
+- **Data-entry limits** reject impossible values to catch typing errors (for example a temperature of 372). They are wide on purpose and are **not** clinical alarm limits.
+- Each set records the author and time and is never changed. A wrong set is marked **entered in error** with a reason; its values stay visible, crossed out. The database allows updates only to the error columns.
+- Observations are recorded only on open visits, with `OBSERVATION_RECORD`.
+
+## 4. Configuration a clinical lead must supply
+
+```yaml
+gcare:
+  triage:
+    urgency-levels:        # empty by default: urgency cannot be recorded
+      - { code: ..., label: ..., rank: 1 }
+    alarm-limits:          # empty by default: nothing is flagged
+      PULSE_BPM: { low: ..., high: ... }   # measures: TEMPERATURE_C, PULSE_BPM, RESPIRATORY_RATE,
+                                           # SYSTOLIC_MMHG, DIASTOLIC_MMHG, SPO2_PCT
+```
+
+Flags are computed when a set is recorded, using the limits in force at that time, and stored with the set. Until values are approved, the screen tells staff that values are not graded or flagged and to follow the local triage procedure.
+
+## 5. Provisional roles
+
+| Role | Permissions |
+|---|---|
+| Registration clerk / supervisor | + `ENCOUNTER_READ`, `ENCOUNTER_OPEN` |
+| Triage nurse | `PATIENT_READ`, `ENCOUNTER_READ`, `OBSERVATION_READ`, `OBSERVATION_RECORD` |
+| Clinician | `PATIENT_READ`, `ENCOUNTER_READ`, `ENCOUNTER_MANAGE`, `ENCOUNTER_REOPEN`, `OBSERVATION_READ`, `OBSERVATION_RECORD` |
+
+Local demo users: `demo.nurse`, `demo.clinician` (see `infra/keycloak/README.md`).
+
+## 6. Design notes
+
+- The encounter module reads patient, department and user names through read-only joins for display. Writes go only to its own tables. Revisit if modules move to separate schemas.
+- Clinical notes, diagnoses, orders and the clinician workspace are tasks 3.2–3.4.
+
+## Open questions for the workflow owner
+
+1. Visit types beyond new/follow-up? Emergency arrivals in the pilot?
+2. Who may close a visit: any clinician, or only the assigned one?
+3. Should reopening be limited in time (for example same day)?
+4. Is triage mandatory before a clinician may call the patient?
+5. Should a transfer keep the clinician (handover) or always return the patient to the queue?
+
+## Change log
+| Date | Change | By |
+|---|---|---|
+| 2026-11-23 | Provisional defaults written at product owner's request; triage scale and alarm limits left empty for a clinical lead | Engineering (Claude Code), task 3.1 |

@@ -165,6 +165,38 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001008",
+      "username": "demo.nurse",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Nurse",
+      "email": "demo.nurse@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001009",
+      "username": "demo.clinician",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Clinician",
+      "email": "demo.clinician@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
     }
   ]
 }

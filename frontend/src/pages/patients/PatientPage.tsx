@@ -43,6 +43,7 @@ import { hasPermission } from '../../auth/session'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { BandBadge, PatientBanner } from '../../components/PatientBadges'
 import { EmptyState, ErrorState, PageTitle, QueryState } from '../../components/states'
+import { StartVisitDialog } from '../encounters/StartVisitDialog'
 import { LinkHistory, LinkedNotice } from './PatientLinks'
 
 /** One patient's record (FR-003, FR-004). Viewing is audited by the backend. */
@@ -52,6 +53,7 @@ export function PatientPage() {
   const registeredNumber = (location.state as { registeredNumber?: string } | null)?.registeredNumber
   const me = useCurrentMe()
   const [correcting, setCorrecting] = useState(false)
+  const [startingVisit, setStartingVisit] = useState(false)
 
   const patient = useQuery({
     queryKey: ['patient', patientId],
@@ -80,12 +82,18 @@ export function PatientPage() {
                   Correct details
                 </Button>
               )}
+              {hasPermission(me, Permission.ENCOUNTER_OPEN) && p.status === 'ACTIVE' && (
+                <Button variant="default" onClick={() => setStartingVisit(true)}>
+                  Start visit
+                </Button>
+              )}
             </Group>
             <Details patient={p} />
             <LinkHistory patientId={p.id} />
             <History patientId={p.id} />
             {p.status === 'ACTIVE' && <PossibleDuplicates patientId={p.id} />}
             {correcting && <CorrectionDialog patient={p} onClose={() => setCorrecting(false)} />}
+            {startingVisit && <StartVisitDialog patientId={p.id} onClose={() => setStartingVisit(false)} />}
           </Stack>
         )}
       </QueryState>

@@ -20,6 +20,12 @@ public final class Permissions {
   public static final String PATIENT_DUPLICATE_REVIEW = "PATIENT_DUPLICATE_REVIEW";
   public static final String PATIENT_LINK_REQUEST = "PATIENT_LINK_REQUEST";
   public static final String PATIENT_LINK_APPROVE = "PATIENT_LINK_APPROVE";
+  public static final String ENCOUNTER_READ = "ENCOUNTER_READ";
+  public static final String ENCOUNTER_OPEN = "ENCOUNTER_OPEN";
+  public static final String ENCOUNTER_MANAGE = "ENCOUNTER_MANAGE";
+  public static final String ENCOUNTER_REOPEN = "ENCOUNTER_REOPEN";
+  public static final String OBSERVATION_READ = "OBSERVATION_READ";
+  public static final String OBSERVATION_RECORD = "OBSERVATION_RECORD";
 
   public static final Set<String> ALL =
       Set.of(
@@ -33,7 +39,13 @@ public final class Permissions {
           PATIENT_UPDATE,
           PATIENT_DUPLICATE_REVIEW,
           PATIENT_LINK_REQUEST,
-          PATIENT_LINK_APPROVE);
+          PATIENT_LINK_APPROVE,
+          ENCOUNTER_READ,
+          ENCOUNTER_OPEN,
+          ENCOUNTER_MANAGE,
+          ENCOUNTER_REOPEN,
+          OBSERVATION_READ,
+          OBSERVATION_RECORD);
 
   private Permissions() {}
 }

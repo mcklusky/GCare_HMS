@@ -17,6 +17,8 @@ It exists so developers can sign in locally. **It is not a production configurat
 | `demo.clerk` | `…1005` | DEMO-ORG, REGISTRATION_CLERK at DEMO-GH | Signs in; can search, register and correct patients |
 | `demo.supervisor` | `…1006` | DEMO-ORG, REGISTRATION_SUPERVISOR at DEMO-GH | Clerk duties plus the duplicate review queue and link requests |
 | `demo.records` | `…1007` | DEMO-ORG, HEALTH_RECORDS_MANAGER at DEMO-GH | Approves, rejects and reverses patient links (second person) |
+| `demo.nurse` | `…1008` | DEMO-ORG, TRIAGE_NURSE at DEMO-GH | Sees queues, records triage observations |
+| `demo.clinician` | `…1009` | DEMO-ORG, CLINICIAN at DEMO-GH | Calls in, transfers, closes and reopens visits; records observations |
 | `demo.unlinked` | `…1004` | not linked | Sign-in refused (`login_error=account_not_enabled`), audited |
 
 Values such as brute-force limits, password policy and session lifetimes are **local defaults only**.
