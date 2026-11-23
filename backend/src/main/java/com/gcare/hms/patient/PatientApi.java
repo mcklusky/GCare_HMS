@@ -5,6 +5,7 @@ import com.gcare.hms.patient.DuplicateScorer.Band;
 import com.gcare.hms.patient.DuplicateScorer.Evidence;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
@@ -116,4 +117,48 @@ public final class PatientApi {
       @JsonProperty("field_errors") Map<String, List<String>> fieldErrors,
       @JsonProperty("correlation_id") String correlationId,
       List<DuplicateCandidate> candidates) {}
+
+  /**
+   * Correction of demographic details (policy §6). {@code changes} holds only the fields to change,
+   * keyed by API field name; a JSON null clears a field. {@code version} must be the version the
+   * user was looking at, so a correction never overwrites someone else's newer change.
+   */
+  public record CorrectionRequest(
+      long version,
+      @NotBlank @Size(max = 500) String reason,
+      @NotEmpty Map<String, Object> changes) {}
+
+  /** One field's before and after values. */
+  public record FieldChange(Object from, Object to) {}
+
+  public record PatientChangeView(
+      UUID id,
+      @JsonProperty("patient_version") long patientVersion,
+      Map<String, FieldChange> changes,
+      String reason,
+      @JsonProperty("changed_by") UUID changedBy,
+      @JsonProperty("changed_at") Instant changedAt) {}
+
+  /** Staff report: "this record may be the same person as that one". */
+  public record DuplicateReportRequest(
+      @NotNull @JsonProperty("candidate_patient_id") UUID candidatePatientId,
+      @NotBlank @Size(max = 500) String reason) {}
+
+  /** Reviewer decision on a flag. */
+  public record ResolveFlagRequest(long version, @NotBlank @Size(max = 500) String note) {}
+
+  public record DuplicateFlagView(
+      UUID id,
+      String status,
+      String origin,
+      int score,
+      String reason,
+      PatientSummary patient,
+      PatientSummary candidate,
+      @JsonProperty("created_by") UUID createdBy,
+      @JsonProperty("created_at") Instant createdAt,
+      @JsonProperty("resolved_by") UUID resolvedBy,
+      @JsonProperty("resolved_at") Instant resolvedAt,
+      @JsonProperty("resolution_note") String resolutionNote,
+      long version) {}
 }

@@ -83,7 +83,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
 VALUES ('00000000-0000-4000-8000-000000000303', '00000000-0000-4000-8000-000000000001', 'REGISTRATION_CLERK', 'Registration clerk',
-        'Searches and registers patients at assigned facilities. No clinical access.', true, 'ACTIVE')
+        'Searches, registers and corrects patients at assigned facilities. No clinical access.', true, 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO role_permissions (organization_id, role_id, permission_code)
@@ -126,3 +126,36 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO patient_number_counters (organization_id, next_value)
 VALUES ('00000000-0000-4000-8000-000000000001', 1000004)
 ON CONFLICT (organization_id) DO UPDATE SET next_value = GREATEST(patient_number_counters.next_value, 1000004);
+
+-- ---------------------------------------------------------------------------
+-- Correction and review (task 2.2). Clerk may correct; demo.supervisor reviews duplicates.
+-- ---------------------------------------------------------------------------
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000303', 'PATIENT_UPDATE')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
+VALUES ('00000000-0000-4000-8000-000000000304', '00000000-0000-4000-8000-000000000001', 'REGISTRATION_SUPERVISOR', 'Registration supervisor',
+        'Registration clerk duties plus reviewing possible duplicate patients. No clinical access.', true, 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000304', 'PATIENT_READ'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000304', 'PATIENT_REGISTER'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000304', 'PATIENT_UPDATE'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000304', 'PATIENT_DUPLICATE_REVIEW')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (id, organization_id, username, display_name, email, status)
+VALUES ('00000000-0000-4000-8000-000000000405', '00000000-0000-4000-8000-000000000001', 'demo.supervisor', 'Demo Registration Supervisor', 'demo.supervisor@example.invalid', 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_identities (id, organization_id, user_id, issuer, subject)
+VALUES ('00000000-0000-4000-8000-000000000505', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000405', 'http://localhost:8180/realms/gcare',
+        '00000000-0000-4000-8000-000000001006')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
+VALUES ('00000000-0000-4000-8000-000000000604', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000405', '00000000-0000-4000-8000-000000000304', '00000000-0000-4000-8000-000000000101')
+ON CONFLICT (id) DO NOTHING;

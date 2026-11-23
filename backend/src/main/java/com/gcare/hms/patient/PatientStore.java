@@ -175,6 +175,198 @@ class PatientStore {
         .update();
   }
 
+  /**
+   * Applies a correction if the record is still at {@code expectedVersion}; returns rows updated.
+   */
+  int update(PatientRow p, long expectedVersion) {
+    return jdbc.sql(
+            """
+            UPDATE patients SET family_name = :family, given_names = :given,
+                family_name_norm = :familyNorm, given_names_norm = :givenNorm,
+                birth_date = :birthDate, birth_date_estimated = :estimated, sex = :sex,
+                phone = :phone, phone_norm = :phoneNorm, details_incomplete = :incomplete,
+                updated_at = now(), version = version + 1
+            WHERE id = :id AND version = :version AND status = 'ACTIVE'
+            """)
+        .param("family", p.familyName())
+        .param("given", p.givenNames())
+        .param("familyNorm", p.familyNorm())
+        .param("givenNorm", p.givenNorm())
+        .param("birthDate", p.birthDate())
+        .param("estimated", p.birthDateEstimated())
+        .param("sex", p.sex().name())
+        .param("phone", p.phone())
+        .param("phoneNorm", p.phoneNorm())
+        .param("incomplete", p.detailsIncomplete())
+        .param("id", p.id())
+        .param("version", expectedVersion)
+        .update();
+  }
+
+  void insertChange(
+      UUID organizationId,
+      UUID patientId,
+      long patientVersion,
+      String changesJson,
+      String reason,
+      UUID changedBy) {
+    jdbc.sql(
+            """
+            INSERT INTO patient_changes (id, organization_id, patient_id, patient_version, changes,
+                reason, changed_by)
+            VALUES (:id, :org, :patient, :version, CAST(:changes AS jsonb), :reason, :by)
+            """)
+        .param("id", UUID.randomUUID())
+        .param("org", organizationId)
+        .param("patient", patientId)
+        .param("version", patientVersion)
+        .param("changes", changesJson)
+        .param("reason", reason)
+        .param("by", changedBy)
+        .update();
+  }
+
+  record ChangeRow(
+      UUID id,
+      long patientVersion,
+      String changesJson,
+      String reason,
+      UUID changedBy,
+      Instant changedAt) {}
+
+  List<ChangeRow> changes(UUID patientId) {
+    return jdbc.sql(
+            "SELECT id, patient_version, changes::text AS changes, reason, changed_by, changed_at"
+                + " FROM patient_changes WHERE patient_id = :id ORDER BY patient_version DESC")
+        .param("id", patientId)
+        .query((rs, i) ->
+            new ChangeRow(
+                rs.getObject("id", UUID.class),
+                rs.getLong("patient_version"),
+                rs.getString("changes"),
+                rs.getString("reason"),
+                rs.getObject("changed_by", UUID.class),
+                rs.getObject("changed_at", OffsetDateTime.class).toInstant()))
+        .list();
+  }
+
+  // --- duplicate flags -------------------------------------------------------------------------
+
+  record FlagRow(
+      UUID id,
+      UUID patientId,
+      UUID candidateId,
+      int score,
+      String origin,
+      String reason,
+      String status,
+      UUID createdBy,
+      Instant createdAt,
+      UUID resolvedBy,
+      Instant resolvedAt,
+      String resolutionNote,
+      long version) {}
+
+  boolean openFlagExists(UUID a, UUID b) {
+    return jdbc.sql(
+                "SELECT count(*) FROM patient_duplicate_flags WHERE status = 'OPEN'"
+                    + " AND ((patient_id = :a AND candidate_patient_id = :b)"
+                    + " OR (patient_id = :b AND candidate_patient_id = :a))")
+            .param("a", a)
+            .param("b", b)
+            .query(Long.class)
+            .single()
+        > 0;
+  }
+
+  void insertStaffReport(
+      UUID organizationId, UUID patientId, UUID candidateId, int score, String reason, UUID by) {
+    jdbc.sql(
+            """
+            INSERT INTO patient_duplicate_flags (id, organization_id, patient_id,
+                candidate_patient_id, score, origin, reason, status, created_by)
+            VALUES (:id, :org, :patient, :candidate, :score, 'STAFF_REPORT', :reason, 'OPEN', :by)
+            """)
+        .param("id", UUID.randomUUID())
+        .param("org", organizationId)
+        .param("patient", patientId)
+        .param("candidate", candidateId)
+        .param("score", score)
+        .param("reason", reason)
+        .param("by", by)
+        .update();
+  }
+
+  List<FlagRow> flags(String status, int page, int size) {
+    return jdbc.sql(
+            "SELECT * FROM patient_duplicate_flags WHERE status = :status"
+                + " ORDER BY score DESC, created_at LIMIT :limit OFFSET :offset")
+        .param("status", status)
+        .param("limit", size)
+        .param("offset", (long) page * size)
+        .query(PatientStore::flagRow)
+        .list();
+  }
+
+  long countFlags(String status) {
+    return jdbc.sql("SELECT count(*) FROM patient_duplicate_flags WHERE status = :status")
+        .param("status", status)
+        .query(Long.class)
+        .single();
+  }
+
+  Optional<FlagRow> flag(UUID id) {
+    return jdbc.sql("SELECT * FROM patient_duplicate_flags WHERE id = :id")
+        .param("id", id)
+        .query(PatientStore::flagRow)
+        .optional();
+  }
+
+  int resolveFlag(UUID id, long expectedVersion, String status, String note, UUID by) {
+    return jdbc.sql(
+            """
+            UPDATE patient_duplicate_flags SET status = :status, resolution_note = :note,
+                resolved_by = :by, resolved_at = now(), version = version + 1
+            WHERE id = :id AND version = :version AND status = 'OPEN'
+            """)
+        .param("status", status)
+        .param("note", note)
+        .param("by", by)
+        .param("id", id)
+        .param("version", expectedVersion)
+        .update();
+  }
+
+  /** Patients already judged "not a duplicate" of {@code patientId}; not suggested again. */
+  Set<UUID> notDuplicateOf(UUID patientId) {
+    return new LinkedHashSet<>(
+        jdbc.sql(
+                "SELECT CASE WHEN patient_id = :id THEN candidate_patient_id ELSE patient_id END"
+                    + " FROM patient_duplicate_flags WHERE status = 'NOT_DUPLICATE'"
+                    + " AND (patient_id = :id OR candidate_patient_id = :id)")
+            .param("id", patientId)
+            .query(UUID.class)
+            .list());
+  }
+
+  private static FlagRow flagRow(ResultSet rs, int i) throws SQLException {
+    OffsetDateTime resolvedAt = rs.getObject("resolved_at", OffsetDateTime.class);
+    return new FlagRow(
+        rs.getObject("id", UUID.class),
+        rs.getObject("patient_id", UUID.class),
+        rs.getObject("candidate_patient_id", UUID.class),
+        rs.getInt("score"),
+        rs.getString("origin"),
+        rs.getString("reason"),
+        rs.getString("status"),
+        rs.getObject("created_by", UUID.class),
+        rs.getObject("created_at", OffsetDateTime.class).toInstant(),
+        rs.getObject("resolved_by", UUID.class),
+        resolvedAt == null ? null : resolvedAt.toInstant(),
+        rs.getString("resolution_note"),
+        rs.getLong("version"));
+  }
+
   // --- reads -----------------------------------------------------------------------------------
 
   Optional<PatientRow> find(UUID id) {

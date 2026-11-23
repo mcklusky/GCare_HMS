@@ -90,7 +90,10 @@ Isolation is enforced by PostgreSQL row-level security, so a missed `WHERE` clau
 - `POST /api/v1/patients` answers **409 `DUPLICATE_CANDIDATES`** with scored candidates when likely/possible duplicates exist. The client resends with `duplicate_review.reviewed_candidate_ids` naming every candidate, plus a `reason` for likely duplicates; those pairs go to `patient_duplicate_flags` for review. Nothing is ever linked or merged automatically.
 - Search needs a number, identifier, phone, or a name with birth date/year or sex (`SEARCH_TOO_BROAD` otherwise). Patients are organization-wide: `PATIENT_READ` anywhere allows searching; registering needs `PATIENT_REGISTER` at the facility.
 - Audit metadata for patients holds criteria *types* and counts only, never names, numbers or free-text reasons.
-- Local demo: `demo.clerk` (registration clerk at DEMO-GH) and three fictional patients `P1000001-6`, `P1000002-4`, `P1000003-2`.
+- **Corrections** (`PATCH /api/v1/patients/{id}`): send `version`, `reason` and only the changed fields; previous values go to `patient_changes` (append-only) and `GET .../history`. A stale `version` answers 409.
+- **Duplicate review** (`/api/v1/patient-duplicate-flags`, permission `PATIENT_DUPLICATE_REVIEW`): staff report pairs with `POST /patients/{id}/duplicate-reports`; a reviewer who did not raise the item marks it `NOT_DUPLICATE` with a note, and the pair is not suggested again. Linking is task 2.3.
+- Screens: `/patients` (search), `/patients/new` (registration with candidate review), `/patients/{id}` (record, history, correction, report), `/patients/duplicates` (review queue). Search criteria and form input stay in memory, never in the URL or browser storage.
+- Local demo: `demo.clerk` (registration clerk at DEMO-GH), `demo.supervisor` (adds duplicate review) and three fictional patients `P1000001-6`, `P1000002-4`, `P1000003-2`.
 
 ## First administrator (admin bootstrap)
 For a new environment, after Keycloak is set up and the administrator's Keycloak account exists:

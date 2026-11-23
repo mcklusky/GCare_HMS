@@ -1,8 +1,11 @@
 package com.gcare.hms.patient;
 
+import com.gcare.hms.patient.PatientApi.CorrectionRequest;
 import com.gcare.hms.patient.PatientApi.DuplicateCandidate;
 import com.gcare.hms.patient.PatientApi.DuplicateCandidatesError;
+import com.gcare.hms.patient.PatientApi.DuplicateReportRequest;
 import com.gcare.hms.patient.PatientApi.Page;
+import com.gcare.hms.patient.PatientApi.PatientChangeView;
 import com.gcare.hms.patient.PatientApi.PatientDetail;
 import com.gcare.hms.patient.PatientApi.PatientSummary;
 import com.gcare.hms.patient.PatientApi.RegisterPatientRequest;
@@ -23,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -94,6 +98,32 @@ class PatientController {
       description = "Needs PATIENT_READ.")
   List<DuplicateCandidate> possibleDuplicates(@PathVariable UUID id) {
     return service.possibleDuplicates(id);
+  }
+
+  @PatchMapping("/{id}")
+  @Operation(
+      summary = "Correct patient details",
+      description =
+          "Needs PATIENT_UPDATE. Body: version (as last read), reason, changes (only the fields to"
+              + " change). Previous values are kept in the history. 409 if changed by someone else.")
+  PatientDetail correct(@PathVariable UUID id, @Valid @RequestBody CorrectionRequest request) {
+    return service.correct(id, request);
+  }
+
+  @GetMapping("/{id}/history")
+  @Operation(summary = "Correction history, newest first", description = "Needs PATIENT_READ.")
+  List<PatientChangeView> history(@PathVariable UUID id) {
+    return service.history(id);
+  }
+
+  @PostMapping("/{id}/duplicate-reports")
+  @Operation(
+      summary = "Report a possible duplicate",
+      description = "Needs PATIENT_READ. Puts the pair in the duplicate review queue.")
+  ResponseEntity<Void> reportDuplicate(
+      @PathVariable UUID id, @Valid @RequestBody DuplicateReportRequest request) {
+    service.reportDuplicate(id, request);
+    return ResponseEntity.noContent().build();
   }
 
   /** Turns {@link DuplicateCandidatesException} into the 409 body with candidates. */

@@ -3,8 +3,10 @@ package com.gcare.hms.identity;
 import static com.gcare.hms.shared.security.Permissions.AUDIT_READ;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
+import static com.gcare.hms.shared.security.Permissions.PATIENT_DUPLICATE_REVIEW;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_READ;
 import static com.gcare.hms.shared.security.Permissions.PATIENT_REGISTER;
+import static com.gcare.hms.shared.security.Permissions.PATIENT_UPDATE;
 import static com.gcare.hms.shared.security.Permissions.USER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.USER_READ;
 
@@ -32,8 +34,14 @@ public enum SystemRole {
    */
   REGISTRATION_CLERK(
       "Registration clerk",
-      "Searches and registers patients at assigned facilities. No clinical access.",
-      Set.of(PATIENT_READ, PATIENT_REGISTER));
+      "Searches, registers and corrects patients at assigned facilities. No clinical access.",
+      Set.of(PATIENT_READ, PATIENT_REGISTER, PATIENT_UPDATE)),
+
+  /** Registration clerk plus the duplicate review queue. PROVISIONAL, like the clerk role. */
+  REGISTRATION_SUPERVISOR(
+      "Registration supervisor",
+      "Registration clerk duties plus reviewing possible duplicate patients. No clinical access.",
+      Set.of(PATIENT_READ, PATIENT_REGISTER, PATIENT_UPDATE, PATIENT_DUPLICATE_REVIEW));
 
   private final String displayName;
   private final String description;

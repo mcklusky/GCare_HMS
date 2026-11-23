@@ -18,6 +18,8 @@ export class ApiRequestError extends Error {
   readonly code: string
   readonly fieldErrors: Record<string, string[]>
   readonly correlationId: string | null
+  /** The full parsed error body (some errors carry extra data, e.g. duplicate candidates). */
+  readonly body: unknown
 
   constructor(status: number, body: Partial<ApiErrorBody> | null, fallbackCorrelationId: string | null) {
     super(body?.message ?? `Request failed (${status})`)
@@ -26,6 +28,7 @@ export class ApiRequestError extends Error {
     this.code = body?.code ?? (status === 0 ? 'NETWORK_ERROR' : 'UNEXPECTED_ERROR')
     this.fieldErrors = body?.field_errors ?? {}
     this.correlationId = body?.correlation_id ?? fallbackCorrelationId
+    this.body = body
   }
 
   get isUnauthenticated(): boolean {

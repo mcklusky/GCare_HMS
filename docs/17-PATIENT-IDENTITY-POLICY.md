@@ -56,7 +56,7 @@ Candidates are scored when a new registration is about to be saved and on reques
 
 **Cap:** a score can only reach *Likely* if an identifier matched or the given names match (equal or similar). Otherwise it is capped at 79. This keeps twins and relatives who share a surname, birth date and phone from being flagged as the same person without stronger evidence.
 
-**Review queue:** records created despite a likely duplicate, and pairs reported by staff ("this may be the same person"), go to a queue for users with permission `PATIENT_DUPLICATE_REVIEW` (registration supervisor). The reviewer chooses **not a duplicate** (the pair is not suggested again) or **request link** (§5).
+**Review queue:** records created despite a likely duplicate, and pairs reported by staff ("this may be the same person"), go to a queue for users with permission `PATIENT_DUPLICATE_REVIEW` (registration supervisor). The reviewer chooses **not a duplicate** (with a note; the pair is not suggested again) or **request link** (§5). The person who raised an item cannot decide it, so a clerk who registered despite a likely duplicate cannot also clear the review.
 
 ## 4. Acceptance scenarios (to be signed off by registration leadership)
 | # | Situation | Expected |
@@ -88,4 +88,5 @@ Changing a name, birth date, sex or identifier creates a new version with the pr
 | Date | Change | By |
 |---|---|---|
 | 2026-11-23 | Provisional defaults written at product owner's request | Engineering (Claude Code) |
+| 2026-11-23 | Reviewer cannot decide an item they raised; decisions need a note. Provisional roles: clerk (search, register, correct), supervisor (+ duplicate review) | Engineering (Claude Code), task 2.2 |
 | 2026-11-23 | Swapped names score as if in the right fields (scenario 4 was otherwise missed); cap at 79 without identifier or given-name evidence (scenario 6); hyphens become spaces | Engineering (Claude Code), found while encoding §4 as tests |

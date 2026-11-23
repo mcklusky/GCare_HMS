@@ -1,4 +1,4 @@
-import { IconBuildingHospital, IconHome } from '@tabler/icons-react'
+import { IconBuildingHospital, IconCopy, IconHome, IconUsers } from '@tabler/icons-react'
 import { Permission } from '../api/types'
 
 export interface NavItem {
@@ -12,6 +12,13 @@ export interface NavItem {
 /** Main navigation. Add items as features arrive; keep the permission in step with the API. */
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Home', to: '/', icon: IconHome },
+  { label: 'Patients', to: '/patients', icon: IconUsers, permission: Permission.PATIENT_READ },
+  {
+    label: 'Duplicate review',
+    to: '/patients/duplicates',
+    icon: IconCopy,
+    permission: Permission.PATIENT_DUPLICATE_REVIEW,
+  },
   { label: 'Facilities', to: '/facilities', icon: IconBuildingHospital, permission: Permission.FACILITY_READ },
 ]
 
