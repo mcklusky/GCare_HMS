@@ -19,6 +19,7 @@ Implementation baseline: React + TypeScript frontend; Java + Spring Boot modular
 - [21 — Configuration and Branding](21-CONFIGURATION.md) (versioned settings, two-person approval, branding; **provisional** roles)
 - [22 — Downtime Forms and Reconciliation](22-DOWNTIME.md) (numbered paper forms, reconciliation queue, second person; **provisional** roles)
 - [23 — Operations Readiness](23-OPERATIONS-READINESS.md) (encrypted backup + restore drill, security sweep, accessibility, health/metrics, alert rules, UAT checklist)
+- [28 — Laboratory: Discovery and Proposed Scope](28-LABORATORY-SCOPE.md) (later module; direction decided, **scope not yet approved**, no code)
 - [27 — Gate Readiness Pack](27-GATE-READINESS.md) (per-phase evidence, what is left before each sign-off, radiology acceptance scenarios; **no gate signed**)
 - [26 — Radiology Reports and Critical Results](26-RADIOLOGY-REPORTS.md) (drafts, signing, amendments, critical-result contact and acknowledgement, viewer links; **provisional** role)
 - [25 — Imaging Worklist and Study Linking](25-IMAGING-WORKLIST.md) (accession numbers, radiographer steps, exact-match linking, two-person review; **provisional** role)
