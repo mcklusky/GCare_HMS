@@ -22,6 +22,7 @@ import com.gcare.hms.billing.PaymentApi.PaymentView;
 import com.gcare.hms.billing.PaymentApi.ReceiptView;
 import com.gcare.hms.billing.PaymentApi.ShiftStatus;
 import com.gcare.hms.billing.PaymentStore.ShiftRow;
+import com.gcare.hms.configuration.ConfigurationService;
 import com.gcare.hms.shared.security.CurrentUser;
 import com.gcare.hms.shared.security.FacilityScope;
 import com.gcare.hms.shared.security.Permissions;
@@ -54,13 +55,19 @@ public class AdjustmentService {
   private final AdjustmentStore store;
   private final PaymentStore payments;
   private final InvoiceStore invoices;
+  private final ConfigurationService configuration;
   private final AuditService audit;
 
   AdjustmentService(
-      AdjustmentStore store, PaymentStore payments, InvoiceStore invoices, AuditService audit) {
+      AdjustmentStore store,
+      PaymentStore payments,
+      InvoiceStore invoices,
+      ConfigurationService configuration,
+      AuditService audit) {
     this.store = store;
     this.payments = payments;
     this.invoices = invoices;
+    this.configuration = configuration;
     this.audit = audit;
   }
 
@@ -339,6 +346,7 @@ public class AdjustmentService {
         "REFUND",
         r.receiptNumber(),
         payments.facilityName(r.facilityId()),
+        configuration.brandingOf(r.facilityId()),
         r.paidAt(),
         invoice.patient(),
         invoice.invoiceNumber(),

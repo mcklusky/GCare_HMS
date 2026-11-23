@@ -50,6 +50,8 @@ public final class Permissions {
   public static final String REPORT_OPERATIONS_READ = "REPORT_OPERATIONS_READ";
   public static final String REPORT_REVENUE_READ = "REPORT_REVENUE_READ";
   public static final String REPORT_EXPORT = "REPORT_EXPORT";
+  public static final String CONFIG_CLINICAL_MANAGE = "CONFIG_CLINICAL_MANAGE";
+  public static final String CONFIG_ORGANIZATION_MANAGE = "CONFIG_ORGANIZATION_MANAGE";
 
   public static final Set<String> ALL =
       Set.of(
@@ -93,7 +95,9 @@ public final class Permissions {
           EXEMPTION_REASON_MANAGE,
           REPORT_OPERATIONS_READ,
           REPORT_REVENUE_READ,
-          REPORT_EXPORT);
+          REPORT_EXPORT,
+          CONFIG_CLINICAL_MANAGE,
+          CONFIG_ORGANIZATION_MANAGE);
 
   private Permissions() {}
 }

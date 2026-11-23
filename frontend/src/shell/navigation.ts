@@ -8,6 +8,7 @@ import {
   IconDiscount,
   IconReceiptRefund,
   IconReportMoney,
+  IconSettings,
   IconClipboardList,
   IconCopy,
   IconFileInvoice,
@@ -69,6 +70,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/admin/payment-methods',
     icon: IconCreditCard,
     permission: Permission.PAYMENT_METHOD_MANAGE,
+  },
+  {
+    label: 'Settings',
+    to: '/admin/settings',
+    icon: IconSettings,
+    permission: [Permission.CONFIG_CLINICAL_MANAGE, Permission.CONFIG_ORGANIZATION_MANAGE],
   },
   {
     label: 'Exemption reasons',

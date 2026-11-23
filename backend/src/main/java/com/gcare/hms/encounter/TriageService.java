@@ -39,11 +39,10 @@ public class TriageService {
 
   private final EncounterStore store;
   private final EncounterAudit audit;
-  private final TriageProperties triage;
+  private final TriageConfig triage;
   private final JsonMapper json;
 
-  TriageService(
-      EncounterStore store, EncounterAudit audit, TriageProperties triage, JsonMapper json) {
+  TriageService(EncounterStore store, EncounterAudit audit, TriageConfig triage, JsonMapper json) {
     this.store = store;
     this.audit = audit;
     this.triage = triage;
@@ -57,7 +56,8 @@ public class TriageService {
           + Permissions.OBSERVATION_RECORD
           + "')")
   public TriageSettings settings() {
-    return new TriageSettings(triage.urgencyLevels(), !triage.alarmLimits().isEmpty());
+    return new TriageSettings(
+        triage.current().urgencyLevels(), !triage.current().alarmLimits().isEmpty());
   }
 
   @PreAuthorize("hasAuthority('" + Permissions.OBSERVATION_RECORD + "')")
@@ -70,10 +70,10 @@ public class TriageService {
     }
     String urgency = StringUtils.hasText(request.urgency()) ? request.urgency().trim() : null;
     if (urgency != null
-        && triage.urgencyLevels().stream().noneMatch(l -> l.code().equals(urgency))) {
+        && triage.current().urgencyLevels().stream().noneMatch(l -> l.code().equals(urgency))) {
       throw new ApiException.Invalid(
           "urgency",
-          triage.urgencyLevels().isEmpty()
+          triage.current().urgencyLevels().isEmpty()
               ? "No urgency scale is configured yet; leave urgency empty"
               : "must be one of the configured urgency levels");
     }
@@ -155,8 +155,9 @@ public class TriageService {
     put(values, Measure.DIASTOLIC_MMHG, r.diastolicMmhg());
     put(values, Measure.SPO2_PCT, r.spo2Pct());
     List<Flag> flags = new ArrayList<>();
+    Map<String, Limit> limits = triage.current().alarmLimits();
     values.forEach((measure, value) -> {
-      Limit limit = triage.alarmLimits().get(measure.name());
+      Limit limit = limits.get(measure.name());
       if (limit == null) {
         return;
       }

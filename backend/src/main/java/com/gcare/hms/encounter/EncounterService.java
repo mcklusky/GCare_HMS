@@ -46,11 +46,11 @@ public class EncounterService {
 
   private final EncounterStore store;
   private final EncounterAudit audit;
-  private final TriageProperties triage;
+  private final TriageConfig triage;
   private final JsonMapper json;
 
   EncounterService(
-      EncounterStore store, EncounterAudit audit, TriageProperties triage, JsonMapper json) {
+      EncounterStore store, EncounterAudit audit, TriageConfig triage, JsonMapper json) {
     this.store = store;
     this.audit = audit;
     this.triage = triage;
@@ -163,7 +163,7 @@ public class EncounterService {
     List<EncounterSummary> items = rows.stream().map(r -> summary(r, clinical)).toList();
     if (OPEN.containsAll(wanted)) {
       Map<String, Integer> rank = new HashMap<>();
-      triage.urgencyLevels().forEach(l -> rank.put(l.code(), l.rank()));
+      triage.current().urgencyLevels().forEach(l -> rank.put(l.code(), l.rank()));
       items =
           items.stream()
               .sorted(

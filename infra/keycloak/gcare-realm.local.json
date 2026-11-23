@@ -277,6 +277,54 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001015",
+      "username": "demo.clinlead",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "ClinicalLead",
+      "email": "demo.clinlead@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001016",
+      "username": "demo.clinlead2",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "ClinicalLeadTwo",
+      "email": "demo.clinlead2@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001017",
+      "username": "demo.admin2",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "AdministratorTwo",
+      "email": "demo.admin2@example.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Local-Demo-Only-1!",
+          "temporary": false
+        }
+      ]
     }
   ]
 }

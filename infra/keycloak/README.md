@@ -24,6 +24,8 @@ It exists so developers can sign in locally. **It is not a production configurat
 | `demo.financemgr` | `…1012` | DEMO-ORG, FINANCE_MANAGER at DEMO-GH | Approves or rejects prices and tax rates (second person); voids issued invoices; signs off cashier shifts; approves refunds and exemptions; sees and exports revenue reports |
 | `demo.cashier` | `…1013` | DEMO-ORG, CASHIER at DEMO-GH | Starts, edits and issues visit invoices; takes payments and pays out refunds in a shift; requests refunds and exemptions |
 | `demo.manager` | `…1014` | DEMO-ORG, DEPARTMENT_MANAGER at DEMO-GH | Sees and exports visit, order and registration reports and the dashboard |
+| `demo.clinlead`, `demo.clinlead2` | `…1015`, `…1016` | DEMO-ORG, CLINICAL_LEAD at DEMO-GH | Propose and approve (each other's) triage settings |
+| `demo.admin2` | `…1017` | DEMO-ORG, ORGANIZATION_ADMIN (organization-wide) | Second administrator, to approve branding and billing options |
 | `demo.unlinked` | `…1004` | not linked | Sign-in refused (`login_error=account_not_enabled`), audited |
 
 Values such as brute-force limits, password policy and session lifetimes are **local defaults only**.

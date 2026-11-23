@@ -13,6 +13,7 @@ import { PaymentMethodsPage } from './pages/billing/PaymentMethodsPage'
 import { PriceApprovalsPage } from './pages/billing/PriceApprovalsPage'
 import { ReceiptPage } from './pages/billing/ReceiptPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
+import { SettingsPage } from './pages/admin/SettingsPage'
 import { ShiftPage } from './pages/billing/ShiftPage'
 import { ShiftReviewPage } from './pages/billing/ShiftReviewPage'
 import { TariffsPage } from './pages/billing/TariffsPage'
@@ -212,6 +213,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={[Permission.REPORT_OPERATIONS_READ, Permission.REPORT_REVENUE_READ]}>
             <ReportsPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'admin/settings',
+        element: (
+          <RequirePermission permission={[Permission.CONFIG_CLINICAL_MANAGE, Permission.CONFIG_ORGANIZATION_MANAGE]}>
+            <SettingsPage />
           </RequirePermission>
         ),
       },

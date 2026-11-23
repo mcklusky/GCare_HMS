@@ -5,6 +5,8 @@ import static com.gcare.hms.shared.security.Permissions.BILLING_CATALOG_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.BILLING_READ;
 import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_READ;
 import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_WRITE;
+import static com.gcare.hms.shared.security.Permissions.CONFIG_CLINICAL_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.CONFIG_ORGANIZATION_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_OPEN;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_READ;
@@ -54,7 +56,7 @@ public enum SystemRole {
   /** Scoped users and configuration; no implicit clinical access. */
   ORGANIZATION_ADMIN(
       "Organization administrator",
-      "Manages facilities, departments, user accounts, the order catalog, payment methods and exemption reasons. No clinical access.",
+      "Manages facilities, departments, user accounts, the order catalog, payment methods, exemption reasons, branding and operational settings. No clinical access.",
       Set.of(
           FACILITY_READ,
           FACILITY_MANAGE,
@@ -62,7 +64,8 @@ public enum SystemRole {
           USER_MANAGE,
           ORDER_CATALOG_MANAGE,
           PAYMENT_METHOD_MANAGE,
-          EXEMPTION_REASON_MANAGE)),
+          EXEMPTION_REASON_MANAGE,
+          CONFIG_ORGANIZATION_MANAGE)),
 
   /** Reads the audit trail; no mutation. */
   AUDITOR("Auditor", "Reads the audit trail. Cannot change anything.", Set.of(AUDIT_READ)),
@@ -196,7 +199,16 @@ public enum SystemRole {
   DEPARTMENT_MANAGER(
       "Department manager",
       "Sees and exports aggregated visit, order and registration reports and the dashboard. No patient records.",
-      Set.of(REPORT_OPERATIONS_READ, REPORT_EXPORT));
+      Set.of(REPORT_OPERATIONS_READ, REPORT_EXPORT)),
+
+  /**
+   * PROVISIONAL (task 5.2; docs/21): proposes and approves clinical settings such as the triage
+   * scale and alarm limits. A second clinical lead must approve each change.
+   */
+  CLINICAL_LEAD(
+      "Clinical lead",
+      "Proposes and approves clinical settings (triage scale, alarm limits); another clinical lead approves each change.",
+      Set.of(CONFIG_CLINICAL_MANAGE));
 
   private final String displayName;
   private final String description;

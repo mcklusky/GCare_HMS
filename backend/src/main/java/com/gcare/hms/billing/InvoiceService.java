@@ -61,31 +61,39 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class InvoiceService {
 
   private static final int MAX_LIST = 200;
-  private static final int DEFAULT_DAYS = 7;
   private static final int MAX_DAYS = 90;
 
   private final InvoiceStore store;
   private final BillingStore billing;
   private final PaymentStore payments;
+  private final BillingOptionsSetting options;
   private final AuditService audit;
   private final Clock clock = Clock.systemUTC();
 
   InvoiceService(
-      InvoiceStore store, BillingStore billing, PaymentStore payments, AuditService audit) {
+      InvoiceStore store,
+      BillingStore billing,
+      PaymentStore payments,
+      BillingOptionsSetting options,
+      AuditService audit) {
     this.store = store;
     this.billing = billing;
     this.payments = payments;
+    this.options = options;
     this.audit = audit;
   }
 
   // --- lists -----------------------------------------------------------------------------------
 
-  /** Recent visits without a draft or issued invoice (default 7 days, at most 90). */
+  /**
+   * Recent visits without a draft or issued invoice (configured look-back, default 7 days; at most
+   * 90).
+   */
   @PreAuthorize("hasAuthority('" + Permissions.INVOICE_MANAGE + "')")
   @Transactional(readOnly = true)
   public List<BillableVisit> billableVisits(UUID facilityId, Integer days) {
     CurrentUser user = CurrentUser.require();
-    int window = days == null ? DEFAULT_DAYS : days;
+    int window = days == null ? options.billableVisitDays() : days;
     if (window < 1 || window > MAX_DAYS) {
       throw new ApiException.Invalid("days", "must be between 1 and " + MAX_DAYS);
     }

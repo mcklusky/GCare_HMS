@@ -1,4 +1,4 @@
-import { Alert, Anchor, Button, Card, Group, Stack, Table, Text, Title } from '@mantine/core'
+import { Alert, Anchor, Button, Card, Group, Image, Stack, Table, Text, Title } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
@@ -6,6 +6,7 @@ import { formatMoney } from '../../api/billing'
 import { displayName } from '../../api/patients'
 import { getRefundReceipt } from '../../api/adjustments'
 import { getReceipt } from '../../api/payments'
+import { logoUrl } from '../../api/settings'
 import { QueryState } from '../../components/states'
 
 /**
@@ -35,7 +36,17 @@ export function ReceiptPage({ kind = 'payment' }: { kind?: 'payment' | 'refund' 
             <Title order={1} size="h3">
               {r.kind === 'REFUND' ? 'Refund receipt' : 'Receipt'} {r.receipt_number}
             </Title>
-            <Text>{r.facility_name}</Text>
+            {r.branding.logo_id && (
+              <Image src={logoUrl(r.branding.logo_id)} alt={r.branding.display_name} h={56} w="auto" fit="contain" />
+            )}
+            <Text fw={600}>{r.branding.display_name || r.facility_name}</Text>
+            {r.branding.address_lines.map((l) => (
+              <Text key={l} size="sm">
+                {l}
+              </Text>
+            ))}
+            {r.branding.phone && <Text size="sm">Tel. {r.branding.phone}</Text>}
+            {r.branding.registration_number && <Text size="sm">Reg. no. {r.branding.registration_number}</Text>}
             <Table aria-label="Receipt" mt="sm">
               <Table.Tbody>
                 <Row label="Date">{new Date(r.received_at).toLocaleString()}</Row>
@@ -56,6 +67,11 @@ export function ReceiptPage({ kind = 'payment' }: { kind?: 'payment' | 'refund' 
                 <Row label={r.kind === 'REFUND' ? 'Paid out by' : 'Received by'}>{r.cashier_name}</Row>
               </Table.Tbody>
             </Table>
+            {r.branding.receipt_footer && (
+              <Text size="sm" mt="sm" ta="center">
+                {r.branding.receipt_footer}
+              </Text>
+            )}
             <Group justify="flex-end" mt="md">
               <Button variant="default" onClick={() => window.print()}>
                 Print

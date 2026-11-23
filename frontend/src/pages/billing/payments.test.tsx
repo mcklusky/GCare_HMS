@@ -88,6 +88,16 @@ const RECEIPT: Receipt = {
   kind: 'PAYMENT',
   receipt_number: 'RCT-000001',
   facility_name: FACILITY_A.name,
+  branding: {
+    facility_id: FACILITY_A.id,
+    display_name: 'Test Hospital A (synthetic)',
+    address_lines: ['1 Test Road'],
+    phone: null,
+    registration_number: null,
+    receipt_footer: 'Thank you (test)',
+    logo_id: null,
+    configured: true,
+  },
   received_at: PAYMENT.received_at,
   patient: PATIENT,
   invoice_number: 'INV-000001',
@@ -151,6 +161,8 @@ describe('payments', () => {
     expect(table).toHaveTextContent('5.00 USD')
     expect(table).toHaveTextContent('INV-000001 (total 10.00 USD)')
     expect(screen.getByText('Provisional format')).toBeInTheDocument()
+    expect(screen.getByText('1 Test Road')).toBeInTheDocument()
+    expect(screen.getByText('Thank you (test)')).toBeInTheDocument()
   })
 })
 

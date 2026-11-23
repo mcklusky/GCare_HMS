@@ -51,7 +51,7 @@ Detailed task numbers use the draft's own numbering (its Phase 0–1 both map to
 | FR-039 | Hospital workspace provisioning | Later (pilot workspace created by admin bootstrap, 1.3) | 1.3 | 1.3 | — | | |
 | FR-040 | Configuration inheritance and versioning | Pilot (partial): facility/department versioning + approval | 5.2 | 5.3 | Approval, effective date, rollback | | |
 | FR-041 | Selectable modules and packages | Pilot (partial): module enable/disable per facility | 5.2 | 5.3 | Disabled module endpoints deny access | | |
-| FR-042 | Hospital workflow configuration | Pilot (partial): catalogs, tariffs, payer categories, roles | 4.1, 5.2 | 4.1, 5.3 | Validation preserves record meaning | | |
+| FR-042 | Hospital workflow configuration | Pilot (partial): catalogs, tariffs, payer categories, roles | 4.1, 5.2 | 4.1, 5.3 | Validation preserves record meaning | **Partial**: `ConfigurationTests` (triage scale active only after a second clinical lead approves, superseded versions kept, DB refuses value changes, invalid values refused, branding/logo shown only once approved, billing look-back follows approved option, isolation); `ConfiguredTriageTests`; frontend `settings.test.tsx`. Payer categories not built (docs/21) | Local `mvnw verify` 2026-11-23: passed (174 tests); local `vitest run`: passed (88 tests) |
 | FR-043 | Customer branding | Pilot | 5.2 | 5.3 | GCare HMS identity retained alongside hospital brand | | |
 | FR-044 | Upgrade-safe extensions and integrations | Later | Later modules | — | — | | |
 | FR-045 | Customer environment and tenant isolation | Pilot | 1.2, 1.3 | 1.3 | Support access time-limited and logged | | |

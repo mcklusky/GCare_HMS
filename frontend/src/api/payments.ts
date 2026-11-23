@@ -2,6 +2,7 @@ import { apiFetch } from './client'
 import type { UserRef } from './encounters'
 import type { Money } from './invoices'
 import type { PatientSummary } from './patients'
+import type { Branding } from './settings'
 
 /**
  * Payment methods, payments, receipts and cashier shifts (backend PaymentController; docs/19 §4).
@@ -36,6 +37,7 @@ export interface Receipt {
   kind: 'PAYMENT' | 'REFUND'
   receipt_number: string
   facility_name: string
+  branding: Branding
   received_at: string
   patient: PatientSummary
   invoice_number: string

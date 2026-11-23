@@ -451,3 +451,39 @@ INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facili
 VALUES
     ('00000000-0000-4000-8000-000000000612', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000413', '00000000-0000-4000-8000-000000000312', '00000000-0000-4000-8000-000000000101')
 ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Configuration (task 5.2). Two clinical leads and a second administrator so every change can be
+-- proposed by one person and approved by another. No setting values are seeded.
+-- ---------------------------------------------------------------------------
+INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
+VALUES
+    ('00000000-0000-4000-8000-000000000313', '00000000-0000-4000-8000-000000000001', 'CLINICAL_LEAD', 'Clinical lead', 'Proposes and approves clinical settings (triage scale, alarm limits); another clinical lead approves each change.', true, 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000301', 'CONFIG_ORGANIZATION_MANAGE'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000313', 'CONFIG_CLINICAL_MANAGE')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO users (id, organization_id, username, display_name, email, status)
+VALUES
+    ('00000000-0000-4000-8000-000000000414', '00000000-0000-4000-8000-000000000001', 'demo.clinlead', 'Demo Clinical Lead', 'demo.clinlead@example.invalid', 'ACTIVE'),
+    ('00000000-0000-4000-8000-000000000415', '00000000-0000-4000-8000-000000000001', 'demo.clinlead2', 'Demo Clinical Lead Two', 'demo.clinlead2@example.invalid', 'ACTIVE'),
+    ('00000000-0000-4000-8000-000000000416', '00000000-0000-4000-8000-000000000001', 'demo.admin2', 'Demo Administrator Two', 'demo.admin2@example.invalid', 'ACTIVE')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_identities (id, organization_id, user_id, issuer, subject)
+VALUES
+    ('00000000-0000-4000-8000-000000000514', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000414', 'http://localhost:8180/realms/gcare', '00000000-0000-4000-8000-000000001015'),
+    ('00000000-0000-4000-8000-000000000515', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000415', 'http://localhost:8180/realms/gcare', '00000000-0000-4000-8000-000000001016'),
+    ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000416', 'http://localhost:8180/realms/gcare', '00000000-0000-4000-8000-000000001017')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_role_assignments (id, organization_id, user_id, role_id, facility_id)
+VALUES
+    ('00000000-0000-4000-8000-000000000613', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000414', '00000000-0000-4000-8000-000000000313', '00000000-0000-4000-8000-000000000101'),
+    ('00000000-0000-4000-8000-000000000614', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000415', '00000000-0000-4000-8000-000000000313', '00000000-0000-4000-8000-000000000101'),
+    ('00000000-0000-4000-8000-000000000615', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000416', '00000000-0000-4000-8000-000000000301', NULL)
+ON CONFLICT (id) DO NOTHING;

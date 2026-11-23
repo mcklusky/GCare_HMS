@@ -23,6 +23,7 @@ import com.gcare.hms.billing.PaymentApi.ShiftView;
 import com.gcare.hms.billing.PaymentApi.UpdateMethodRequest;
 import com.gcare.hms.billing.PaymentStore.NewPayment;
 import com.gcare.hms.billing.PaymentStore.ShiftRow;
+import com.gcare.hms.configuration.ConfigurationService;
 import com.gcare.hms.shared.security.CurrentUser;
 import com.gcare.hms.shared.security.FacilityScope;
 import com.gcare.hms.shared.security.Permissions;
@@ -58,11 +59,17 @@ public class PaymentService {
 
   private final PaymentStore store;
   private final InvoiceStore invoices;
+  private final ConfigurationService configuration;
   private final AuditService audit;
 
-  PaymentService(PaymentStore store, InvoiceStore invoices, AuditService audit) {
+  PaymentService(
+      PaymentStore store,
+      InvoiceStore invoices,
+      ConfigurationService configuration,
+      AuditService audit) {
     this.store = store;
     this.invoices = invoices;
+    this.configuration = configuration;
     this.audit = audit;
   }
 
@@ -426,6 +433,7 @@ public class PaymentService {
         "PAYMENT",
         p.receiptNumber(),
         store.facilityName(facility),
+        configuration.brandingOf(facility),
         p.receivedAt(),
         invoice.patient(),
         invoice.invoiceNumber(),

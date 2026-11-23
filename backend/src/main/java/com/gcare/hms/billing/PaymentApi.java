@@ -2,6 +2,7 @@ package com.gcare.hms.billing;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcare.hms.billing.BillingApi.ServiceStatus;
+import com.gcare.hms.configuration.ConfigApi.BrandingView;
 import com.gcare.hms.encounter.EncounterApi.UserRef;
 import com.gcare.hms.patient.PatientApi.PatientSummary;
 import jakarta.validation.Valid;
@@ -86,6 +87,8 @@ public final class PaymentApi {
       String kind,
       @JsonProperty("receipt_number") String receiptNumber,
       @JsonProperty("facility_name") String facilityName,
+      /** Approved facility branding and receipt text (task 5.2). */
+      BrandingView branding,
       @JsonProperty("received_at") Instant receivedAt,
       PatientSummary patient,
       @JsonProperty("invoice_number") String invoiceNumber,

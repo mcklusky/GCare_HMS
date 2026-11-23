@@ -1,8 +1,10 @@
-import { Anchor, AppShell, Badge, Burger, Group, Menu, NavLink, Select, Text, UnstyledButton } from '@mantine/core'
+import { Anchor, AppShell, Badge, Burger, Group, Image, Menu, NavLink, Select, Text, UnstyledButton } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { useQuery } from '@tanstack/react-query'
 import { IconChevronDown, IconLogout, IconUserCircle } from '@tabler/icons-react'
 import { useEffect, useRef } from 'react'
 import { NavLink as RouterNavLink, Outlet, useLocation } from 'react-router'
+import { getBranding, logoUrl } from '../api/settings'
 import type { Me } from '../api/types'
 import { useFacilityContext } from '../auth/facilityContextValue'
 import { useSignOut } from '../auth/session'
@@ -59,9 +61,7 @@ export function AppLayout({ me }: { me: Me }) {
             <Text fw={700} size="lg">
               GCare HMS
             </Text>
-            <Text c="dimmed" visibleFrom="md" truncate>
-              {me.organization.name}
-            </Text>
+            <FacilityBrand fallback={me.organization.name} />
             {environmentLabel && (
               <Badge color="yellow" variant="filled" visibleFrom="sm">
                 {environmentLabel}
@@ -133,5 +133,26 @@ export function AppLayout({ me }: { me: Me }) {
         <Outlet />
       </AppShell.Main>
     </AppShell>
+  )
+}
+
+/** Approved facility branding (task 5.2): name and logo of the working facility; else the organization name. */
+function FacilityBrand({ fallback }: { fallback: string }) {
+  const { current } = useFacilityContext()
+  const branding = useQuery({
+    queryKey: ['branding', current?.id],
+    queryFn: ({ signal }) => getBranding(current!.id, signal),
+    enabled: !!current,
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+  const b = branding.data?.configured ? branding.data : null
+  return (
+    <Group gap="xs" wrap="nowrap" visibleFrom="md">
+      {b?.logo_id && <Image src={logoUrl(b.logo_id)} alt="" h={28} w="auto" fit="contain" />}
+      <Text c="dimmed" truncate>
+        {b ? b.display_name : fallback}
+      </Text>
+    </Group>
   )
 }

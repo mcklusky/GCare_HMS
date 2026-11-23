@@ -16,6 +16,7 @@ Implementation baseline: React + TypeScript frontend; Java + Spring Boot modular
 - [17 — Patient Identity Policy](17-PATIENT-IDENTITY-POLICY.md) (**provisional** defaults for OD-05–07; needs registration-leadership sign-off)
 - [19 — Billing Policy](19-BILLING-POLICY.md) (decisions on prices, currency, tax, approval; **provisional** defaults for the finance owner)
 - [20 — Operational Reports](20-REPORTING.md) (reports, dashboard, export decisions; **provisional** roles)
+- [21 — Configuration and Branding](21-CONFIGURATION.md) (versioned settings, two-person approval, branding; **provisional** roles)
 - [18 — Encounter Workflow](18-ENCOUNTER-WORKFLOW.md) (**provisional** visit lifecycle and queues; triage scale and alarm limits left for a clinical lead)
 - [Consistency Review and Decision Register](REVIEW.md)
 
