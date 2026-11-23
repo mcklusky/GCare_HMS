@@ -1,0 +1,56 @@
+# --- Secrets and local config (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+credentials*.json
+secrets/
+.claude/settings.local.json
+
+# --- Patient data / extracts / imaging (never commit) ---
+# Synthetic fixtures belong under src/test resources and must be reviewed.
+data/
+exports/
+extracts/
+backups/
+*.dcm
+*.dump
+*.sql.gz
+*.bak
+
+# --- Java / Spring Boot ---
+target/
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+.mvn/wrapper/maven-wrapper.jar
+
+# --- Node / React ---
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- IDEs / OS ---
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
