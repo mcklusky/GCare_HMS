@@ -30,7 +30,6 @@ import com.gcare.hms.shared.security.CurrentUser;
 import com.gcare.hms.shared.security.FacilityScope;
 import com.gcare.hms.shared.security.Permissions;
 import com.gcare.hms.shared.web.ApiException;
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -328,9 +327,10 @@ public class InvoiceService {
               ? "You cannot discard this draft"
               : "Voiding an issued invoice needs the void permission");
     }
-    if (payments.paidTotal(id).signum() > 0) {
+    PaymentStore.Settlement settled = payments.settlement(id);
+    if (settled.paid().signum() > 0 || settled.exempted().signum() > 0) {
       throw new ApiException.InvalidTransition(
-          "This invoice has payments and cannot be voided. Refunds come with task 4.4.");
+          "This invoice has payments or an exemption and cannot be voided. Use refunds instead.");
     }
     if (store.voidInvoice(
             id, request.version(), invoice.status(), request.reason().trim(), user.userId())
@@ -456,7 +456,7 @@ public class InvoiceService {
             ? totals(
                 lines.stream().filter(l -> l.status() == LineStatus.ACTIVE).toList(), i.currency())
             : new Totals(i.subtotal(), i.taxTotal(), i.total());
-    BigDecimal paid = PaymentStore.strip(payments.paidTotal(i.id()));
+    PaymentStore.Settlement settled = payments.settlement(i.id());
     return new InvoiceView(
         i.id(),
         i.invoiceNumber(),
@@ -470,8 +470,10 @@ public class InvoiceService {
         totals.subtotal(),
         totals.tax(),
         totals.total(),
-        paid,
-        i.status() == InvoiceStatus.ISSUED ? i.total().subtract(paid) : null,
+        settled.paid(),
+        settled.refunded(),
+        settled.exempted(),
+        i.status() == InvoiceStatus.ISSUED ? settled.balance(i.total()) : null,
         i.replacesInvoiceId(),
         i.createdBy(),
         i.createdAt(),

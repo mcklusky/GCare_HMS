@@ -43,9 +43,17 @@ export function SessionGate() {
  * Hides a page from users without the permission. Usability only: the API enforces the same
  * permission and facility scope on every request.
  */
-export function RequirePermission({ permission, children }: { permission: string; children: ReactNode }) {
+export function RequirePermission({
+  permission,
+  children,
+}: {
+  /** One permission, or a list meaning "any of these". */
+  permission: string | readonly string[]
+  children: ReactNode
+}) {
   const me = useCurrentMe()
-  if (hasPermission(me, permission)) return <>{children}</>
+  if ((typeof permission === 'string' ? [permission] : permission).some((p) => hasPermission(me, p)))
+    return <>{children}</>
   return (
     <Stack>
       <PageTitle>Access denied</PageTitle>

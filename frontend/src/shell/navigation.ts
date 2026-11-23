@@ -4,6 +4,8 @@ import {
   IconChecklist,
   IconCashRegister,
   IconCreditCard,
+  IconDiscount,
+  IconReceiptRefund,
   IconReportMoney,
   IconClipboardList,
   IconCopy,
@@ -20,8 +22,8 @@ export interface NavItem {
   label: string
   to: string
   icon: typeof IconHome
-  /** Shown only to users holding this permission. Hiding is for usability; the API enforces. */
-  permission?: string
+  /** Shown only to users holding this permission (or any of a list). Hiding is for usability; the API enforces. */
+  permission?: string | readonly string[]
 }
 
 /** Main navigation. Add items as features arrive; keep the permission in step with the API. */
@@ -45,6 +47,12 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IconReportMoney,
     permission: Permission.SHIFT_REVIEW,
   },
+  {
+    label: 'Refund & exemption approvals',
+    to: '/billing/adjustment-approvals',
+    icon: IconReceiptRefund,
+    permission: [Permission.REFUND_APPROVE, Permission.EXEMPTION_APPROVE],
+  },
   { label: 'Tariffs', to: '/billing/tariffs', icon: IconCash, permission: Permission.BILLING_READ },
   { label: 'Price approvals', to: '/billing/approvals', icon: IconChecklist, permission: Permission.PRICE_APPROVE },
   { label: 'Facilities', to: '/facilities', icon: IconBuildingHospital, permission: Permission.FACILITY_READ },
@@ -55,8 +63,18 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IconCreditCard,
     permission: Permission.PAYMENT_METHOD_MANAGE,
   },
+  {
+    label: 'Exemption reasons',
+    to: '/admin/exemption-reasons',
+    icon: IconDiscount,
+    permission: Permission.EXEMPTION_REASON_MANAGE,
+  },
 ]
 
 export function visibleNavItems(permissions: readonly string[]): NavItem[] {
-  return NAV_ITEMS.filter((item) => !item.permission || permissions.includes(item.permission))
+  return NAV_ITEMS.filter(
+    (item) =>
+      !item.permission ||
+      (typeof item.permission === 'string' ? [item.permission] : item.permission).some((p) => permissions.includes(p)),
+  )
 }

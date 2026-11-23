@@ -306,7 +306,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
 VALUES
     ('00000000-0000-4000-8000-000000000309', '00000000-0000-4000-8000-000000000001', 'FINANCE_OFFICER', 'Finance officer', 'Maintains billable services and proposes prices and tax rates. No clinical access.', true, 'ACTIVE'),
-    ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000001', 'FINANCE_MANAGER', 'Finance manager', 'Approves or rejects prices and tax rates proposed by others. Voids issued invoices and signs off cashier shifts. No clinical access.', true, 'ACTIVE')
+    ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000001', 'FINANCE_MANAGER', 'Finance manager', 'Approves prices, tax rates, refunds and exemptions requested by others. Voids issued invoices and signs off cashier shifts. No clinical access.', true, 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO role_permissions (organization_id, role_id, permission_code)
@@ -357,7 +357,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 INSERT INTO roles (id, organization_id, code, name, description, is_system_role, status)
 VALUES
-    ('00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000001', 'CASHIER', 'Cashier', 'Starts and issues visit invoices and takes payments in a shift. Cannot void issued invoices or change prices.', true, 'ACTIVE')
+    ('00000000-0000-4000-8000-000000000311', '00000000-0000-4000-8000-000000000001', 'CASHIER', 'Cashier', 'Starts and issues visit invoices, takes payments and pays out approved refunds in a shift; requests refunds and exemptions. Cannot approve them.', true, 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO role_permissions (organization_id, role_id, permission_code)
@@ -400,4 +400,23 @@ INSERT INTO payment_methods (id, organization_id, code, name, is_cash, status, c
 VALUES
     ('00000000-0000-4000-8000-000000000961', '00000000-0000-4000-8000-000000000001', 'DEMO-CASH', 'Cash (demo)', true, 'ACTIVE', '00000000-0000-4000-8000-000000000401'),
     ('00000000-0000-4000-8000-000000000962', '00000000-0000-4000-8000-000000000001', 'DEMO-NONCASH', 'Non-cash (demo)', false, 'ACTIVE', '00000000-0000-4000-8000-000000000401')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Refunds and exemptions (task 4.4). demo.cashier requests and pays out; demo.financemgr
+-- approves; demo.admin manages exemption reasons. The reason below is a DEMO entry only and
+-- implies no eligibility rule.
+-- ---------------------------------------------------------------------------
+INSERT INTO role_permissions (organization_id, role_id, permission_code)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000301', 'EXEMPTION_REASON_MANAGE'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000310', 'REFUND_APPROVE'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000310', 'EXEMPTION_APPROVE'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000311', 'REFUND_REQUEST'),
+    ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000311', 'EXEMPTION_REQUEST')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO exemption_reasons (id, organization_id, code, name, status, created_by)
+VALUES
+    ('00000000-0000-4000-8000-000000000971', '00000000-0000-4000-8000-000000000001', 'DEMO-REASON', 'Demo reason (fictional)', 'ACTIVE', '00000000-0000-4000-8000-000000000401')
 ON CONFLICT (id) DO NOTHING;

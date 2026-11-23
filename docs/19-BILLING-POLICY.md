@@ -2,7 +2,7 @@
 
 > **Status:** the decisions below were made by the product owner on 2026-11-23. Everything marked *provisional* is an engineering default that the **finance owner** must confirm before real use (Phase 4 exit: "finance owner approves permissions and receipt format"). No tariff, price, tax rate or exchange rate is defined by engineering.
 
-Requirements: FR-017 (billing and tariff catalog), FR-018 (payments and receipts), FR-042 (configuration, partial). Code: `backend/.../billing/`, migrations `V9__billing_catalog_and_tariffs.sql`, `V10__invoices.sql`, `V11__payments_and_shifts.sql`, screens `/billing/tariffs`, `/billing/approvals`, `/billing/invoices`, `/billing/shift`, `/billing/shift-reviews`, `/billing/receipts/{id}`, `/admin/payment-methods`.
+Requirements: FR-017 (billing and tariff catalog), FR-018 (payments and receipts), FR-019 (exemptions, partial), FR-042 (configuration, partial). Code: `backend/.../billing/`, migrations `V9__billing_catalog_and_tariffs.sql`, `V10__invoices.sql`, `V11__payments_and_shifts.sql`, `V12__refunds_and_exemptions.sql`, screens `/billing/tariffs`, `/billing/approvals`, `/billing/invoices`, `/billing/shift`, `/billing/shift-reviews`, `/billing/receipts/{id}`, `/billing/refund-receipts/{id}`, `/billing/adjustment-approvals`, `/admin/payment-methods`, `/admin/exemption-reasons`.
 
 ## 1. Decisions (product owner, 2026-11-23)
 
@@ -19,6 +19,10 @@ Requirements: FR-017 (billing and tariff catalog), FR-018 (payments and receipts
 | Part payments | **Allowed up to the balance.** A payment larger than the balance is refused; change is given outside the system. |
 | Shift close | **Cash count + second-person sign-off.** A difference needs a note. |
 | Receipt | **Basic, provisional** layout until the finance owner approves it. |
+| Refunds (task 4.4) | **Two people**: requested with a reason, approved by a different person, then paid out by a cashier in an open shift. |
+| Refund pay-out | **In a shift**: cash refunds reduce that shift's expected cash. |
+| Exemptions | **Full or partial amount** up to the balance, with an admin-managed reason (empty by default) and a note. |
+| Exemption approver | **Finance manager** (separate permission `EXEMPTION_APPROVE`, so another role can be given it later); never the requester. |
 | Corrections | **Void + reissue**: an issued invoice never changes; it is voided with a reason and a new invoice is made. Credit notes and refunds are task 4.4. |
 
 ## 2. Services, prices and tax rates (task 4.1)
@@ -54,16 +58,27 @@ Requirements: FR-017 (billing and tariff catalog), FR-018 (payments and receipts
 - **Never changed:** payments and cash counts cannot be updated or deleted (grants). An invoice with payments can no longer be voided (service and database trigger); refunds and reversals are task 4.4.
 - Audit records ids, receipt numbers, method codes and currencies; never amounts or notes.
 
-## 5. Provisional roles
+## 5. Refunds and exemptions (task 4.4)
+
+- **Balance due** = invoice total − approved exemptions − payments + refunds paid out.
+- **Refund** of a payment: requested with an amount and reason (up to what is left of that payment after other refund requests); approved or rejected with a note by a **different person** (service and database CHECK); then **paid out** by a cashier in an open shift at the invoice's facility, using the payment's method. Pay-out is idempotent (key per attempt) and takes a receipt number from the same `RCT` sequence; the refund receipt shows the balance after. The original payment never changes.
+- **Cash refunds** come from the drawer: the shift must have taken at least that much cash in the currency, and they reduce the shift's expected cash.
+- **Exemption:** an amount up to the balance due (minus exemptions already requested), with a reason from the admin-managed list and a note; approved or rejected by a **different person**. Approval re-checks the balance (a payment in between can make the request too large). Approved exemptions reduce the balance at once.
+- A refund raises the balance again: for a service not given, request an exemption after the refund so the invoice does not show the amount as owing.
+- An invoice with payments or an approved exemption cannot be voided (service and trigger). Decided exemptions and paid refunds never change.
+- *Not built (FR-019, open):* eligibility schemes with evidence and effective dates; reasons carry no eligibility rules.
+- Audit records ids, codes and receipt numbers; never amounts, reasons or notes.
+
+## 6. Provisional roles
 
 | Role | Permissions |
 |---|---|
 | Finance officer | `BILLING_READ`, `BILLING_CATALOG_MANAGE`, `PRICE_PROPOSE`, `INVOICE_READ` |
-| Finance manager | `BILLING_READ`, `PRICE_PROPOSE`, `PRICE_APPROVE`, `INVOICE_READ`, `INVOICE_VOID`, `SHIFT_REVIEW` |
-| Cashier | `BILLING_READ`, `INVOICE_READ`, `INVOICE_MANAGE`, `PAYMENT_RECORD` |
-| Organization administrator | adds `PAYMENT_METHOD_MANAGE` |
+| Finance manager | `BILLING_READ`, `PRICE_PROPOSE`, `PRICE_APPROVE`, `INVOICE_READ`, `INVOICE_VOID`, `SHIFT_REVIEW`, `REFUND_APPROVE`, `EXEMPTION_APPROVE` |
+| Cashier | `BILLING_READ`, `INVOICE_READ`, `INVOICE_MANAGE`, `PAYMENT_RECORD`, `REFUND_REQUEST`, `EXEMPTION_REQUEST` |
+| Organization administrator | adds `PAYMENT_METHOD_MANAGE`, `EXEMPTION_REASON_MANAGE` |
 
-Local demo: `demo.finance`, `demo.financemgr`, `demo.cashier`; services `DEMO-CONSULT`, `DEMO-LAB-A` with **fictional** prices of 1.00 (not a tariff); payment methods `DEMO-CASH`, `DEMO-NONCASH` (demo only).
+Local demo: `demo.finance`, `demo.financemgr`, `demo.cashier`; services `DEMO-CONSULT`, `DEMO-LAB-A` with **fictional** prices of 1.00 (not a tariff); payment methods `DEMO-CASH`, `DEMO-NONCASH` and exemption reason `DEMO-REASON` (demo only).
 
 ## Open questions for the finance owner
 
@@ -76,6 +91,8 @@ Local demo: `demo.finance`, `demo.financemgr`, `demo.cashier`; services `DEMO-CO
 7. Which payment methods are accepted (cash, mobile money, card, bank transfer…), and which need a reference number?
 8. Approve the receipt layout (Phase 4 exit), including any legal wording or tax number.
 9. Who may sign off cashier shifts, and what difference (if any) needs escalation?
+10. Which exemption reasons and eligibility schemes apply (FR-019), what evidence is needed, and who besides the finance manager may approve?
+11. Are there limits above which a refund or exemption needs a further approver?
 
 ## Change log
 | Date | Change | By |
@@ -83,3 +100,4 @@ Local demo: `demo.finance`, `demo.financemgr`, `demo.cashier`; services `DEMO-CO
 | 2026-11-23 | Decisions recorded; service catalog, dated prices and tax rates with two-person approval | Engineering (Claude Code), task 4.1 |
 | 2026-11-23 | Invoice decisions recorded; visit invoices with per-line tax, issue and void | Engineering (Claude Code), task 4.2 |
 | 2026-11-23 | Payment decisions recorded; idempotent part payments, receipts, shifts with cash count and sign-off | Engineering (Claude Code), task 4.3 |
+| 2026-11-23 | Refund and exemption decisions recorded; two-person refunds paid out in shifts, amount exemptions | Engineering (Claude Code), task 4.4 |

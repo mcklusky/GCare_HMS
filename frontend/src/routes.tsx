@@ -5,6 +5,8 @@ import { WorkspacePage } from './pages/encounters/WorkspacePage'
 import { QueuePage } from './pages/encounters/QueuePage'
 import { FacilitiesPage, FacilityDepartmentsPage } from './pages/FacilitiesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { AdjustmentApprovalsPage } from './pages/billing/AdjustmentApprovalsPage'
+import { ExemptionReasonsPage } from './pages/billing/ExemptionReasonsPage'
 import { InvoicePage } from './pages/billing/InvoicePage'
 import { InvoicesPage } from './pages/billing/InvoicesPage'
 import { PaymentMethodsPage } from './pages/billing/PaymentMethodsPage'
@@ -149,7 +151,7 @@ export const routes: RouteObject[] = [
         ),
       },
       {
-        path: 'billing/receipts/:paymentId',
+        path: 'billing/receipts/:id',
         element: (
           <RequirePermission permission={Permission.INVOICE_READ}>
             <ReceiptPage />
@@ -177,6 +179,30 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.PAYMENT_METHOD_MANAGE}>
             <PaymentMethodsPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/refund-receipts/:id',
+        element: (
+          <RequirePermission permission={Permission.INVOICE_READ}>
+            <ReceiptPage kind="refund" />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'billing/adjustment-approvals',
+        element: (
+          <RequirePermission permission={[Permission.REFUND_APPROVE, Permission.EXEMPTION_APPROVE]}>
+            <AdjustmentApprovalsPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'admin/exemption-reasons',
+        element: (
+          <RequirePermission permission={Permission.EXEMPTION_REASON_MANAGE}>
+            <ExemptionReasonsPage />
           </RequirePermission>
         ),
       },

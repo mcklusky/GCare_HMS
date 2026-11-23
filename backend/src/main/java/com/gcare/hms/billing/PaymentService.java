@@ -195,7 +195,7 @@ public class PaymentService {
         throw new ApiException.Invalid("counts", c.currency() + " is counted twice");
       }
     }
-    Map<String, BigDecimal> expected = expectedCash(store.totals(id));
+    Map<String, BigDecimal> expected = expectedCash(store.totals(id), store.refundTotals(id));
     for (String currency : expected.keySet()) {
       if (!counted.containsKey(currency)) {
         throw new ApiException.Invalid("counts", "count the " + currency + " cash");
@@ -339,7 +339,7 @@ public class PaymentService {
     if (invoices.invoice(invoiceId).map(InvoiceRow::status).orElse(null) != InvoiceStatus.ISSUED) {
       throw new ApiException.InvalidTransition("Only issued invoices can be paid");
     }
-    BigDecimal balance = invoice.total().subtract(store.paidTotal(invoiceId));
+    BigDecimal balance = store.settlement(invoiceId).balance(invoice.total());
     if (balance.signum() <= 0) {
       throw new ApiException.InvalidTransition("This invoice is already fully paid");
     }
@@ -423,6 +423,7 @@ public class PaymentService {
         Map.of("receipt", p.receiptNumber()));
     return new ReceiptView(
         PaymentApi.RECEIPT_FORMAT,
+        "PAYMENT",
         p.receiptNumber(),
         store.facilityName(facility),
         p.receivedAt(),
@@ -450,20 +451,28 @@ public class PaymentService {
         || user.scopeOf(Permissions.SHIFT_REVIEW).includes(s.facilityId());
   }
 
-  private static Map<String, BigDecimal> expectedCash(List<MethodTotal> totals) {
+  /** Cash that should be in the drawer per currency: cash payments minus cash refunds. */
+  static Map<String, BigDecimal> expectedCash(List<MethodTotal> totals, List<MethodTotal> refunds) {
     Map<String, BigDecimal> expected = new LinkedHashMap<>();
     for (MethodTotal t : totals) {
       if (t.isCash()) {
         expected.merge(t.currency(), t.amount(), BigDecimal::add);
       }
     }
+    for (MethodTotal r : refunds) {
+      if (r.isCash()) {
+        expected.merge(r.currency(), r.amount().negate(), BigDecimal::add);
+      }
+    }
+    expected.replaceAll((c, v) -> PaymentStore.strip(v));
     return expected;
   }
 
   private ShiftView view(ShiftRow s) {
     List<MethodTotal> totals = store.totals(s.id());
+    List<MethodTotal> refunds = store.refundTotals(s.id());
     List<CurrencyAmount> expected =
-        expectedCash(totals).entrySet().stream()
+        expectedCash(totals, refunds).entrySet().stream()
             .map(e -> new CurrencyAmount(e.getKey(), e.getValue()))
             .toList();
     return new ShiftView(
@@ -478,6 +487,7 @@ public class PaymentService {
         s.reviewedAt(),
         s.reviewNote(),
         totals,
+        refunds,
         expected,
         store.counts(s.id()),
         s.version());

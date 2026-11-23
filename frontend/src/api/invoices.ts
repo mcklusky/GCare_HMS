@@ -56,7 +56,11 @@ export interface Invoice {
   total: Money
   /** Sum of payments (task 4.3). */
   paid: Money
-  /** Total minus payments for issued invoices; null for drafts and void invoices. */
+  /** Refunds paid out (task 4.4). */
+  refunded: Money
+  /** Approved exemptions (task 4.4). */
+  exempted: Money
+  /** Total − exempted − paid + refunded for issued invoices; null for drafts and void invoices. */
   balance: Money | null
   replaces_invoice_id: string | null
   created_by: UserRef

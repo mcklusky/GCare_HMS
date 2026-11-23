@@ -271,11 +271,49 @@ class PaymentStore {
         .optional();
   }
 
-  BigDecimal paidTotal(UUID invoiceId) {
-    return jdbc.sql("SELECT coalesce(sum(amount), 0) FROM payments WHERE invoice_id = :i")
+  /**
+   * Money settled on an invoice (task 4.4): payments, paid refunds and approved exemptions. Balance
+   * due = total − exempted − paid + refunded.
+   */
+  record Settlement(BigDecimal paid, BigDecimal refunded, BigDecimal exempted) {
+    BigDecimal balance(BigDecimal total) {
+      return strip(total.subtract(exempted).subtract(paid).add(refunded));
+    }
+  }
+
+  Settlement settlement(UUID invoiceId) {
+    return jdbc.sql(
+            """
+            SELECT (SELECT coalesce(sum(amount), 0) FROM payments WHERE invoice_id = :i) AS paid,
+                   (SELECT coalesce(sum(amount), 0) FROM refunds WHERE invoice_id = :i AND status = 'PAID') AS refunded,
+                   (SELECT coalesce(sum(amount), 0) FROM exemptions WHERE invoice_id = :i AND status = 'APPROVED') AS exempted
+            """)
         .param("i", invoiceId)
-        .query(BigDecimal.class)
+        .query((rs, n) ->
+            new Settlement(decimal(rs, "paid"), decimal(rs, "refunded"), decimal(rs, "exempted")))
         .single();
+  }
+
+  /** Refunds paid out in a shift, by method and currency (they reduce expected cash). */
+  List<MethodTotal> refundTotals(UUID shiftId) {
+    return jdbc.sql(
+            """
+            SELECT m.code, m.name, r.method_is_cash, r.currency, sum(r.amount) AS amount, count(*) AS n
+            FROM refunds r JOIN payment_methods m ON m.id = r.method_id
+            WHERE r.shift_id = :s AND r.status = 'PAID'
+            GROUP BY m.code, m.name, r.method_is_cash, r.currency
+            ORDER BY m.name, r.currency
+            """)
+        .param("s", shiftId)
+        .query((rs, i) ->
+            new MethodTotal(
+                rs.getString("code"),
+                rs.getString("name"),
+                rs.getBoolean("method_is_cash"),
+                rs.getString("currency"),
+                decimal(rs, "amount"),
+                rs.getInt("n")))
+        .list();
   }
 
   long nextReceiptNumber(UUID org) {

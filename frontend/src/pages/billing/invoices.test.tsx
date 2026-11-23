@@ -70,6 +70,8 @@ const DRAFT: Invoice = {
   tax_total: 1.88,
   total: 14.38,
   paid: 0,
+  refunded: 0,
+  exempted: 0,
   balance: null,
   replaces_invoice_id: null,
   created_by: USER,
@@ -132,6 +134,7 @@ describe('invoice page', () => {
         return { body: ISSUED }
       },
       'GET /api/v1/invoices/inv1/payments': { body: [] },
+      'GET /api/v1/invoices/inv1/adjustments': { body: { refunds: [], exemptions: [] } },
     })
 
     renderApp('/billing/invoices/inv1')
@@ -178,6 +181,7 @@ describe('invoice page', () => {
       'GET /api/v1/me': { body: VOIDER },
       'GET /api/v1/invoices/inv1': { body: ISSUED },
       'GET /api/v1/invoices/inv1/payments': { body: [] },
+      'GET /api/v1/invoices/inv1/adjustments': { body: { refunds: [], exemptions: [] } },
       'POST /api/v1/invoices/inv1/void': (init: RequestInit) => {
         sent = JSON.parse(String(init.body))
         return {

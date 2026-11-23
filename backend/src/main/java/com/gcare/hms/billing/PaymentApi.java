@@ -82,6 +82,8 @@ public final class PaymentApi {
 
   public record ReceiptView(
       String format,
+      /** PAYMENT (money received) or REFUND (money paid back; task 4.4). */
+      String kind,
       @JsonProperty("receipt_number") String receiptNumber,
       @JsonProperty("facility_name") String facilityName,
       @JsonProperty("received_at") Instant receivedAt,
@@ -135,7 +137,9 @@ public final class PaymentApi {
       @JsonProperty("review_note") String reviewNote,
       /** Payments in the shift by method and currency. */
       List<MethodTotal> totals,
-      /** Cash that should be in the drawer, per currency (cash methods only). */
+      /** Refunds paid out in the shift by method and currency (task 4.4). */
+      List<MethodTotal> refunds,
+      /** Cash that should be in the drawer, per currency: cash payments minus cash refunds. */
       @JsonProperty("expected_cash") List<CurrencyAmount> expectedCash,
       /** Counted at close; empty while open. */
       List<CountView> counts,

@@ -9,6 +9,9 @@ import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_OPEN;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_READ;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_REOPEN;
+import static com.gcare.hms.shared.security.Permissions.EXEMPTION_APPROVE;
+import static com.gcare.hms.shared.security.Permissions.EXEMPTION_REASON_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.EXEMPTION_REQUEST;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.FACILITY_READ;
 import static com.gcare.hms.shared.security.Permissions.INVOICE_MANAGE;
@@ -30,6 +33,8 @@ import static com.gcare.hms.shared.security.Permissions.PAYMENT_METHOD_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.PAYMENT_RECORD;
 import static com.gcare.hms.shared.security.Permissions.PRICE_APPROVE;
 import static com.gcare.hms.shared.security.Permissions.PRICE_PROPOSE;
+import static com.gcare.hms.shared.security.Permissions.REFUND_APPROVE;
+import static com.gcare.hms.shared.security.Permissions.REFUND_REQUEST;
 import static com.gcare.hms.shared.security.Permissions.SHIFT_REVIEW;
 import static com.gcare.hms.shared.security.Permissions.USER_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.USER_READ;
@@ -46,14 +51,15 @@ public enum SystemRole {
   /** Scoped users and configuration; no implicit clinical access. */
   ORGANIZATION_ADMIN(
       "Organization administrator",
-      "Manages facilities, departments, user accounts, the order catalog and payment methods. No clinical access.",
+      "Manages facilities, departments, user accounts, the order catalog, payment methods and exemption reasons. No clinical access.",
       Set.of(
           FACILITY_READ,
           FACILITY_MANAGE,
           USER_READ,
           USER_MANAGE,
           ORDER_CATALOG_MANAGE,
-          PAYMENT_METHOD_MANAGE)),
+          PAYMENT_METHOD_MANAGE,
+          EXEMPTION_REASON_MANAGE)),
 
   /** Reads the audit trail; no mutation. */
   AUDITOR("Auditor", "Reads the audit trail. Cannot change anything.", Set.of(AUDIT_READ)),
@@ -151,8 +157,16 @@ public enum SystemRole {
   /** Second person for money: approves or rejects prices and tax rates proposed by others. */
   FINANCE_MANAGER(
       "Finance manager",
-      "Approves or rejects prices and tax rates proposed by others. Voids issued invoices and signs off cashier shifts. No clinical access.",
-      Set.of(BILLING_READ, PRICE_PROPOSE, PRICE_APPROVE, INVOICE_READ, INVOICE_VOID, SHIFT_REVIEW)),
+      "Approves prices, tax rates, refunds and exemptions requested by others. Voids issued invoices and signs off cashier shifts. No clinical access.",
+      Set.of(
+          BILLING_READ,
+          PRICE_PROPOSE,
+          PRICE_APPROVE,
+          INVOICE_READ,
+          INVOICE_VOID,
+          SHIFT_REVIEW,
+          REFUND_APPROVE,
+          EXEMPTION_APPROVE)),
 
   /**
    * PROVISIONAL (task 4.2; docs/19): starts visit invoices, adds or removes charges with a reason
@@ -160,8 +174,14 @@ public enum SystemRole {
    */
   CASHIER(
       "Cashier",
-      "Starts and issues visit invoices and takes payments in a shift. Cannot void issued invoices or change prices.",
-      Set.of(BILLING_READ, INVOICE_READ, INVOICE_MANAGE, PAYMENT_RECORD));
+      "Starts and issues visit invoices, takes payments and pays out approved refunds in a shift; requests refunds and exemptions. Cannot approve them.",
+      Set.of(
+          BILLING_READ,
+          INVOICE_READ,
+          INVOICE_MANAGE,
+          PAYMENT_RECORD,
+          REFUND_REQUEST,
+          EXEMPTION_REQUEST));
 
   private final String displayName;
   private final String description;

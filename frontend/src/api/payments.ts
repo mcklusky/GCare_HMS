@@ -33,6 +33,7 @@ export interface Payment {
 
 export interface Receipt {
   format: string
+  kind: 'PAYMENT' | 'REFUND'
   receipt_number: string
   facility_name: string
   received_at: string
@@ -68,6 +69,7 @@ export interface Shift {
     amount: Money
     payments: number
   }[]
+  refunds: Shift['totals']
   expected_cash: { currency: string; amount: Money }[]
   counts: { currency: string; expected: Money; counted: Money; difference: Money }[]
   version: number

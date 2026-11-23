@@ -42,6 +42,11 @@ public final class Permissions {
   public static final String PAYMENT_METHOD_MANAGE = "PAYMENT_METHOD_MANAGE";
   public static final String PAYMENT_RECORD = "PAYMENT_RECORD";
   public static final String SHIFT_REVIEW = "SHIFT_REVIEW";
+  public static final String REFUND_REQUEST = "REFUND_REQUEST";
+  public static final String REFUND_APPROVE = "REFUND_APPROVE";
+  public static final String EXEMPTION_REQUEST = "EXEMPTION_REQUEST";
+  public static final String EXEMPTION_APPROVE = "EXEMPTION_APPROVE";
+  public static final String EXEMPTION_REASON_MANAGE = "EXEMPTION_REASON_MANAGE";
 
   public static final Set<String> ALL =
       Set.of(
@@ -77,7 +82,12 @@ public final class Permissions {
           INVOICE_VOID,
           PAYMENT_METHOD_MANAGE,
           PAYMENT_RECORD,
-          SHIFT_REVIEW);
+          SHIFT_REVIEW,
+          REFUND_REQUEST,
+          REFUND_APPROVE,
+          EXEMPTION_REQUEST,
+          EXEMPTION_APPROVE,
+          EXEMPTION_REASON_MANAGE);
 
   private Permissions() {}
 }

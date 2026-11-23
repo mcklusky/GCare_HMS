@@ -82,18 +82,27 @@ export function ShiftPage() {
 }
 
 export function ShiftTotals({ shift }: { shift: Shift }) {
-  if (shift.totals.length === 0) return <Text size="sm">No payments in this shift.</Text>
   return (
-    <Table aria-label="Payments in this shift">
+    <>
+      <MethodTable rows={shift.totals} label="Payments in this shift" none="No payments in this shift." />
+      {shift.refunds.length > 0 && <MethodTable rows={shift.refunds} label="Refunds paid out in this shift" none="" />}
+    </>
+  )
+}
+
+function MethodTable({ rows, label, none }: { rows: Shift['totals']; label: string; none: string }) {
+  if (rows.length === 0) return <Text size="sm">{none}</Text>
+  return (
+    <Table aria-label={label}>
       <Table.Thead>
         <Table.Tr>
           <Table.Th scope="col">Method</Table.Th>
-          <Table.Th scope="col">Payments</Table.Th>
+          <Table.Th scope="col">Count</Table.Th>
           <Table.Th scope="col">Amount</Table.Th>
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        {shift.totals.map((t) => (
+        {rows.map((t) => (
           <Table.Tr key={`${t.method_code}-${t.currency}`}>
             <Table.Td>
               {t.method_name}{' '}

@@ -40,6 +40,8 @@ const INVOICE: Invoice = {
   tax_total: 0,
   total: 10,
   paid: 0,
+  refunded: 0,
+  exempted: 0,
   balance: 10,
   replaces_invoice_id: null,
   created_by: USER,
@@ -76,12 +78,14 @@ const SHIFT: Shift = {
   reviewed_at: null,
   review_note: null,
   totals: [{ method_code: 'T-CASH', method_name: 'Test cash', is_cash: true, currency: 'USD', amount: 5, payments: 1 }],
+  refunds: [],
   expected_cash: [{ currency: 'USD', amount: 5 }],
   counts: [],
   version: 0,
 }
 const RECEIPT: Receipt = {
   format: 'PROVISIONAL',
+  kind: 'PAYMENT',
   receipt_number: 'RCT-000001',
   facility_name: FACILITY_A.name,
   received_at: PAYMENT.received_at,
@@ -111,6 +115,7 @@ describe('payments', () => {
       'GET /api/v1/me': { body: CASHIER },
       'GET /api/v1/invoices/inv1': { body: INVOICE },
       'GET /api/v1/invoices/inv1/payments': { body: [] },
+      'GET /api/v1/invoices/inv1/adjustments': { body: { refunds: [], exemptions: [] } },
       'GET /api/v1/payment-methods': { body: [CASH] },
       'POST /api/v1/invoices/inv1/payments': (init: RequestInit) => {
         sent.push(JSON.parse(String(init.body)))
