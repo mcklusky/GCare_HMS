@@ -5,29 +5,29 @@ Goal: establish a runnable, reviewable foundation for the approved Java + React 
 ## Before implementation
 - [ ] Create repository and protect the main branch; require reviewed changes. *(Repo created 2026-11-23; branch protection still to be set in GitHub.)*
 - [x] Confirm Java LTS/Spring Boot and Node/React versions; pin versions and document upgrade policy. *(ADR-011, [DEVELOPMENT.md](DEVELOPMENT.md))*
-- [ ] Record approved deployment topology, identity provider, tenant isolation model, timezone, RPO/RTO and support owner from the approved pilot artifacts. *(Isolation model decided: ADR-010. Identity provider OD-03 and the rest remain open.)*
+- [ ] Record approved deployment topology, identity provider, tenant isolation model, timezone, RPO/RTO and support owner from the approved pilot artifacts. *(Isolation model: ADR-010. Identity provider: Keycloak, ADR-012. Deployment topology, timezone, RPO/RTO and support owner remain open.)*
 - [x] Create synthetic-only development data policy and secret-handling checklist. *([DEVELOPMENT.md](DEVELOPMENT.md#data-and-secrets-policy))*
 
 ## Backend foundation
 - [x] Create Spring Boot application with module/package boundaries and health endpoint.
 - [x] Configure PostgreSQL for local development and Flyway migrations. *(No migrations yet; first one in task 1.2.)*
-- [ ] Add tenant, facility and department seed configuration using synthetic values.
-- [ ] Add authentication integration using the approved identity setup; deny access by default. *(Deny-by-default done; authentication blocked on OD-03.)*
-- [ ] Implement authorization context and scoped repository/service pattern before patient APIs.
-- [ ] Add audit event interface and persistence for security-relevant actions; redact sensitive fields.
-- [ ] Add consistent validation/error response and correlation IDs.
-- [ ] Add OpenAPI generation and `/api/v1` conventions.
+- [x] Add tenant, facility and department seed configuration using synthetic values. *(`db/seed-local`, local profile only.)*
+- [x] Add authentication integration using the approved identity setup; deny access by default. *(Keycloak OIDC, task 1.3. Verified with a real Keycloak in `KeycloakSignInTests` and locally against Compose.)*
+- [x] Implement authorization context and scoped repository/service pattern before patient APIs. *(Organization: RLS, set per request from the signed-in user. Facility: `CurrentUser.scopeOf(permission)`. Department-level scope is stored on assignments but not yet enforced; it arrives with the first department-scoped feature.)*
+- [x] Add audit event interface and persistence for security-relevant actions; redact sensitive fields. *(Append-only `audit_events`; callers are added per feature.)*
+- [x] Add consistent validation/error response and correlation IDs.
+- [x] Add OpenAPI generation and `/api/v1` conventions. *(springdoc; `/v3/api-docs` for signed-in users, on in local/test only; the build writes `target/openapi/openapi.json`.)*
 
 ## Frontend foundation
-- [ ] Create React + TypeScript application with approved router and component library.
-- [ ] Implement application shell, sign-in/session handling, facility context and role-filtered navigation.
-- [ ] Add shared loading, empty, error, forbidden and confirmation patterns.
-- [ ] Establish accessible form, table, dialog and focus patterns; verify keyboard use.
-- [ ] Do not persist clinical content or tokens in local storage unless the approved auth design explicitly requires a reviewed mechanism.
+- [x] Create React + TypeScript application with approved router and component library. *(React Router 8, Mantine 9, TanStack Query; ADR-013.)*
+- [x] Implement application shell, sign-in/session handling, facility context and role-filtered navigation. *(Task 1.4. Verified locally through the Vite proxy with the Compose Keycloak.)*
+- [x] Add shared loading, empty, error, forbidden and confirmation patterns. *(`components/states.tsx`, `ConfirmDialog` with required reason.)*
+- [x] Establish accessible form, table, dialog and focus patterns; verify keyboard use. *(Skip link, focus moves to the page title on navigation, dialog focus trap/Escape tested, automated axe checks in unit tests. A manual screen-reader and keyboard review is still needed before pilot; colour contrast is not checked by the automated tests.)*
+- [x] Do not persist clinical content or tokens in local storage unless the approved auth design explicitly requires a reviewed mechanism. *(No browser storage used; tokens stay on the server, ADR-012.)*
 
 ## Quality and operations
 - [ ] CI runs formatting/static analysis, compile/build, unit tests, migration checks and dependency scan. *(Workflow added; Java dependency scanning is Dependabot only, and CI has not yet run on GitHub.)*
-- [ ] Add automated tests for unauthenticated access, role denial, tenant/facility isolation, audit creation and error shape.
+- [ ] Add automated tests for unauthenticated access, role denial, tenant/facility isolation, audit creation and error shape. *(Done: unauthenticated access, role denial, organization and facility isolation, audit, error shape.)*
 - [x] Add `.env.example` with placeholders only; verify secrets and real patient data are excluded from Git.
 - [x] Document local setup, test commands, architecture map, migration workflow and backup responsibilities. *([DEVELOPMENT.md](DEVELOPMENT.md))*
 - [ ] Demonstrate a clean setup from a fresh checkout using synthetic data.

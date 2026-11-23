@@ -10,11 +10,11 @@ Detailed task numbers use the draft's own numbering (its Phase 0–1 both map to
 
 | FR | Requirement | Scope | Baseline task | Detailed task | Test focus | Tests | Evidence |
 |---|---|---|---|---|---|---|---|
-| FR-001 | Facility and department configuration | Pilot | 1.2 | 1.3 | Scope hierarchy, tenant/facility isolation | | |
-| FR-002 | User and access administration | Pilot | 1.3 | 1.4, 1.5 | Deny-by-default, role/scope denial, privileged-action audit | `SecurityBaselineTests` (deny-by-default only) | Local `mvnw verify` 2026-11-23: 5/5 passed |
-| FR-003 | Patient search and identity | Pilot | 2.1, 2.3 | 2.3, 2.5 | Scoped search, matches shown before create, no auto-merge | | |
-| FR-004 | Patient registration | Pilot | 2.2 | 2.2, 2.4 | Unknown/incomplete details allowed, provenance | | |
-| FR-005 | Patient identifier | Pilot | 2.1 | 2.1 | Uniqueness, check digit/collision protection, stability | | |
+| FR-001 | Facility and department configuration | Pilot | 1.2 | 1.3 | Scope hierarchy, tenant/facility isolation | `OrganizationIsolationTests`, `LocalSeedTests`, `AccessControlTests` (facility-scoped reads; no create/update API yet) | Local `mvnw verify` 2026-11-23: passed (66 tests) |
+| FR-002 | User and access administration | Pilot | 1.3 | 1.4, 1.5 | Deny-by-default, role/scope denial, privileged-action audit | `SecurityBaselineTests`, `AccessControlTests`, `KeycloakSignInTests`, `SessionLifetimeTests`, `IdentitySchemaTests`, `AdminBootstrapTests` (sign-in, deactivation, role/facility denial, sign-out; no user-admin API yet); frontend `App.test.tsx`, `client.test.ts` (sign-in/out UI, session end, permission-filtered navigation, CSRF header) | Local `mvnw verify` 2026-11-23: passed (66 tests); local `vitest run` 2026-11-23: passed (24 tests); CI run on PR #1 passed |
+| FR-003 | Patient search and identity | Pilot | 2.1, 2.3 | 2.3, 2.5 | Scoped search, matches shown before create, no auto-merge | `PatientApiTests` (search rules, 409 with candidates before create), `DuplicateScoringScenarioTests` (policy scenarios 1–7), `PatientCorrectionAndReviewTests` (review queue, two-person decision); frontend `patients.test.tsx` (search, candidate review UI); link/merge is task 2.3 | Local `mvnw verify` 2026-11-23: passed (109 tests); local `vitest run`: passed (34 tests). Rules PROVISIONAL (docs/17) |
+| FR-004 | Patient registration | Pilot | 2.2 | 2.2, 2.4 | Unknown/incomplete details allowed, provenance | `PatientApiTests` (registration API, unknown patient, identifier provenance, facility scope, audit), `PatientCorrectionAndReviewTests` (corrections with history, stale-edit conflict); frontend `patients.test.tsx` (registration and correction UI, accessibility) | Local `mvnw verify` 2026-11-23: passed (109 tests); local `vitest run`: passed (34 tests). Rules PROVISIONAL (docs/17) |
+| FR-005 | Patient identifier | Pilot | 2.1 | 2.1 | Uniqueness, check digit/collision protection, stability | `PatientNumberAndNormalizerTests` (Luhn, typo detection), `PatientApiTests` (sequential numbers), `PatientSchemaTests` (format, isolation) | Local `mvnw verify` 2026-11-23: passed (102 tests). Rules PROVISIONAL (docs/17) |
 | FR-006 | Encounter management | Pilot | 3.1 | 3.1, 3.2 | Lifecycle transitions, 422 on invalid transition | | |
 | FR-007 | Triage and observations | Pilot | 3.1 | 3.3, 3.4 | Units, timestamps, attribution, escalation flags | | |
 | FR-008 | Clinical record | Pilot | 3.2, 3.4 | 3.5, 3.6 | Draft/sign/amend, signed immutability | | |
@@ -35,13 +35,13 @@ Detailed task numbers use the draft's own numbering (its Phase 0–1 both map to
 | FR-023 | Notifications | Pilot (partial): in-app task/alert area only; SMS gated | 1.4, 5.1 | 5.1; SMS Phase 8 | No sensitive content in alerts | | |
 | FR-024 | Operational dashboards | Pilot | 5.1 | 5.1 | Scope-limited data, refresh status | | |
 | FR-025 | Reports and export | Pilot | 5.1 | 5.2 | Report metadata, permissioned + logged exports | | |
-| FR-026 | Audit and patient access history | Pilot | 1.2 | 1.6 | Audit on every mutation and sensitive read; redaction | | |
+| FR-026 | Audit and patient access history | Pilot | 1.2 | 1.6 | Audit on every mutation and sensitive read; redaction | `AuditTrailTests`, `MetadataRedactorTests`, `AccessControlTests` (sign-in/out, refused sign-in, session end, access denied) | Local `mvnw verify` 2026-11-23: passed (66 tests) |
 | FR-027 | Downtime and recovery workflow | Pilot | 5.3 | 5.4 | Interrupted/repeated submission, no silent duplicates | | |
 | FR-028 | Data import | Workstream | [10-DATA-MIGRATION.md](10-DATA-MIGRATION.md) | — | Reconciliation counts, rollback | | |
 | FR-029 | AI decision support | Gated | Later modules | Phase 8 | — | | |
 | FR-030 | Configuration and localization | Pilot (partial): English, facility timezone, currencies incl. LRD | 1.4, 5.2 | 5.3 | Timezone display, currency handling | | |
 | FR-031 | Country and jurisdiction configuration | Pilot (partial): versioned config; country packs later | 5.2 | 5.3 | Config versioning never rewrites history | | |
-| FR-032 | Deployment and tenant isolation | Pilot | 1.2, 1.3 | 1.3 | Cross-tenant access tests on every endpoint | | |
+| FR-032 | Deployment and tenant isolation | Pilot | 1.2, 1.3 | 1.3 | Cross-tenant access tests on every endpoint | `OrganizationIsolationTests`, `AuditTrailTests`, `IdentitySchemaTests`, `AccessControlTests` (RLS + cross-organization API checks) | Local `mvnw verify` 2026-11-23: passed (66 tests) |
 | FR-033 | Standards-based interoperability | Gated (ADR-008) | Later modules | Phase 7 | Contract tests against supplied partner spec only | | |
 | FR-034 | Patient access (portal) | Gated | Later modules | Phase 8 | — | | |
 | FR-035 | Offline continuity and synchronization | Pilot (partial): downtime procedure + idempotent submission; advanced offline gated | 5.3, 4.3 | 5.4; Phase 8 | Duplicate-submission safety | | |
