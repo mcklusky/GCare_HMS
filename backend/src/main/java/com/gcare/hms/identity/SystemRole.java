@@ -7,6 +7,8 @@ import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_READ;
 import static com.gcare.hms.shared.security.Permissions.CLINICAL_NOTE_WRITE;
 import static com.gcare.hms.shared.security.Permissions.CONFIG_CLINICAL_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.CONFIG_ORGANIZATION_MANAGE;
+import static com.gcare.hms.shared.security.Permissions.CRITICAL_RESULT_ACKNOWLEDGE;
+import static com.gcare.hms.shared.security.Permissions.CRITICAL_RESULT_OVERSIGHT;
 import static com.gcare.hms.shared.security.Permissions.DOWNTIME_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.DOWNTIME_RECORD;
 import static com.gcare.hms.shared.security.Permissions.ENCOUNTER_MANAGE;
@@ -40,6 +42,8 @@ import static com.gcare.hms.shared.security.Permissions.PAYMENT_METHOD_MANAGE;
 import static com.gcare.hms.shared.security.Permissions.PAYMENT_RECORD;
 import static com.gcare.hms.shared.security.Permissions.PRICE_APPROVE;
 import static com.gcare.hms.shared.security.Permissions.PRICE_PROPOSE;
+import static com.gcare.hms.shared.security.Permissions.RADIOLOGY_REPORT_READ;
+import static com.gcare.hms.shared.security.Permissions.RADIOLOGY_REPORT_WRITE;
 import static com.gcare.hms.shared.security.Permissions.REFUND_APPROVE;
 import static com.gcare.hms.shared.security.Permissions.REFUND_REQUEST;
 import static com.gcare.hms.shared.security.Permissions.REPORT_EXPORT;
@@ -134,7 +138,8 @@ public enum SystemRole {
           OBSERVATION_RECORD,
           CLINICAL_NOTE_READ,
           ORDER_READ,
-          DOWNTIME_RECORD)),
+          DOWNTIME_RECORD,
+          RADIOLOGY_REPORT_READ)),
 
   /**
    * Calls, transfers, closes and reopens visits and records observations (docs/18). PROVISIONAL
@@ -155,7 +160,9 @@ public enum SystemRole {
           CLINICAL_NOTE_WRITE,
           ORDER_READ,
           ORDER_CREATE,
-          DOWNTIME_RECORD)),
+          DOWNTIME_RECORD,
+          RADIOLOGY_REPORT_READ,
+          CRITICAL_RESULT_ACKNOWLEDGE)),
 
   /**
    * Staff of a performing department (laboratory, imaging, ...): works the order worklist.
@@ -253,7 +260,23 @@ public enum SystemRole {
   RADIOGRAPHER(
       "Radiographer",
       "Sees the imaging worklist, records arrival and examination done, checks the archive and links studies to orders (a second person approves reviewed links).",
-      Set.of(PATIENT_READ, ORDER_READ, ORDER_PROCESS, IMAGING_WORKLIST, IMAGING_LINK));
+      Set.of(PATIENT_READ, ORDER_READ, ORDER_PROCESS, IMAGING_WORKLIST, IMAGING_LINK)),
+
+  /**
+   * PROVISIONAL (task 6.4; docs/26): writes, signs and amends radiology reports, documents
+   * critical-result contacts and sees open critical results; may approve study links (docs/25).
+   */
+  RADIOLOGIST(
+      "Radiologist",
+      "Writes, signs and amends radiology reports, documents critical-result contacts, follows open critical results and may approve study links.",
+      Set.of(
+          PATIENT_READ,
+          ORDER_READ,
+          IMAGING_WORKLIST,
+          IMAGING_LINK,
+          RADIOLOGY_REPORT_READ,
+          RADIOLOGY_REPORT_WRITE,
+          CRITICAL_RESULT_OVERSIGHT));
 
   private final String displayName;
   private final String description;

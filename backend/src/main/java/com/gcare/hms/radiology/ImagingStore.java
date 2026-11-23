@@ -161,6 +161,20 @@ class ImagingStore {
         .optional();
   }
 
+  List<OrderRow> ordersOfEncounter(UUID encounterId) {
+    return jdbc.sql(ORDER + " WHERE o.encounter_id = :e ORDER BY o.requested_at")
+        .param("e", encounterId)
+        .query(this::orderRow)
+        .list();
+  }
+
+  List<OrderRow> ordersOfPatient(UUID patientId) {
+    return jdbc.sql(ORDER + " WHERE o.patient_id = :p ORDER BY o.requested_at DESC LIMIT 200")
+        .param("p", patientId)
+        .query(this::orderRow)
+        .list();
+  }
+
   Optional<OrderRow> orderByAccession(String accession) {
     return jdbc.sql(ORDER + " WHERE io.accession_number = :acc")
         .param("acc", accession)

@@ -10,6 +10,7 @@ import { Permission } from '../../api/types'
 import { useCurrentMe } from '../../auth/MeContext'
 import { hasPermission } from '../../auth/session'
 import { EmptyState, QueryState } from '../../components/states'
+import { ImagingResultsSection } from '../imaging/ImagingResultsSection'
 
 /**
  * Patient chart (task 3.4): visits, and, with permission, reported allergies, latest triage,
@@ -126,6 +127,7 @@ export function PatientChart({ patientId }: { patientId: string }) {
             )}
           </Card>
           {hasPermission(me, Permission.ORDER_READ) && <PatientOrders patientId={patientId} />}
+          {hasPermission(me, Permission.RADIOLOGY_REPORT_READ) && <ImagingResultsSection patientId={patientId} />}
         </Stack>
       )}
     </QueryState>

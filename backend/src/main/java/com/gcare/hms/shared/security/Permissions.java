@@ -57,6 +57,10 @@ public final class Permissions {
   public static final String IMAGING_ARCHIVE_ADMIN = "IMAGING_ARCHIVE_ADMIN";
   public static final String IMAGING_WORKLIST = "IMAGING_WORKLIST";
   public static final String IMAGING_LINK = "IMAGING_LINK";
+  public static final String RADIOLOGY_REPORT_WRITE = "RADIOLOGY_REPORT_WRITE";
+  public static final String RADIOLOGY_REPORT_READ = "RADIOLOGY_REPORT_READ";
+  public static final String CRITICAL_RESULT_ACKNOWLEDGE = "CRITICAL_RESULT_ACKNOWLEDGE";
+  public static final String CRITICAL_RESULT_OVERSIGHT = "CRITICAL_RESULT_OVERSIGHT";
 
   public static final Set<String> ALL =
       Set.of(
@@ -107,7 +111,11 @@ public final class Permissions {
           DOWNTIME_RECORD,
           IMAGING_ARCHIVE_ADMIN,
           IMAGING_WORKLIST,
-          IMAGING_LINK);
+          IMAGING_LINK,
+          RADIOLOGY_REPORT_WRITE,
+          RADIOLOGY_REPORT_READ,
+          CRITICAL_RESULT_ACKNOWLEDGE,
+          CRITICAL_RESULT_OVERSIGHT);
 
   private Permissions() {}
 }

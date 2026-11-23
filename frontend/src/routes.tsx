@@ -20,6 +20,9 @@ import { FormsPrintPage } from './pages/downtime/FormsPrintPage'
 import { ImagingArchivePage } from './pages/imaging/ImagingArchivePage'
 import { ImagingWorklistPage } from './pages/imaging/ImagingWorklistPage'
 import { StudyQueuePage } from './pages/imaging/StudyQueuePage'
+import { ReportingPage } from './pages/imaging/ReportingPage'
+import { ReportEditorPage } from './pages/imaging/ReportEditorPage'
+import { CriticalResultsPage } from './pages/imaging/CriticalResultsPage'
 import { ShiftPage } from './pages/billing/ShiftPage'
 import { ShiftReviewPage } from './pages/billing/ShiftReviewPage'
 import { TariffsPage } from './pages/billing/TariffsPage'
@@ -275,6 +278,30 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission={Permission.IMAGING_LINK}>
             <StudyQueuePage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'radiology/reporting',
+        element: (
+          <RequirePermission permission={Permission.RADIOLOGY_REPORT_WRITE}>
+            <ReportingPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'radiology/orders/:orderId',
+        element: (
+          <RequirePermission permission={Permission.RADIOLOGY_REPORT_WRITE}>
+            <ReportEditorPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'critical-results',
+        element: (
+          <RequirePermission permission={[Permission.CRITICAL_RESULT_ACKNOWLEDGE, Permission.CRITICAL_RESULT_OVERSIGHT]}>
+            <CriticalResultsPage />
           </RequirePermission>
         ),
       },

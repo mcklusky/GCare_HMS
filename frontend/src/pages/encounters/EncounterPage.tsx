@@ -23,6 +23,7 @@ import { NotesSection } from './NotesSection'
 import { OrdersSection } from './OrdersSection'
 import { TriageSection } from './TriageSection'
 import { DowntimeSourcesNotice } from '../downtime/DowntimeSourcesNotice'
+import { ImagingResultsSection } from '../imaging/ImagingResultsSection'
 
 const DIALOG: Record<
   Exclude<EncounterAction, 'call'>,
@@ -129,6 +130,9 @@ export function EncounterPage() {
             )}
             {hasPermission(me, Permission.ORDER_READ) && (
               <OrdersSection encounterId={e.id} open={e.status === 'WAITING' || e.status === 'IN_CONSULTATION'} />
+            )}
+            {hasPermission(me, Permission.RADIOLOGY_REPORT_READ) && (
+              <ImagingResultsSection encounterId={e.id} />
             )}
           </Stack>
         )}

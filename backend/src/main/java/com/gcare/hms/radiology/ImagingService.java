@@ -18,7 +18,6 @@ import com.gcare.hms.radiology.ImagingWorkApi.WorklistItem;
 import com.gcare.hms.shared.security.CurrentUser;
 import com.gcare.hms.shared.security.Permissions;
 import com.gcare.hms.shared.web.ApiException;
-import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -52,13 +51,19 @@ public class ImagingService {
 
   private final ImagingStore store;
   private final ImagingArchive archive;
+  private final ImagingViews views;
   private final OrderService orders;
   private final AuditService audit;
 
   ImagingService(
-      ImagingStore store, ImagingArchive archive, OrderService orders, AuditService audit) {
+      ImagingStore store,
+      ImagingArchive archive,
+      ImagingViews views,
+      OrderService orders,
+      AuditService audit) {
     this.store = store;
     this.archive = archive;
+    this.views = views;
     this.orders = orders;
     this.audit = audit;
   }
@@ -77,7 +82,7 @@ public class ImagingService {
     List<WorklistItem> items =
         store.worklist(statuses, 300).stream()
             .filter(o -> user.scopeOf(Permissions.IMAGING_WORKLIST).includes(o.facilityId()))
-            .map(this::item)
+            .map(views::item)
             // Finished = examined with images linked, or cancelled; hidden unless asked for.
             .filter(i ->
                 includeFinished
@@ -107,7 +112,7 @@ public class ImagingService {
       throw new ApiException.Conflict("This order was changed. Reload it.");
     }
     audit(user, o.facilityId(), "IMAGING_PATIENT_ARRIVED", "ImagingOrder", orderId, Map.of());
-    return item(store.order(orderId).orElseThrow());
+    return views.item(store.order(orderId).orElseThrow());
   }
 
   @PreAuthorize("hasAuthority('" + Permissions.IMAGING_WORKLIST + "')")
@@ -127,7 +132,7 @@ public class ImagingService {
       throw new ApiException.Conflict("This order was changed. Reload it.");
     }
     audit(user, o.facilityId(), "IMAGING_EXAMINATION_DONE", "ImagingOrder", orderId, Map.of());
-    return item(store.order(orderId).orElseThrow());
+    return views.item(store.order(orderId).orElseThrow());
   }
 
   // --- archive checks --------------------------------------------------------------------------
@@ -146,7 +151,7 @@ public class ImagingService {
     }
     SyncResult r = absorb(user.organizationId(), found);
     audit(user, o.facilityId(), "IMAGING_ARCHIVE_CHECKED", "ImagingOrder", orderId, counts(r));
-    return item(store.order(orderId).orElseThrow());
+    return views.item(store.order(orderId).orElseThrow());
   }
 
   /**
@@ -183,7 +188,7 @@ public class ImagingService {
   @Transactional(readOnly = true)
   public List<StudyView> queue() {
     CurrentUser user = CurrentUser.require();
-    List<StudyView> list = store.studiesNotLinked().stream().map(this::studyView).toList();
+    List<StudyView> list = store.studiesNotLinked().stream().map(views::study).toList();
     audit(
         user,
         null,
@@ -235,7 +240,7 @@ public class ImagingService {
         "ImagingStudy",
         studyId,
         Map.of("order", o.orderId().toString()));
-    return studyView(store.study(studyId).orElseThrow());
+    return views.study(store.study(studyId).orElseThrow());
   }
 
   @PreAuthorize("hasAuthority('" + Permissions.IMAGING_LINK + "')")
@@ -272,7 +277,7 @@ public class ImagingService {
         "ImagingStudy",
         studyId,
         Map.of("order", o.orderId().toString(), "method", "REVIEWED"));
-    return studyView(store.study(studyId).orElseThrow());
+    return views.study(store.study(studyId).orElseThrow());
   }
 
   @PreAuthorize("hasAuthority('" + Permissions.IMAGING_LINK + "')")
@@ -295,7 +300,7 @@ public class ImagingService {
         request.note().trim(),
         user.userId());
     audit(user, null, "IMAGING_LINK_SENT_BACK", "ImagingStudy", studyId, Map.of());
-    return studyView(store.study(studyId).orElseThrow());
+    return views.study(store.study(studyId).orElseThrow());
   }
 
   /** Undoes a link (automatic or reviewed), with a reason; the study returns to the queue. */
@@ -326,7 +331,7 @@ public class ImagingService {
         "ImagingStudy",
         studyId,
         Map.of("order", o.orderId().toString()));
-    return studyView(store.study(studyId).orElseThrow());
+    return views.study(store.study(studyId).orElseThrow());
   }
 
   // --- matching --------------------------------------------------------------------------------
@@ -369,98 +374,11 @@ public class ImagingService {
         .filter(o -> !store.orderHasLinkedStudy(o.orderId()));
   }
 
-  /** Why a study waits in the queue, in words a radiographer can act on. */
-  private String unmatchedReason(StudyRow s) {
-    if (s.status() != StudyStatus.UNMATCHED) {
-      return null;
-    }
-    if (s.accessionNumber() == null) {
-      return "The study has no accession number";
-    }
-    Optional<OrderRow> o = store.orderByAccession(s.accessionNumber().trim());
-    if (o.isEmpty()) {
-      return "No imaging order has this accession number";
-    }
-    if ("CANCELLED".equals(o.get().orderStatus())) {
-      return "The order with this accession number was cancelled";
-    }
-    if (s.dicomPatientId() == null
-        || !o.get().patient().patientNumber().equals(s.dicomPatientId().trim())) {
-      return "The patient ID on the study differs from the order's patient number";
-    }
-    if (store.orderHasLinkedStudy(o.get().orderId())) {
-      return "The order already has a linked study";
-    }
-    return "Waiting for the next archive check";
-  }
-
   private void assignAccessions(UUID org) {
     for (UUID[] o : store.ordersWithoutAccession()) {
       String accession = String.format("ACC%09d", store.nextAccession(org));
       store.insertImagingOrder(org, o[0], o[1], accession);
     }
-  }
-
-  // --- views -----------------------------------------------------------------------------------
-
-  private WorklistItem item(OrderRow o) {
-    List<StudyView> studies =
-        store.studiesOfOrder(o.orderId()).stream().map(this::studyView).toList();
-    String step =
-        "CANCELLED".equals(o.orderStatus())
-            ? "CANCELLED"
-            : !studies.isEmpty() && o.examinedAt() != null
-                ? "IMAGES_AVAILABLE"
-                : o.examinedAt() != null
-                    ? "EXAMINED"
-                    : o.arrivedAt() != null ? "ARRIVED" : "ORDERED";
-    return new WorklistItem(
-        o.orderId(),
-        o.encounterId(),
-        o.facilityId(),
-        o.accessionNumber(),
-        o.patient(),
-        o.itemCode(),
-        o.itemName(),
-        o.priority(),
-        o.indication(),
-        o.orderStatus(),
-        o.requestedAt(),
-        o.arrivedAt(),
-        o.arrivedBy(),
-        o.examinedAt(),
-        o.examinedBy(),
-        step,
-        studies,
-        o.version());
-  }
-
-  private StudyView studyView(StudyRow s) {
-    return new StudyView(
-        s.id(),
-        s.studyInstanceUid(),
-        s.accessionNumber(),
-        s.dicomPatientId(),
-        s.modalities(),
-        s.studyDate(),
-        s.description(),
-        s.seriesCount(),
-        s.instanceCount(),
-        s.firstSeenAt(),
-        s.status(),
-        unmatchedReason(s),
-        s.orderId(),
-        s.linkMethod(),
-        s.linkedAt(),
-        s.linkedBy(),
-        s.proposedOrderId(),
-        s.proposedAccession(),
-        s.proposedBy(),
-        s.proposalNote(),
-        s.status() == StudyStatus.LINKED
-            ? archive.viewerUrl(s.studyInstanceUid()).map(URI::toString).orElse(null)
-            : null,
-        s.version());
   }
 
   // --- access ----------------------------------------------------------------------------------

@@ -150,5 +150,8 @@ Local candidate archive (synthetic only): `docker compose --profile imaging up -
 ## Imaging worklist
 API: `GET /api/v1/imaging/worklist`, `POST /api/v1/imaging/orders/{id}/arrived|examined|check-archive`, `GET /api/v1/imaging/studies/unlinked`, `/studies/{id}/history`, `POST /studies/{id}/propose|approve|send-back|unlink`. Screens `/imaging`, `/imaging/studies`. Scheduled archive check: set `GCARE_IMAGING_ARCHIVE_ORGANIZATION_ID` (+ `GCARE_IMAGING_SYNC_INTERVAL`, default PT5M). Demo: `demo.radiographer`, `demo.radiographer2` ([25-IMAGING-WORKLIST.md](25-IMAGING-WORKLIST.md)).
 
+## Radiology reports
+API: `GET /api/v1/radiology/reporting`, `GET|POST /api/v1/imaging/orders/{id}/reports`, `PUT /api/v1/radiology-reports/{id}`, `POST /radiology-reports/{id}/sign|discard`, `GET /api/v1/encounters/{id}/imaging-results`, `GET /api/v1/patients/{id}/imaging-results`, `GET /api/v1/critical-results`, `POST /critical-results/{reportId}/acknowledge`. Screens `/radiology/reporting`, `/critical-results`. Demo: `demo.radiologist` reports; `demo.clinician` acknowledges ([26-RADIOLOGY-REPORTS.md](26-RADIOLOGY-REPORTS.md)).
+
 ## Health and metrics
 Application port: `/actuator/health`, `/livez`, `/readyz` (status only). Management port `MANAGEMENT_PORT` (default 9091, bound to `MANAGEMENT_ADDRESS` 127.0.0.1): `/actuator/health` with details, `/actuator/prometheus`. Example alert rules: `infra/monitoring/alert-rules.yml` (provisional thresholds).
